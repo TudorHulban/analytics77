@@ -22,6 +22,9 @@ jobs:
 
   j2_of_2-test:
     runs-on: ubuntu-latest
+    env:
+      API_KEY_GEOLOCATION: ${{secrets.API_KEY_GEOLOCATION}}
+
     needs: j1_of_2-lint
     timeout-minutes: 2
     steps:
