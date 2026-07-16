@@ -1,0 +1,5 @@
+package appanalytics
+
+const (
+	RoutesAll = "/"
+)

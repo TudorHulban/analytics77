@@ -1,0 +1,52 @@
+COMMERCIAL SOFTWARE LICENSE AND TERMS OF USE
+
+Copyright (c) 2026 TARA Works SRL. All rights reserved.
+
+IMPORTANT-READ CAREFULLY: This Commercial Software License ("License") is a 
+legal agreement between you (either an individual or a single entity) and 
+TARA Works SRL ("Licensor") for the software accompanying this 
+License, which includes computer software, source code, and may include 
+associated media, printed materials, and "online" or electronic documentation 
+(collectively, the "Software").
+
+1. GRANT OF LICENSE
+Subject to the terms and conditions of this License, Licensor hereby grants 
+you a non-exclusive, non-transferable, limited license to download, view, 
+and run the Software solely for personal, non-commercial evaluation and 
+testing purposes. 
+
+2. RESTRICTIONS
+Except as expressly permitted in Section 1, you shall not, and shall not 
+permit any third party to:
+(a) Use the Software for any commercial purpose, commercial gain, or in a 
+    production environment;
+(b) Modify, adapt, translate, or create derivative works based upon the Software;
+(c) Distribute, sublicense, lease, rent, loan, or otherwise transfer the 
+    Software or any portion thereof to any third party;
+(d) Reverse engineer, decompile, or disassemble the Software, except and 
+    only to the extent that such activity is expressly permitted by applicable 
+    law notwithstanding this limitation;
+(e) Remove any proprietary notices, labels, or copyright markings on the Software.
+
+3. COMMERCIAL USE AND LICENSING
+Any use of the Software for commercial purposes, including but not limited to 
+internal business operations, incorporating the Software into a commercial 
+product or service, or generating revenue directly or indirectly from the 
+Software, requires a separate commercial license. 
+
+To obtain a commercial license, please open a new Issue on this repository 
+with the title "Commercial License Request" and include your contact email.
+
+4. TERMINATION
+Without prejudice to any other rights, Licensor may terminate this License if 
+you fail to comply with its terms and conditions. In such event, you must 
+destroy all copies of the Software in your possession.
+
+5. DISCLAIMER OF WARRANTY
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+SOFTWARE.

@@ -1,0 +1,7 @@
+lock
+*.data
+config.json
+
+.linting
+*.log
+*.out

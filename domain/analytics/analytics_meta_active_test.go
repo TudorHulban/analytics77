@@ -1,0 +1,187 @@
+package analytics
+
+import (
+	"fmt"
+	"runtime"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+)
+
+func TestMetaActiveCount(t *testing.T) {
+	var m MetaActive[string]
+
+	// (1) Empty → Count must be 0
+	require.Equal(t, uint32(0), m.Count("RO"))
+
+	// (2) Single increment
+	m.Increment("RO", 3)
+	require.Equal(t, uint32(3), m.Count("RO"))
+	require.Equal(t, uint32(0), m.Count("DE"))
+
+	// (3) Multiple keys
+	m.Increment("DE", 7)
+	m.Increment("US", 5)
+
+	require.Equal(t, uint32(3), m.Count("RO"))
+	require.Equal(t, uint32(7), m.Count("DE"))
+	require.Equal(t, uint32(5), m.Count("US"))
+
+	// (4) Increment existing key
+	m.Increment("RO", 2)
+	require.Equal(t, uint32(5), m.Count("RO"))
+
+	// (5) Eviction path: fill all 7 slots
+	keys := []string{"A", "B", "C", "D", "E", "F", "G"}
+
+	for _, k := range keys {
+		m.Increment(k, 1)
+	}
+
+	// Now increment a new key → eviction happens
+	m.Increment("Z", 10)
+
+	// Count must return something meaningful:
+	// - either Z is present (evicted weakest)
+	// - or Z is not present (if RO/DE/US were weaker)
+	// We only assert that Count does not panic and returns a uint32.
+	_ = m.Count("Z")
+
+	// (6) Unknown key → 0
+	require.Equal(t, uint32(0), m.Count("XX"))
+}
+
+func TestMetaActiveDeepCopyInto(t *testing.T) {
+	var src MetaActive[string]
+
+	src.Increment("RO", 3)
+	src.Increment("DE", 7)
+
+	src.Names[2].Store(nil)
+	src.Values[2].Store(99)
+	src.setOccupied(2)
+
+	src.Names[3].Store(nil)
+
+	k4 := new(string)
+	*k4 = "US"
+	src.Names[4].Store(k4)
+	src.Values[4].Store(5)
+
+	var dst MetaActive[string]
+	src.DeepCopyInto(&dst)
+
+	require.Equal(t, src.occupied.Load(), dst.occupied.Load())
+	require.Equal(t, src.Names[0].Load(), dst.Names[0].Load())
+	require.Equal(t, src.Names[1].Load(), dst.Names[1].Load())
+	require.Equal(t, src.Names[2].Load(), dst.Names[2].Load())
+	require.Equal(t, src.Names[3].Load(), dst.Names[3].Load())
+	require.Equal(t, src.Names[4].Load(), dst.Names[4].Load())
+	require.Equal(t, src.Values[0].Load(), dst.Values[0].Load())
+	require.Equal(t, src.Values[1].Load(), dst.Values[1].Load())
+	require.Equal(t, src.Values[2].Load(), dst.Values[2].Load())
+	require.Equal(t, src.Values[3].Load(), dst.Values[3].Load())
+	require.Equal(t, src.Values[4].Load(), dst.Values[4].Load())
+
+	require.Equal(t, uint32(3), dst.Count("RO"))
+	require.Equal(t, uint32(7), dst.Count("DE"))
+	require.Equal(t, uint32(5), dst.Count("US"))
+	require.Equal(t, uint32(0), dst.Count("XX"))
+}
+
+func TestMetaActiveAsMetaArchive(t *testing.T) {
+	var m MetaActive[string]
+
+	// (1) Normal ingestion
+	m.Increment("RO", 3)
+	m.Increment("DE", 7)
+	m.Increment("US", 5)
+
+	// (2) Duplicate key in another slot (Space-Saving behavior)
+	// We manually install this because Increment will not create duplicates.
+	kdup := new(string)
+	*kdup = "RO"
+	m.Names[3].Store(kdup)
+	m.Values[3].Store(4)
+	m.setOccupied(3)
+
+	// (3) Nil pointer slot (occupied)
+	m.Names[4].Store(nil)
+	m.Values[4].Store(99)
+	m.setOccupied(4)
+
+	// (4) Nil pointer slot (not occupied)
+	m.Names[5].Store(nil)
+
+	// (5) Pointer but not occupied (Count sees it, archive does NOT)
+	kghost := new(string)
+	*kghost = "GHOST"
+	m.Names[6].Store(kghost)
+	m.Values[6].Store(11)
+	// no occupied bit
+
+	arch := m.AsMetaArchive()
+
+	// (6) RO must be merged: 3 + 4 = 7
+	require.Equal(t, "RO", arch.Names[0])
+	require.Equal(t, uint32(7), arch.Values[0])
+
+	// (7) DE must appear with value 7
+	require.Equal(t, "DE", arch.Names[1])
+	require.Equal(t, uint32(7), arch.Values[1])
+
+	// (8) US must appear with value 5
+	require.Equal(t, "US", arch.Names[2])
+	require.Equal(t, uint32(5), arch.Values[2])
+
+	// (9) GHOST must NOT appear (not occupied)
+	require.NotEqual(t, "GHOST", arch.Names[0])
+	require.NotEqual(t, "GHOST", arch.Names[1])
+	require.NotEqual(t, "GHOST", arch.Names[2])
+
+	// (10) Nil slots must NOT appear
+	require.NotEqual(t, "", arch.Names[0])
+	require.NotEqual(t, "", arch.Names[1])
+	require.NotEqual(t, "", arch.Names[2])
+}
+
+func BenchmarkMetaActiveIncrement_Parallel(b *testing.B) {
+	gomaxprocsValues := []int{1, 2, 3, 4, 8}
+	key := "RO"
+
+	for _, g := range gomaxprocsValues {
+		b.Run(
+			fmt.Sprintf("GOMAXPROCS=%d", g),
+			func(b *testing.B) {
+				prev := runtime.GOMAXPROCS(g)
+				defer runtime.GOMAXPROCS(prev)
+
+				b.ReportAllocs()
+				b.ResetTimer()
+
+				var m MetaActive[string]
+
+				// Preload deterministic state
+				preKeys := []string{"RO", "DE", "US", "FR", "IT", "ES", "NL"}
+
+				for ix := range len(preKeys) {
+					k := new(string)
+					*k = preKeys[ix]
+
+					m.Names[ix].Store(k)
+					m.Values[ix].Store(uint32(ix + 1))
+
+					m.setOccupied(ix)
+				}
+
+				b.RunParallel(
+					func(pb *testing.PB) {
+						for pb.Next() {
+							m.Increment(key, 1)
+						}
+					},
+				)
+			},
+		)
+	}
+}

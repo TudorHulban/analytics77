@@ -1,0 +1,47 @@
+package analytics
+
+import "strings"
+
+type AggregatedTopN struct {
+	IPs       MetaArchived[string]
+	ASN       MetaArchived[string]
+	Countries MetaArchived[string]
+	Cities    MetaArchived[string]
+	URL       MetaArchived[string]
+	OS        MetaArchived[string]
+	Browsers  MetaArchived[Browser]
+}
+
+func (a AggregatedTopN) String() string {
+	var b strings.Builder
+
+	b.WriteString("IPs:\n")
+	b.WriteString(a.IPs.String())
+	// b.WriteByte('\n')
+
+	b.WriteString("ASN:\n")
+	b.WriteString(a.ASN.String())
+	// b.WriteByte('\n')
+
+	b.WriteString("Countries:\n")
+	b.WriteString(a.Countries.String())
+	// b.WriteByte('\n')
+
+	b.WriteString("Cities:\n")
+	b.WriteString(a.Cities.String())
+	// b.WriteByte('\n')
+
+	b.WriteString("URL:\n")
+	b.WriteString(a.URL.String())
+	// b.WriteByte('\n')
+
+	b.WriteString("OS:\n")
+	b.WriteString(a.OS.String())
+	// b.WriteByte('\n')
+
+	b.WriteString("Browsers:\n")
+	b.WriteString(a.Browsers.String())
+	// b.WriteByte('\n')
+
+	return b.String()
+}
