@@ -11,19 +11,6 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println(
-			"Error: Please provide the geolocation API key as the first argument.",
-		)
-		fmt.Println(
-			"Usage: go run main.go <API_KEY>",
-		)
-
-		os.Exit(
-			hxerrors.OSExitForApplicationIssues,
-		)
-	}
-
 	configRaw := initialization.Configuration(cmd.PathConfig)
 
 	configuration, errParse := extractConfiguration(configRaw)
@@ -44,7 +31,7 @@ func main() {
 			ConfigPortHTTP: configuration.portHTTP,
 
 			PathLogFile:       configuration.nameLogfile,
-			KeyGeolocationAPI: os.Args[1],
+			KeyGeolocationAPI: os.Getenv(cmd.OSAPIGeolocation),
 		},
 	)
 
