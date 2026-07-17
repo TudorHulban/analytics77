@@ -19,8 +19,11 @@ type ParamsInitializeApp struct {
 
 	KeyGeolocationAPI string
 	PathLogFile       string
+
+	OffsetUTCHours int64
 }
 
+// TODO: refactor with passed writer for more testability.
 func InitializeApp(params *ParamsInitializeApp) *App {
 	listener, errListener := net.Listen( //nolint:noctx
 		"tcp",
@@ -55,7 +58,7 @@ func InitializeApp(params *ParamsInitializeApp) *App {
 	serviceAnalytics, errInitialization := initialization.Services(
 		&initialization.ParamsServices{
 			Offsets: helpers.TimestampOffsets{
-				OffsetUTCHours: +3,
+				OffsetUTCHours: params.OffsetUTCHours,
 			},
 			APIKeyGeolocation: params.KeyGeolocationAPI,
 

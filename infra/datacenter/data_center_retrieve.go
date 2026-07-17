@@ -86,7 +86,6 @@ func (dc *DataCenter) previousHourRecordsPerSiteAt(nowUTC int64, offsets *helper
 	previousHourUTC := nowUTC - 3600
 
 	dc.mu.RLock()
-	defer dc.mu.RUnlock()
 
 	result := make(map[string]uint32, len(dc.data))
 
@@ -115,6 +114,8 @@ func (dc *DataCenter) previousHourRecordsPerSiteAt(nowUTC int64, offsets *helper
 		result[string(siteKey)] = month[dhelpers.CalendarDayToIndex(prevDay)][prevHour].RecordsPerPeriod.Load()
 	}
 
+	dc.mu.RUnlock()
+
 	return result
 }
 
@@ -124,7 +125,7 @@ func (dc *DataCenter) GetCurrentHourRecordsPerSite(offsets *helpers.TimestampOff
 		offsets,
 	)
 
-	dc.mu.Lock()
+	dc.mu.RLock()
 
 	result := make(map[string]uint32, len(dc.data))
 
