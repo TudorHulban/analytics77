@@ -63,11 +63,11 @@ func (m MetaArchived[T]) MergeActive(src *MetaActive[T]) MetaArchived[T] {
 
 	// 1. Load archived entries
 	for ix := range 7 {
-		v := m.Values[ix]
+		value := m.Values[ix]
 
-		if v != 0 {
+		if value != 0 {
 			tmpKeys[tmpLen] = m.Names[ix]
-			tmpVals[tmpLen] = v
+			tmpVals[tmpLen] = value
 
 			tmpLen++
 		}
@@ -156,11 +156,11 @@ func (m MetaArchived[T]) MergeArchived(src MetaArchived[T]) MetaArchived[T] {
 
 	// Load archived entries from dst
 	for ix := range 7 {
-		v := m.Values[ix]
+		value := m.Values[ix]
 
-		if v != 0 {
+		if value != 0 {
 			tmpKeys[tmpLen] = m.Names[ix]
-			tmpVals[tmpLen] = v
+			tmpVals[tmpLen] = value
 
 			tmpLen++
 		}
@@ -168,11 +168,11 @@ func (m MetaArchived[T]) MergeArchived(src MetaArchived[T]) MetaArchived[T] {
 
 	// Load archived entries from src
 	for ix := range 7 {
-		v := src.Values[ix]
+		value := src.Values[ix]
 
-		if v != 0 {
+		if value != 0 {
 			tmpKeys[tmpLen] = src.Names[ix]
-			tmpVals[tmpLen] = v
+			tmpVals[tmpLen] = value
 
 			tmpLen++
 		}
@@ -202,10 +202,10 @@ func (m MetaArchived[T]) MergeArchived(src MetaArchived[T]) MetaArchived[T] {
 		bestVal := uint32(0)
 
 		for ix := 0; ix < tmpLen; ix++ {
-			v := tmpVals[ix]
+			value := tmpVals[ix]
 
-			if v > bestVal {
-				bestVal = v
+			if value > bestVal {
+				bestVal = value
 				bestIdx = ix
 			}
 		}
@@ -230,27 +230,16 @@ func (m MetaArchived[T]) MergeArchived(src MetaArchived[T]) MetaArchived[T] {
 // associated with the key, or 0 if not present.
 //
 // This is the only correct way to query archived results.
-func (m *MetaArchived[T]) Count(key T) uint32 {
+func (m *MetaArchived[T]) Count(forName T) uint32 {
 	if m == nil {
 		return 0
 	}
 
 	for ix := range 7 {
-		if m.Names[ix] == key {
+		if m.Names[ix] == forName {
 			return m.Values[ix]
 		}
 	}
 
 	return 0
-}
-
-func (m *MetaArchived[T]) GetValue(byKey T) (uint32, error) {
-	for ix, n := range m.Names {
-		if n == byKey {
-			return m.Values[ix], nil
-		}
-	}
-
-	return 0,
-		ErrKeyNotFound
 }

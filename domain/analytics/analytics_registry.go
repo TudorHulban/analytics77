@@ -82,7 +82,7 @@ func (r *Registry) CurrentMonthForEach(action ActionActive) {
 // Rollover is safe to call concurrently with ingestion: the swap is a
 // single atomic pointer store, so CurrentMonth()/PreviousMonth() never
 // observe a partially-reset buffer. It is NOT safe to call Rollover
-// concurrently with itself — that's what rolloverMu is for.
+// concurrently with itself — that is what rolloverMu is for.
 //
 // See the package doc for the one accepted race: in-flight increments
 // that read a *MonthActive just before the swap and write to it just

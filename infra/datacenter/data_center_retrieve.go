@@ -134,7 +134,7 @@ func (dc *DataCenter) GetCurrentHourRecordsPerSite(offsets *helpers.TimestampOff
 			GetCurrentMonth()[dhelpers.CalendarDayToIndex(ixDay)][ixHour].RecordsPerPeriod.Load()
 	}
 
-	dc.mu.Unlock()
+	dc.mu.RUnlock()
 
 	return result
 }
