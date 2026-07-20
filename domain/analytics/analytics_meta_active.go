@@ -63,7 +63,8 @@ outer:
 					continue outer // key changed, retry from scratch
 				}
 
-				newVal := oldVal //nolint:ineffassign
+				var newVal uint32
+
 				if oldVal > maxUint32-byValue {
 					newVal = maxUint32
 				} else {
@@ -124,7 +125,8 @@ outer:
 				}
 			}
 
-			newVal := lowestVal //nolint:ineffassign
+			var newVal uint32
+
 			if lowestVal > maxUint32-byValue {
 				newVal = maxUint32
 			} else {
@@ -179,7 +181,12 @@ func (m *MetaActive[T]) AsMetaArchive() MetaArchived[T] {
 
 		for j := ix + 1; j < tmpLen; j++ {
 			if tmpVals[j] != 0 && tmpKeys[j] == ki {
-				tmpVals[ix] = tmpVals[ix] + tmpVals[j]
+				if tmpVals[ix] > maxUint32-tmpVals[j] {
+					tmpVals[ix] = maxUint32
+				} else {
+					tmpVals[ix] = tmpVals[ix] + tmpVals[j]
+				}
+
 				tmpVals[j] = 0
 			}
 		}

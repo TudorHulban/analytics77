@@ -22,7 +22,7 @@ type Registry struct {
 	TimestampDSTWinter int64
 	TimestampDSTSpring int64
 
-	CalendarMonthCurrentNumber int8
+	CalendarMonthCurrentNumber int8 // no need for year as we keep only 7 months.
 
 	// rolloverMu serializes concurrent Rollover callers only. Ingestion
 	// and queries never touch it and are never blocked by it.
