@@ -7,9 +7,11 @@ func (r *Registry) PreviousMonthForEach(action ActionActive) {
 		return
 	}
 
+	previousMonth := r.GetPreviousMonth()
+
 	for day := range int8(31) {
 		for hour := range int8(24) {
-			m := &r.GetPreviousMonth()[day][hour]
+			m := &previousMonth[day][hour]
 
 			if m.RecordsPerPeriod.Load() != 0 {
 				action(day, hour, m)
@@ -18,21 +20,23 @@ func (r *Registry) PreviousMonthForEach(action ActionActive) {
 	}
 }
 
-// func (r *Registry) CurrentMonthForEach(action ActionActive) {
-// 	if action == nil {
-// 		return
-// 	}
+func (r *Registry) CurrentMonthForEach(action ActionActive) {
+	if action == nil {
+		return
+	}
 
-// 	for day := range int8(31) {
-// 		for hour := range int8(24) {
-// 			m := &r.GetCurrentMonth()[day][hour]
+	currentMonth := r.GetCurrentMonth()
 
-// 			if m.RecordsPerPeriod.Load() != 0 {
-// 				action(day, hour, m)
-// 			}
-// 		}
-// 	}
-// }
+	for day := range int8(31) {
+		for hour := range int8(24) {
+			m := &currentMonth[day][hour]
+
+			if m.RecordsPerPeriod.Load() != 0 {
+				action(day, hour, m)
+			}
+		}
+	}
+}
 
 type ActionArchive func(month, day, hour int8, m *MetricArchived)
 

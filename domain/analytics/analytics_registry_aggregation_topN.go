@@ -8,7 +8,7 @@ type AggregatedTopN struct {
 	Countries MetaArchived[string]
 	Cities    MetaArchived[string]
 	URL       MetaArchived[string]
-	OS        MetaArchived[string]
+	OS        MetaArchived[OS]
 	Browsers  MetaArchived[Browser]
 }
 

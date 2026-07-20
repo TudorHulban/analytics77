@@ -104,5 +104,8 @@ func TestMetaActiveIncrement_ConcurrentSameKeys(t *testing.T) {
 		sum = sum + uint64(m.Values[ix].Load())
 	}
 
-	require.EqualValues(t, numGoroutines*incrementsPerGoro, sum)
+	require.EqualValues(t,
+		numGoroutines*incrementsPerGoro,
+		sum,
+	)
 }

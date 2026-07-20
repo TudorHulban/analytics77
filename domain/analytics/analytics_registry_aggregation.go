@@ -12,6 +12,7 @@ func (*Registry) aggregateHour(m *MetricActive) AggregatedTopN {
 	result.Countries = result.Countries.MergeActive(&m.TopCountries)
 	result.Cities = result.Cities.MergeActive(&m.TopCities)
 	result.URL = result.URL.MergeActive(&m.TopURL)
+
 	result.OS = result.OS.MergeActive(&m.TopOperatingSystems)
 	result.Browsers = result.Browsers.MergeActive(&m.TopBrowsers)
 

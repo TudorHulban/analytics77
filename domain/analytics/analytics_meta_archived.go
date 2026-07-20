@@ -95,7 +95,12 @@ func (m MetaArchived[T]) MergeActive(src *MetaActive[T]) MetaArchived[T] {
 
 		for j := i + 1; j < tmpLen; j++ {
 			if tmpVals[j] != 0 && tmpKeys[j] == ki {
-				tmpVals[i] = tmpVals[i] + tmpVals[j]
+				if tmpVals[i] > maxUint32-tmpVals[j] {
+					tmpVals[i] = maxUint32
+				} else {
+					tmpVals[i] = tmpVals[i] + tmpVals[j]
+				}
+
 				tmpVals[j] = 0 // mark as consumed
 			}
 		}
@@ -188,7 +193,12 @@ func (m MetaArchived[T]) MergeArchived(src MetaArchived[T]) MetaArchived[T] {
 
 		for j := i + 1; j < tmpLen; j++ {
 			if tmpVals[j] != 0 && tmpKeys[j] == ki {
-				tmpVals[i] = tmpVals[i] + tmpVals[j]
+				if tmpVals[i] > maxUint32-tmpVals[j] {
+					tmpVals[i] = maxUint32
+				} else {
+					tmpVals[i] = tmpVals[i] + tmpVals[j]
+				}
+
 				tmpVals[j] = 0 // mark as consumed
 			}
 		}

@@ -42,11 +42,7 @@ outer:
 	for {
 		mask := m.occupied.Load()
 
-		// 1. Exact-match fast path.
-		// A slightly stale mask is fine here: bits only ever transition 0->1
-		// outside of Rollover/DeepCopy (which never run concurrently with
-		// ingestion), so we can't see a "phantom" occupied slot that isn't
-		// really there.
+		// 1. Exact-match fast path — CAS-based, no Add
 		for ix := range 7 {
 			if (mask & (1 << ix)) == 0 {
 				continue
@@ -57,25 +53,31 @@ outer:
 				continue
 			}
 
-			m.Values[ix].Add(byValue)
+			// Key matched
+			// Now CAS the value while verifying key has not changed
+			for {
+				oldVal := m.Values[ix].Load()
 
-			// Guard: if a concurrent eviction replaced this slot's key while
-			// above Add was in flight, the increment just landed on the wrong
-			// bucket. Undo it and retry the whole operation from scratch.
-			if after := m.Names[ix].Load(); after == nil || *after != key {
-				m.Values[ix].Add(-byValue) // unsigned wraparound == subtract
+				// Re-verify key before every CAS attempt
+				if after := m.Names[ix].Load(); after == nil || *after != key {
+					continue outer // key changed, retry from scratch
+				}
 
-				continue outer
+				newVal := oldVal //nolint:ineffassign
+				if oldVal > maxUint32-byValue {
+					newVal = maxUint32
+				} else {
+					newVal = oldVal + byValue
+				}
+
+				if m.Values[ix].CompareAndSwap(oldVal, newVal) {
+					return // success
+				}
+				// CAS failed, loop back and re-verify key + retry
 			}
-
-			return
 		}
 
-		// 2. Claim an empty slot.
-		// Each bit is claimed with its own CAS, so only one goroutine can ever
-		// win a given slot. A failed CAS means someone else just claimed a
-		// bit (this one or another); reload and keep scanning forward rather
-		// than retrying the same bit.
+		// 2. Claim an empty slot — unchanged
 		for {
 			claimed := -1
 
@@ -96,28 +98,21 @@ outer:
 
 			if claimed == -1 {
 				if mask&0b1111111 == 0b1111111 {
-					break // all 7 slots occupied -> fall through to eviction
+					break
 				}
 
-				continue // fresh mask picked up a newly-freed view; rescan
+				continue
 			}
 
-			// We now exclusively own `claimed`: occupancy bits only ever go
-			// 0->1 via this CAS, so no other goroutine can also hold it.
 			k := new(T)
 			*k = key
-
 			m.Names[claimed].Store(k)
 			m.Values[claimed].Store(byValue)
 
 			return
 		}
 
-		// 3. Full: evict the weakest slot (Space-Saving).
-		// The CAS on Values makes "read weakest, then update it" atomic
-		// against other evictions and other exact-match Adds racing the same
-		// slot: if anything touches Values[lowestIdx] between our read and
-		// our swap, the CAS fails and we just recompute the weakest slot.
+		// 3. Full: evict the weakest slot — unchanged
 		for {
 			lowestIdx := 0
 			lowestVal := m.Values[0].Load()
@@ -129,15 +124,19 @@ outer:
 				}
 			}
 
-			newVal := lowestVal + byValue
+			newVal := lowestVal //nolint:ineffassign
+			if lowestVal > maxUint32-byValue {
+				newVal = maxUint32
+			} else {
+				newVal = lowestVal + byValue
+			}
 
 			if !m.Values[lowestIdx].CompareAndSwap(lowestVal, newVal) {
-				continue // lost the race on this slot's value; retry
+				continue
 			}
 
 			k := new(T)
 			*k = key
-
 			m.Names[lowestIdx].Store(k)
 
 			return
@@ -290,17 +289,4 @@ func (m *MetaActive[T]) GetValue(byKey T) (uint32, error) {
 	}
 
 	return 0, ErrKeyNotFound
-}
-
-func (m *MetaActive[T]) setOccupied(ix int) {
-	bit := uint32(1 << ix)
-
-	for {
-		oldValue := m.occupied.Load()
-		newValue := oldValue | bit
-
-		if m.occupied.CompareAndSwap(oldValue, newValue) {
-			return
-		}
-	}
 }

@@ -32,8 +32,13 @@ type Registry struct {
 // NewRegistry returns a Registry ready for ingestion. The zero value of
 // Registry is NOT usable — monthCurrent/monthPrevious must be seeded with
 // real buffers before CurrentMonth()/PreviousMonth() can be called.
-func NewRegistry() *Registry {
+func NewRegistry(dstTimestamps ...int64) *Registry {
 	r := Registry{}
+
+	if len(dstTimestamps) == 2 {
+		r.TimestampDSTSpring = dstTimestamps[0]
+		r.TimestampDSTWinter = dstTimestamps[1]
+	}
 
 	r.monthCurrent.Store(&MonthActive{})
 	r.monthPrevious.Store(&MonthActive{})
@@ -52,24 +57,6 @@ func (r *Registry) GetCurrentMonth() *MonthActive {
 // Same caching rule as CurrentMonth.
 func (r *Registry) GetPreviousMonth() *MonthActive {
 	return r.monthPrevious.Load()
-}
-
-func (r *Registry) CurrentMonthForEach(action ActionActive) {
-	if action == nil {
-		return
-	}
-
-	month := r.GetCurrentMonth()
-
-	for day := range int8(31) {
-		for hour := range int8(24) {
-			m := &month[day][hour]
-
-			if m.RecordsPerPeriod.Load() != 0 {
-				action(day, hour, m)
-			}
-		}
-	}
 }
 
 // Rollover advances the registry by one month:
@@ -126,10 +113,12 @@ func (r *Registry) Rollover() {
 
 // Snapshot writes a textual snapshot of the registry into w.
 func (r *Registry) Snapshot(w io.Writer) error {
-	// MonthCurrent
+	currentMonth := r.GetCurrentMonth()
+
 	for day := range 31 {
 		for hour := range 24 {
-			m := &r.GetCurrentMonth()[day][hour]
+			m := &currentMonth[day][hour]
+
 			if m.RecordsPerPeriod.Load() == 0 {
 				continue
 			}
@@ -147,10 +136,11 @@ func (r *Registry) Snapshot(w io.Writer) error {
 		}
 	}
 
-	// MonthPrevious
+	previousMonth := r.GetPreviousMonth()
+
 	for day := range 31 {
 		for hour := range 24 {
-			m := &r.GetPreviousMonth()[day][hour]
+			m := &previousMonth[day][hour]
 			if m.RecordsPerPeriod.Load() == 0 {
 				continue
 			}
@@ -168,7 +158,6 @@ func (r *Registry) Snapshot(w io.Writer) error {
 		}
 	}
 
-	// History
 	for h := range 7 {
 		for day := range 31 {
 			for hour := range 24 {
