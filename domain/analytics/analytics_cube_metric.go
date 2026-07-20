@@ -12,6 +12,7 @@ type MetricActive struct {
 	TopBrowsers         MetaActive[Browser]
 
 	RecordsPerPeriod atomic.Uint32
+	readOnly         atomic.Bool
 }
 
 func (m *MetricActive) IsZero() bool {
@@ -48,6 +49,8 @@ func (m *MetricActive) AsArchived() MetricArchived {
 }
 
 func (m *MetricActive) DeepCopyInto(dst *MetricActive) {
+	m.readOnly.Store(true)
+
 	m.TopIPs.DeepCopyInto(&dst.TopIPs)
 	m.TopASN.DeepCopyInto(&dst.TopASN)
 	m.TopCountries.DeepCopyInto(&dst.TopCountries)
@@ -57,6 +60,8 @@ func (m *MetricActive) DeepCopyInto(dst *MetricActive) {
 	m.TopBrowsers.DeepCopyInto(&dst.TopBrowsers)
 
 	dst.RecordsPerPeriod.Store(m.RecordsPerPeriod.Load())
+
+	m.readOnly.Store(false)
 }
 
 type MetricArchived struct {

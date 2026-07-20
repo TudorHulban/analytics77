@@ -18,15 +18,7 @@ func (m *MonthActive) IsZero() bool {
 func (m *MonthActive) DeepCopyInto(dst *MonthActive) {
 	for d := range 31 {
 		for h := range 24 {
-			m[d][h].TopIPs.DeepCopyInto(&dst[d][h].TopIPs)
-			m[d][h].TopASN.DeepCopyInto(&dst[d][h].TopASN)
-			m[d][h].TopCountries.DeepCopyInto(&dst[d][h].TopCountries)
-			m[d][h].TopCities.DeepCopyInto(&dst[d][h].TopCities)
-			m[d][h].TopURL.DeepCopyInto(&dst[d][h].TopURL)
-			m[d][h].TopOperatingSystems.DeepCopyInto(&dst[d][h].TopOperatingSystems)
-			m[d][h].TopBrowsers.DeepCopyInto(&dst[d][h].TopBrowsers)
-
-			dst[d][h].RecordsPerPeriod.Store(m[d][h].RecordsPerPeriod.Load())
+			m[d][h].DeepCopyInto(&dst[d][h])
 		}
 	}
 }
