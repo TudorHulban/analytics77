@@ -157,8 +157,10 @@ func (m *MetaActive[T]) AsMetaArchive() MetaArchived[T] {
 	)
 
 	// 1. Load active entries into temporary arrays
+	mask := m.occupied.Load()
+
 	for ix := range 7 {
-		if (m.occupied.Load() & (1 << ix)) != 0 {
+		if (mask & (1 << ix)) != 0 {
 			if ptr := m.Names[ix].Load(); ptr != nil {
 				tmpKeys[tmpLen] = *ptr
 				tmpVals[tmpLen] = m.Values[ix].Load()
@@ -219,7 +221,13 @@ func (m *MetaActive[T]) DeepCopyInto(dst *MetaActive[T]) {
 	// 2. Copy atomic pointers safely
 	for ix := range 7 {
 		ptr := m.Names[ix].Load()
-		dst.Names[ix].Store(ptr)
+
+		if ptr != nil {
+			k := new(T)
+			*k = *ptr
+
+			dst.Names[ix].Store(k)
+		}
 	}
 
 	// 3. Copy atomic counters safely

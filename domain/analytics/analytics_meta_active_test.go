@@ -71,22 +71,45 @@ func TestMetaActiveDeepCopyInto(t *testing.T) {
 	var dst MetaActive[string]
 	src.DeepCopyInto(&dst)
 
+	// --- Occupancy mask copied correctly ---
 	require.Equal(t, src.occupied.Load(), dst.occupied.Load())
-	require.Equal(t, src.Names[0].Load(), dst.Names[0].Load())
-	require.Equal(t, src.Names[1].Load(), dst.Names[1].Load())
-	require.Equal(t, src.Names[2].Load(), dst.Names[2].Load())
-	require.Equal(t, src.Names[3].Load(), dst.Names[3].Load())
-	require.Equal(t, src.Names[4].Load(), dst.Names[4].Load())
+
+	// --- Values copied correctly ---
 	require.Equal(t, src.Values[0].Load(), dst.Values[0].Load())
 	require.Equal(t, src.Values[1].Load(), dst.Values[1].Load())
 	require.Equal(t, src.Values[2].Load(), dst.Values[2].Load())
 	require.Equal(t, src.Values[3].Load(), dst.Values[3].Load())
 	require.Equal(t, src.Values[4].Load(), dst.Values[4].Load())
 
+	// --- Count lookups work on dst ---
 	require.Equal(t, uint32(3), dst.Count("RO"))
 	require.Equal(t, uint32(7), dst.Count("DE"))
 	require.Equal(t, uint32(5), dst.Count("US"))
 	require.Equal(t, uint32(0), dst.Count("XX"))
+
+	// --- CRITICAL: deep copy isolation ---
+	// Modifying src must NOT affect dst
+	*src.Names[0].Load() = "MODIFIED-RO"
+	*src.Names[1].Load() = "MODIFIED-DE"
+	*src.Names[4].Load() = "MODIFIED-US"
+
+	require.Equal(t,
+		"RO",
+		*dst.Names[0].Load(),
+		"dst was corrupted by src mutation — DeepCopyInto shares pointers")
+	require.Equal(t,
+		"DE",
+		*dst.Names[1].Load(),
+		"dst was corrupted by src mutation — DeepCopyInto shares pointers")
+	require.Equal(t,
+		"US",
+		*dst.Names[4].Load(),
+		"dst was corrupted by src mutation — DeepCopyInto shares pointers")
+
+	// Counts on dst must remain unchanged
+	require.Equal(t, uint32(3), dst.Count("RO"))
+	require.Equal(t, uint32(7), dst.Count("DE"))
+	require.Equal(t, uint32(5), dst.Count("US"))
 }
 
 func TestMetaActiveAsMetaArchive(t *testing.T) {
