@@ -7,7 +7,7 @@ import (
 )
 
 func TestRollover_HistoryShift(t *testing.T) {
-	r := NewRegistry()
+	r := NewRegistry[MonthActive, MetricActive]()
 
 	// Seed each history slot with a unique record count so we can track them.
 	// History[0]=100, History[1]=200, ..., History[6]=700

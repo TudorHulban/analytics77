@@ -9,7 +9,7 @@ import (
 // The second return value is the number of valid entries in the array.
 //
 // This avoids heap allocation: callers must iterate only up to `count`.
-func (r *Registry) PreviousMonthDaysWithData() ([31]int8, int8) {
+func (r *Registry[T, TData]) PreviousMonthDaysWithData() ([31]int8, int8) {
 	var (
 		out   [31]int8
 		count int8
@@ -55,7 +55,7 @@ func (r *Registry) PreviousMonthDaysWithData() ([31]int8, int8) {
 // The second return value is the number of valid entries.
 //
 // This avoids heap allocation: callers must iterate only up to `count`.
-func (r *Registry) PreviousMonthHoursWithData(forCalendarDay int8) ([24]int8, int8) {
+func (r *Registry[T, TData]) PreviousMonthHoursWithData(forCalendarDay int8) ([24]int8, int8) {
 	var (
 		hoursWithData [24]int8
 		count         int8
@@ -84,7 +84,7 @@ func (r *Registry) PreviousMonthHoursWithData(forCalendarDay int8) ([24]int8, in
 // The second return value is the number of valid entries.
 //
 // This avoids heap allocation: callers must iterate only up to `count`.
-func (r *Registry) CurrentMonthHoursWithData(forCalendarDay int8) ([24]int8, int8) {
+func (r *Registry[T, TData]) CurrentMonthHoursWithData(forCalendarDay int8) ([24]int8, int8) {
 	var (
 		hoursWithData [24]int8
 		howMany       int8
@@ -111,7 +111,7 @@ func (r *Registry) CurrentMonthHoursWithData(forCalendarDay int8) ([24]int8, int
 // the day numbers need to be translated to calendar days.
 //
 // Registry stores storage hours as UTC time.
-func (r *Registry) CurrentDayHoursWithData(timestampUTC, offsetUTCHours int64) ([24]int8, int8) {
+func (r *Registry[T, TData]) CurrentDayHoursWithData(timestampUTC, offsetUTCHours int64) ([24]int8, int8) {
 	_, currentDay, _ := helpers.ExtractMonthDayHour(
 		timestampUTC,
 		&helpers.TimestampOffsets{
@@ -133,7 +133,7 @@ func (r *Registry) CurrentDayHoursWithData(timestampUTC, offsetUTCHours int64) (
 //
 // Registry stores storage days so
 // the day numbers need to be translated to calendar days.
-func (r *Registry) CurrentMonthDaysWithData() ([31]int8, int8) {
+func (r *Registry[T, TData]) CurrentMonthDaysWithData() ([31]int8, int8) {
 	var (
 		daysWithData [31]int8
 		howMany      int8

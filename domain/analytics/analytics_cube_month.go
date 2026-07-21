@@ -1,9 +1,6 @@
 package analytics
 
-type (
-	MonthActive   [31]DayActive
-	MonthArchived [31]DayArchived
-)
+type MonthActive [31]DayActive
 
 func (m *MonthActive) IsZero() bool {
 	for i := range m {
@@ -21,4 +18,16 @@ func (m *MonthActive) DeepCopyInto(dst *MonthActive) {
 			m[d][h].DeepCopyInto(&dst[d][h])
 		}
 	}
+}
+
+func (m *MonthActive) GetMetric(day int8, hour int8) *MetricActive {
+	if day < 0 || day >= 31 {
+		return nil
+	}
+
+	if hour < 0 || hour >= 24 {
+		return nil
+	}
+
+	return &m[day][hour]
 }

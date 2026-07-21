@@ -20,10 +20,7 @@ package analytics
 // This kernel is designed for deterministic, high‑frequency ingestion and
 // predictable OLAP reporting without hidden allocations or dynamic behavior.
 
-type (
-	DayActive   [24]MetricActive
-	DayArchived [24]MetricArchived
-)
+type DayActive [24]MetricActive
 
 func (d *DayActive) IsZero() bool {
 	for i := range d {
@@ -33,30 +30,4 @@ func (d *DayActive) IsZero() bool {
 	}
 
 	return true
-}
-
-// AsDayArchived converts a DayActive (24 MetricActive buckets)
-// into a DayArchived (24 MetricArchived buckets).
-// This is a pure, deterministic, zero‑allocation transformation.
-func (d *DayActive) AsDayArchived() DayArchived {
-	var result DayArchived
-
-	for hour := range 24 {
-		result[hour] = d[hour].AsArchived()
-	}
-
-	return result
-}
-
-// AsMonthArchived converts a MonthActive (31 DayActive buckets)
-// into a MonthArchived (31 DayArchived buckets).
-// Pure, deterministic, zero‑allocation transformation.
-func (m *MonthActive) AsMonthArchived() MonthArchived {
-	var result MonthArchived
-
-	for day := range 31 {
-		result[day] = m[day].AsDayArchived()
-	}
-
-	return result
 }

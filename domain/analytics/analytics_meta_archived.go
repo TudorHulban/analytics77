@@ -53,7 +53,7 @@ func (m MetaArchived[T]) String() string {
 //
 // This function is fully deterministic, zero‑alloc, and stable under full load.
 // Ordering is NOT guaranteed; callers must use Count(key).
-func (m MetaArchived[T]) MergeActive(src *MetaActive[T]) MetaArchived[T] {
+func (m MetaArchived[T]) MergeActive(src *MetaActive[T]) MetaActive[T] {
 	// Temporary fixed array for up to 14 entries
 	var (
 		tmpKeys [14]T
@@ -107,7 +107,7 @@ func (m MetaArchived[T]) MergeActive(src *MetaActive[T]) MetaArchived[T] {
 	}
 
 	// 4. Select top 7 (no sorting, no allocs)
-	var out MetaArchived[T]
+	var out MetaActive[T]
 
 	for k := range 7 {
 		bestIdx := -1

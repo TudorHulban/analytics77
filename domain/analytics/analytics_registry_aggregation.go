@@ -1,9 +1,9 @@
 package analytics
 
-func (*Registry) aggregateHour(m *MetricActive) AggregatedTopN {
+func (r *Registry[T, TData]) aggregateHour(m *TData) AggregatedTopN {
 	var result AggregatedTopN
 
-	if m.RecordsPerPeriod.Load() == 0 {
+	if (*m).GetRecordsPerPeriod() == 0 {
 		return result
 	}
 
@@ -19,84 +19,99 @@ func (*Registry) aggregateHour(m *MetricActive) AggregatedTopN {
 	return result
 }
 
-func (r *Registry) CurrentMonthAggregateTopNForHour(day, hour int8) AggregatedTopN {
+func (r *Registry[T, TData]) CurrentMonthAggregateTopNForHour(day, hour int8) AggregatedTopN {
 	if day < 0 || day >= 31 || hour < 0 || hour >= 24 {
 		return AggregatedTopN{}
 	}
 
-	return r.aggregateHour(&r.GetCurrentMonth()[day][hour])
+	currentMonth := r.GetCurrentMonth()
+
+	return r.aggregateHour((*currentMonth).GetMetric(day, hour))
 }
 
-func (r *Registry) PreviousMonthAggregateTopNForHour(day, hour int8) AggregatedTopN {
+func (r *Registry[T, TData]) PreviousMonthAggregateTopNForHour(day, hour int8) AggregatedTopN {
 	if day < 0 || day >= 31 || hour < 0 || hour >= 24 {
 		return AggregatedTopN{}
 	}
 
-	return r.aggregateHour(&r.GetPreviousMonth()[day][hour])
+	previousMonth := r.Ring.GetPreviousSlot()
+
+	return r.aggregateHour((*previousMonth).GetMetric(day, hour))
 }
 
-func (r *Registry) PreviousMonthTotalRecords() uint32 {
+func (r *Registry[T, TData]) PreviousMonthTotalRecords() uint32 {
 	var result uint32
+
+	previousMonth := r.Ring.GetPreviousSlot()
 
 	for day := range int8(31) {
 		for hour := range int8(24) {
-			m := &r.GetPreviousMonth()[day][hour]
+			m := (*previousMonth).GetMetric(day, hour)
 
-			result = result + m.RecordsPerPeriod.Load()
+			result = result + (*m).GetRecordsPerPeriod()
 		}
 	}
 
 	return result
 }
 
-func (r *Registry) PreviousMonthTotalRecordsForDay(day int8) uint32 {
+func (r *Registry[T, TMetric]) PreviousMonthTotalRecordsForDay(day int8) uint32 {
+	if day < 0 || day >= 31 {
+		return 0
+	}
+
+	previousSlot := r.Ring.GetPreviousSlot()
+
 	var result uint32
 
-	if day < 0 || day >= 31 {
-		return result
-	}
-
-	for hour := range int8(24) {
-		m := &r.GetPreviousMonth()[day][hour]
-
-		result = result + m.RecordsPerPeriod.Load()
-	}
+	r.ForEachMetric(
+		previousSlot,
+		func(d int8, h int8, m *TMetric) {
+			if d == day {
+				result = result + (*m).GetRecordsPerPeriod()
+			}
+		},
+	)
 
 	return result
 }
 
-func (r *Registry) CurrentMonthTotalRecords() uint32 {
+func (r *Registry[T, TData]) CurrentMonthTotalRecords() uint32 {
 	var result uint32
+
+	currentSlot := r.GetCurrentMonth()
 
 	for day := range int8(31) {
 		for hour := range int8(24) {
-			m := &r.GetCurrentMonth()[day][hour]
+			m := (*currentSlot).GetMetric(day, hour)
 
-			result = result + m.RecordsPerPeriod.Load()
+			result = result + (*m).GetRecordsPerPeriod()
 		}
 	}
 
 	return result
 }
 
-func (r *Registry) CurrentMonthTotalRecordsForDay(day int8) uint32 {
+func (r *Registry[T, TData]) CurrentMonthTotalRecordsForDay(day int8) uint32 {
 	var result uint32
 
 	if day < 0 || day >= 31 {
 		return result
 	}
 
-	for hour := range int8(24) {
-		m := &r.GetCurrentMonth()[day][hour]
+	currentSlot := r.GetCurrentMonth()
 
-		result = result + m.RecordsPerPeriod.Load()
+	for hour := range int8(24) {
+		m := (*currentSlot).GetMetric(day, hour)
+
+		result = result + (*m).GetRecordsPerPeriod()
 	}
 
 	return result
 }
 
-func (*Registry) mergeHourInto(m *MetricActive, dst *AggregatedTopN) {
-	if m.RecordsPerPeriod.Load() == 0 {
+func (r *Registry[T, TData]) mergeHourInto(m *TData, dst *AggregatedTopN) {
+	if (*m).GetRecordsPerPeriod() == 0 {
 		return
 	}
 
@@ -109,25 +124,27 @@ func (*Registry) mergeHourInto(m *MetricActive, dst *AggregatedTopN) {
 	dst.Browsers = dst.Browsers.MergeActive(&m.TopBrowsers)
 }
 
-func (r *Registry) PreviousMonthAggregateTopNForDay(day int8) AggregatedTopN {
+func (r *Registry[T, Data]) PreviousMonthAggregateTopNForDay(day int8) AggregatedTopN {
 	var result AggregatedTopN
 
 	if day < 0 || day >= 31 {
 		return result
 	}
 
-	for hour := range 24 {
-		r.mergeHourInto(&r.GetPreviousMonth()[day][hour], &result)
+	previousSlot := r.Ring.GetPreviousSlot()
+
+	for hour := range int8(24) {
+		r.mergeHourInto((*previousSlot).GetMetric(day, hour), &result)
 	}
 
 	return result
 }
 
-func (r *Registry) PreviousMonthAggregateTopN() AggregatedTopN {
+func (r *Registry[T, Data]) PreviousMonthAggregateTopN() AggregatedTopN {
 	var result AggregatedTopN
 
 	r.PreviousMonthForEach(
-		func(_, _ int8, m *MetricActive) {
+		func(_, _ int8, m *Data) {
 			r.mergeHourInto(m, &result)
 		},
 	)
@@ -135,20 +152,22 @@ func (r *Registry) PreviousMonthAggregateTopN() AggregatedTopN {
 	return result
 }
 
-func (r *Registry) CurrentMonthAggregateTopNForDay(day int8) AggregatedTopN {
+func (r *Registry[T, Data]) CurrentMonthAggregateTopNForDay(day int8) AggregatedTopN {
 	var result AggregatedTopN
 	if day < 0 || day >= 31 {
 		return result
 	}
 
-	for hour := range 24 {
-		r.mergeHourInto(&r.GetCurrentMonth()[day][hour], &result)
+	currentSlot := r.GetCurrentMonth()
+
+	for hour := range int8(24) {
+		r.mergeHourInto((*currentSlot).GetMetric(day, hour), &result)
 	}
 
 	return result
 }
 
-func (r *Registry) CurrentMonthAggregateTopN() AggregatedTopN {
+func (r *Registry[T, Data]) CurrentMonthAggregateTopN() AggregatedTopN {
 	var result AggregatedTopN
 
 	r.CurrentMonthForEach(
@@ -166,21 +185,23 @@ func (r *Registry) CurrentMonthAggregateTopN() AggregatedTopN {
 	return result
 }
 
-func (r *Registry) HistoryAggregateTopNForDay(month, day int8) AggregatedTopN {
+func (r *Registry[T, TMetric]) HistoryAggregateTopNForDay(month, day int8) AggregatedTopN {
 	var result AggregatedTopN
 
 	if month < 0 || month >= 7 || day < 0 || day >= 31 {
 		return result
 	}
 
-	for hour := range 24 {
-		m := &r.History[month][day][hour]
+	slot := &r.Ring.slots[month]
 
-		if m.RecordsPerPeriod == 0 {
+	for hour := int8(0); hour < 24; hour++ {
+		m := (*slot).GetMetric(day, hour)
+
+		if (*m).GetRecordsPerPeriod() == 0 {
 			continue
 		}
 
-		result.IPs = result.IPs.MergeArchived(m.TopIPs)
+		result.IPs = result.IPs.MergeActive(m.TopIPs)
 		result.ASN = result.ASN.MergeArchived(m.TopASN)
 		result.Countries = result.Countries.MergeArchived(m.TopCountries)
 		result.Cities = result.Cities.MergeArchived(m.TopCities)
@@ -192,18 +213,20 @@ func (r *Registry) HistoryAggregateTopNForDay(month, day int8) AggregatedTopN {
 	return result
 }
 
-func (r *Registry) HistoryAggregateTopNForMonth(month int8) AggregatedTopN {
+func (r *Registry[T, TMetric]) HistoryAggregateTopNForMonth(month int8) AggregatedTopN {
 	var result AggregatedTopN
 
 	if month < 0 || month >= 7 {
 		return result
 	}
 
-	for day := range 31 {
-		for hour := range 24 {
-			m := &r.History[month][day][hour]
+	slot := &r.Ring.slots[month]
 
-			if m.RecordsPerPeriod == 0 {
+	for day := int8(0); day < 31; day++ {
+		for hour := int8(0); hour < 24; hour++ {
+			m := (*slot).GetMetric(day, hour)
+
+			if (*m).GetRecordsPerPeriod() == 0 {
 				continue
 			}
 
@@ -220,16 +243,18 @@ func (r *Registry) HistoryAggregateTopNForMonth(month int8) AggregatedTopN {
 	return result
 }
 
-func (r *Registry) HistoryAggregateTopNForHour(month, day, hour int8) AggregatedTopN {
+func (r *Registry[T, TMetric]) HistoryAggregateTopNForHour(month, day, hour int8) AggregatedTopN {
 	var result AggregatedTopN
 
 	if month < 0 || month >= 7 || day < 0 || day >= 31 || hour < 0 || hour >= 24 {
 		return result
 	}
 
-	m := &r.History[month][day][hour]
+	slot := &r.Ring.slots[month]
 
-	if m.RecordsPerPeriod == 0 {
+	m := (*slot).GetMetric(day, hour)
+
+	if (*m).GetRecordsPerPeriod() == 0 {
 		return result
 	}
 
@@ -244,15 +269,17 @@ func (r *Registry) HistoryAggregateTopNForHour(month, day, hour int8) Aggregated
 	return result
 }
 
-func (r *Registry) HistoryAggregateTopN() AggregatedTopN {
+func (r *Registry[T, TMetric]) HistoryAggregateTopN() AggregatedTopN {
 	var result AggregatedTopN
 
-	for month := range 7 {
-		for day := range 31 {
-			for hour := range 24 {
-				m := &r.History[month][day][hour]
+	for month := int8(0); month < 7; month++ {
+		slot := &r.Ring.slots[month]
 
-				if m.RecordsPerPeriod == 0 {
+		for day := int8(0); day < 31; day++ {
+			for hour := int8(0); hour < 24; hour++ {
+				m := (*slot).GetMetric(day, hour)
+
+				if (*m).GetRecordsPerPeriod() == 0 {
 					continue
 				}
 
@@ -270,13 +297,17 @@ func (r *Registry) HistoryAggregateTopN() AggregatedTopN {
 	return result
 }
 
-func (r *Registry) HistoryTotalRecords() uint32 {
+func (r *Registry[T, TMetric]) HistoryTotalRecords() uint32 {
 	var result uint32
 
-	for month := range 7 {
-		for day := range 31 {
-			for hour := range 24 {
-				result = result + r.History[month][day][hour].RecordsPerPeriod
+	for month := int8(0); month < 7; month++ {
+		slot := &r.Ring.slots[month]
+
+		for day := int8(0); day < 31; day++ {
+			for hour := int8(0); hour < 24; hour++ {
+				m := (*slot).GetMetric(day, hour)
+
+				result = result + (*m).GetRecordsPerPeriod()
 			}
 		}
 	}
@@ -284,40 +315,52 @@ func (r *Registry) HistoryTotalRecords() uint32 {
 	return result
 }
 
-func (r *Registry) HistoryTotalRecordsForMonth(month int8) uint32 {
-	var result uint32
-
+func (r *Registry[T, TMetric]) HistoryTotalRecordsForMonth(month int8) uint32 {
 	if month < 0 || month >= 7 {
-		return result
+		return 0
 	}
 
-	for day := range 31 {
-		for hour := range 24 {
-			result = result + r.History[month][day][hour].RecordsPerPeriod
+	slot := &r.Ring.slots[month]
+
+	var result uint32
+
+	for day := int8(0); day < 31; day++ {
+		for hour := int8(0); hour < 24; hour++ {
+			m := (*slot).GetMetric(day, hour)
+
+			result = result + (*m).GetRecordsPerPeriod()
 		}
 	}
 
 	return result
 }
 
-func (r *Registry) HistoryTotalRecordsForDay(month, day int8) uint32 {
-	var result uint32
-
+func (r *Registry[T, TMetric]) HistoryTotalRecordsForDay(month, day int8) uint32 {
 	if month < 0 || month >= 7 || day < 0 || day >= 31 {
-		return result
+		return 0
 	}
 
-	for hour := range 24 {
-		result = result + r.History[month][day][hour].RecordsPerPeriod
+	slot := &r.Ring.slots[month]
+
+	var result uint32
+
+	for hour := int8(0); hour < 24; hour++ {
+		m := (*slot).GetMetric(day, hour)
+
+		result = result + (*m).GetRecordsPerPeriod()
 	}
 
 	return result
 }
 
-func (r *Registry) HistoryTotalRecordsForHour(month, day, hour int8) uint32 {
+func (r *Registry[T, TMetric]) HistoryTotalRecordsForHour(month, day, hour int8) uint32 {
 	if month < 0 || month >= 7 || day < 0 || day >= 31 || hour < 0 || hour >= 24 {
 		return 0
 	}
 
-	return r.History[month][day][hour].RecordsPerPeriod
+	slot := &r.Ring.slots[month]
+
+	m := (*slot).GetMetric(day, hour)
+
+	return (*m).GetRecordsPerPeriod()
 }

@@ -15,6 +15,10 @@ type MetricActive struct {
 	readOnly         atomic.Bool
 }
 
+func (m *MetricActive) GetRecordsPerPeriod() uint32 {
+	return m.RecordsPerPeriod.Load()
+}
+
 func (m *MetricActive) IsZero() bool {
 	// 1. Check the atomic counter first (usually fastest to rule out)
 	if m.RecordsPerPeriod.Load() != 0 {
@@ -35,19 +39,6 @@ func (m *MetricActive) IsZero() bool {
 	return true
 }
 
-func (m *MetricActive) AsArchived() MetricArchived {
-	return MetricArchived{
-		RecordsPerPeriod:    m.RecordsPerPeriod.Load(),
-		TopIPs:              m.TopIPs.AsMetaArchive(),
-		TopASN:              m.TopASN.AsMetaArchive(),
-		TopCountries:        m.TopCountries.AsMetaArchive(),
-		TopCities:           m.TopCities.AsMetaArchive(),
-		TopURL:              m.TopURL.AsMetaArchive(),
-		TopOperatingSystems: m.TopOperatingSystems.AsMetaArchive(),
-		TopBrowsers:         m.TopBrowsers.AsMetaArchive(),
-	}
-}
-
 func (m *MetricActive) DeepCopyInto(dst *MetricActive) {
 	m.readOnly.Store(true)
 
@@ -62,16 +53,4 @@ func (m *MetricActive) DeepCopyInto(dst *MetricActive) {
 	dst.RecordsPerPeriod.Store(m.RecordsPerPeriod.Load())
 
 	m.readOnly.Store(false)
-}
-
-type MetricArchived struct {
-	TopIPs              MetaArchived[string]
-	TopASN              MetaArchived[string]
-	TopCountries        MetaArchived[string]
-	TopCities           MetaArchived[string]
-	TopURL              MetaArchived[string]
-	TopOperatingSystems MetaArchived[OS]
-	TopBrowsers         MetaArchived[Browser]
-
-	RecordsPerPeriod uint32
 }

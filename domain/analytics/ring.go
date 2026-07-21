@@ -33,25 +33,64 @@ import "sync/atomic"
 // These invariants make the Ring a lock-free, time-partitioned structure with
 // deterministic ingestion and query behavior.
 
-type Ingestable[TData any] interface {
-	Ingest(TData)
+type TMetric interface {
+	GetRecordsPerPeriod() uint32
 }
 
-type ring[T Ingestable[TData], TData any] struct {
+type Ingestable[Metric TMetric] interface {
+	Ingest(Metric)
+	GetMetric(day int8, hour int8) *Metric
+}
+
+type ring[T Ingestable[Data], Data TMetric] struct {
 	slots   [7]T
 	current atomic.Int32
 }
 
-func newRing[T Ingestable[TData], TData any]() *ring[T, TData] {
-	var r ring[T, TData]
+func newRing[T Ingestable[Data], Data TMetric]() *ring[T, Data] {
+	var r ring[T, Data]
 
 	r.current.Store(0)
 
 	return &r
 }
 
-func NewRegistryRing[T Ingestable[TData], TData any](dstTimestamps ...int64) *RegistryRing[T, TData] {
-	result := RegistryRing[T, TData]{
+func (r *ring[T, Data]) ZeroSlot(i int32) {
+	var zero T
+
+	r.slots[i] = zero
+}
+
+func (r *ring[T, Data]) Advance() {
+	next := (r.current.Load() + 1) % int32(len(r.slots))
+
+	r.ZeroSlot(next)
+
+	r.current.Store(next)
+}
+
+func (r *ring[T, Data]) GetActiveSlot() *T {
+	return &r.slots[r.current.Load()]
+}
+
+func (r *ring[T, Data]) GetPreviousSlot() *T {
+	curr := r.current.Load()
+	prev := (curr + int32(len(r.slots)) - 1) % int32(len(r.slots))
+
+	return &r.slots[prev]
+}
+
+type Registry[T Ingestable[Data], Data TMetric] struct {
+	Ring *ring[T, Data]
+
+	TimestampDSTWinter int64
+	TimestampDSTSpring int64
+
+	CalendarMonthCurrentNumber int8 // no need for year as we keep only 7 months.
+}
+
+func NewRegistry[T Ingestable[Data], Data TMetric](dstTimestamps ...int64) *Registry[T, Data] {
+	result := Registry[T, Data]{
 		Ring: newRing[T](),
 	}
 
@@ -63,35 +102,18 @@ func NewRegistryRing[T Ingestable[TData], TData any](dstTimestamps ...int64) *Re
 	return &result
 }
 
-func (r *ring[T, TData]) ZeroSlot(i int32) {
-	var zero T
-
-	r.slots[i] = zero
-}
-
-func (r *ring[T, TData]) Advance() {
-	next := (r.current.Load() + 1) % int32(len(r.slots))
-
-	r.ZeroSlot(next)
-
-	r.current.Store(next)
-}
-
-func (r *ring[T, TData]) GetActiveSlot() *T {
-	return &r.slots[r.current.Load()]
-}
-
-type RegistryRing[T Ingestable[TData], TData any] struct {
-	Ring *ring[T, TData]
-
-	TimestampDSTWinter int64
-	TimestampDSTSpring int64
-
-	CalendarMonthCurrentNumber int8 // no need for year as we keep only 7 months.
-}
-
-func (rr *RegistryRing[T, TData]) Ingest(data TData) {
-	slot := rr.Ring.GetActiveSlot()
+func (r *Registry[T, Data]) Ingest(data Data) {
+	slot := r.Ring.GetActiveSlot()
 
 	(*slot).Ingest(data)
+}
+
+func (r *Registry[T, Data]) ForEachMetric(slot *T, fn func(day int8, hour int8, m *Data)) {
+	for day := int8(0); day < 31; day++ {
+		for hour := int8(0); hour < 24; hour++ {
+			m := (*slot).GetMetric(day, hour)
+
+			fn(day, hour, m)
+		}
+	}
 }
