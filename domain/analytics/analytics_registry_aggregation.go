@@ -1,6 +1,6 @@
 package analytics
 
-func (r *Registry[T, TData]) aggregateHour(m *TData) AggregatedTopN {
+func (r *Registry[T, TData]) aggregateHour(m *TMetric) AggregatedTopN {
 	var result AggregatedTopN
 
 	if (*m).GetRecordsPerPeriod() == 0 {
@@ -110,7 +110,7 @@ func (r *Registry[T, TData]) CurrentMonthTotalRecordsForDay(day int8) uint32 {
 	return result
 }
 
-func (r *Registry[T, TData]) mergeHourInto(m *TData, dst *AggregatedTopN) {
+func (r *Registry[T, TData]) mergeHourInto(m *TMetric, dst *AggregatedTopN) {
 	if (*m).GetRecordsPerPeriod() == 0 {
 		return
 	}
@@ -140,11 +140,11 @@ func (r *Registry[T, Data]) PreviousMonthAggregateTopNForDay(day int8) Aggregate
 	return result
 }
 
-func (r *Registry[T, Data]) PreviousMonthAggregateTopN() AggregatedTopN {
+func (r *Registry[T, D]) PreviousMonthAggregateTopN() AggregatedTopN {
 	var result AggregatedTopN
 
 	r.PreviousMonthForEach(
-		func(_, _ int8, m *Data) {
+		func(_, _ int8, m *D) {
 			r.mergeHourInto(m, &result)
 		},
 	)

@@ -37,18 +37,18 @@ type TMetric interface {
 	GetRecordsPerPeriod() uint32
 }
 
-type Ingestable[Metric TMetric] interface {
-	Ingest(Metric)
-	GetMetric(day int8, hour int8) *Metric
+type Ingestable[M TMetric] interface {
+	Ingest(M)
+	GetMetric(day int8, hour int8) *TMetric
 }
 
-type ring[T Ingestable[Data], Data TMetric] struct {
+type ring[T Ingestable[TMetric], D TMetric] struct {
 	slots   [7]T
 	current atomic.Int32
 }
 
-func newRing[T Ingestable[Data], Data TMetric]() *ring[T, Data] {
-	var r ring[T, Data]
+func newRing[T Ingestable[TMetric], D TMetric]() *ring[T, D] {
+	var r ring[T, D]
 
 	r.current.Store(0)
 
@@ -80,8 +80,8 @@ func (r *ring[T, Data]) GetPreviousSlot() *T {
 	return &r.slots[prev]
 }
 
-type Registry[T Ingestable[Data], Data TMetric] struct {
-	Ring *ring[T, Data]
+type Registry[T Ingestable[TMetric], D TMetric] struct {
+	Ring *ring[T, D]
 
 	TimestampDSTWinter int64
 	TimestampDSTSpring int64
@@ -89,9 +89,9 @@ type Registry[T Ingestable[Data], Data TMetric] struct {
 	CalendarMonthCurrentNumber int8 // no need for year as we keep only 7 months.
 }
 
-func NewRegistry[T Ingestable[Data], Data TMetric](dstTimestamps ...int64) *Registry[T, Data] {
-	result := Registry[T, Data]{
-		Ring: newRing[T](),
+func NewRegistry[T Ingestable[TMetric], D TMetric](dstTimestamps ...int64) *Registry[T, D] {
+	result := Registry[T, D]{
+		Ring: newRing[T, D](),
 	}
 
 	if len(dstTimestamps) == 2 {
@@ -108,7 +108,7 @@ func (r *Registry[T, Data]) Ingest(data Data) {
 	(*slot).Ingest(data)
 }
 
-func (r *Registry[T, Data]) ForEachMetric(slot *T, fn func(day int8, hour int8, m *Data)) {
+func (r *Registry[T, D]) ForEachMetric(slot *T, fn func(day int8, hour int8, m *TMetric)) {
 	for day := int8(0); day < 31; day++ {
 		for hour := int8(0); hour < 24; hour++ {
 			m := (*slot).GetMetric(day, hour)

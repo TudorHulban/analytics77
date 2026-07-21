@@ -50,7 +50,7 @@ import (
 //
 // No time mocking, no abstraction layers, no background rollover.
 // Month transitions are strictly event-driven.
-func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
+func (dc *DataCenter[T, D]) AddEvents(events ...*shared.ParamsAddEvent) []error {
 	if len(events) == 0 {
 		return nil
 	}
@@ -93,7 +93,7 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 
 		registrySite, exists := dc.data[site]
 		if !exists {
-			registrySite = analytics.NewRegistry()
+			registrySite = analytics.NewRegistry[T, D]()
 			dc.data[site] = registrySite
 		}
 

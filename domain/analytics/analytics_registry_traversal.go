@@ -1,6 +1,6 @@
 package analytics
 
-func (r *Registry[T, Data]) PreviousMonthForEach(action func(day, hour int8, m *TData)) {
+func (r *Registry[T, D]) PreviousMonthForEach(action func(day, hour int8, m *TMetric)) {
 	if action == nil {
 		return
 	}
@@ -18,7 +18,7 @@ func (r *Registry[T, Data]) PreviousMonthForEach(action func(day, hour int8, m *
 	}
 }
 
-func (r *Registry[T, Data]) CurrentMonthForEach(action func(day, hour int8, m *TData)) {
+func (r *Registry[T, D]) CurrentMonthForEach(action func(day, hour int8, m *TMetric)) {
 	if action == nil {
 		return
 	}
@@ -36,7 +36,7 @@ func (r *Registry[T, Data]) CurrentMonthForEach(action func(day, hour int8, m *T
 	}
 }
 
-func (r *Registry[T, Data]) HistoryForEach(action func(monthIndex, day, hour int8, m *TData)) {
+func (r *Registry[T, Data]) HistoryForEach(action func(monthIndex, day, hour int8, m *TMetric)) {
 	if action == nil {
 		return
 	}

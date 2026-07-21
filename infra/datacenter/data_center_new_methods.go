@@ -14,7 +14,7 @@ import (
 // This method uses a read lock because it does not mutate the DataCenter.
 // The caller must treat the returned pointer as read‑only unless they
 // explicitly coordinate ingestion through AddEvents.
-func (dc *DataCenter) GetRegistry(site Site) *analytics.Registry {
+func (dc *DataCenter[T, D]) GetRegistry(site Site) *analytics.Registry[T, D] {
 	dc.mu.RLock()
 
 	result := dc.data[site]
@@ -27,7 +27,7 @@ func (dc *DataCenter) GetRegistry(site Site) *analytics.Registry {
 // ListSites returns a snapshot of all sites currently present in the DataCenter.
 // The returned slice is a copy of the map keys and is safe for the caller to use.
 // This method acquires a read lock and does not mutate the DataCenter.
-func (dc *DataCenter) GetSiteNames() []Site {
+func (dc *DataCenter[T, D]) GetSiteNames() []Site {
 	dc.mu.RLock()
 
 	result := make([]Site, 0, len(dc.data))
@@ -40,19 +40,9 @@ func (dc *DataCenter) GetSiteNames() []Site {
 	return result
 }
 
-func (dc *DataCenter) Rollover() {
-	dc.mu.Lock()
-
-	for _, registry := range dc.data {
-		registry.Rollover()
-	}
-
-	dc.mu.Unlock()
-}
-
 // Snapshot writes snapshots of all registries into w.
 // It acquires a read lock and delegates snapshotting to each Registry.
-func (dc *DataCenter) Snapshot(w io.Writer) error {
+func (dc *DataCenter[T, D]) Snapshot(w io.Writer) error {
 	dc.mu.RLock()
 	defer dc.mu.RUnlock()
 
