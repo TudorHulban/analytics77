@@ -10,10 +10,10 @@ func TestPreviousMonthTotalRecords(t *testing.T) {
 	r := NewRegistry()
 
 	// Populate some data
-	r.GetPreviousMonth()[0][0].RecordsPerPeriod.Store(5)
-	r.GetPreviousMonth()[0][1].RecordsPerPeriod.Store(3)
-	r.GetPreviousMonth()[10][5].RecordsPerPeriod.Store(12)
-	r.GetPreviousMonth()[30][23].RecordsPerPeriod.Store(20)
+	r.GetPreviousSlot()[0][0].RecordsPerPeriod.Store(5)
+	r.GetPreviousSlot()[0][1].RecordsPerPeriod.Store(3)
+	r.GetPreviousSlot()[10][5].RecordsPerPeriod.Store(12)
+	r.GetPreviousSlot()[30][23].RecordsPerPeriod.Store(20)
 
 	got := r.PreviousMonthTotalRecords()
 
@@ -33,9 +33,9 @@ func TestPreviousMonthTotalRecordsForDay(t *testing.T) {
 	r := NewRegistry()
 
 	// day 12: hours 0, 3, 7 have data
-	r.GetPreviousMonth()[12][0].RecordsPerPeriod.Store(5)
-	r.GetPreviousMonth()[12][3].RecordsPerPeriod.Store(8)
-	r.GetPreviousMonth()[12][7].RecordsPerPeriod.Store(20)
+	r.GetPreviousSlot()[12][0].RecordsPerPeriod.Store(5)
+	r.GetPreviousSlot()[12][3].RecordsPerPeriod.Store(8)
+	r.GetPreviousSlot()[12][7].RecordsPerPeriod.Store(20)
 
 	got := r.PreviousMonthTotalRecordsForDay(12)
 
@@ -55,9 +55,9 @@ func TestCurrentMonthTotalRecords(t *testing.T) {
 	r := NewRegistry()
 
 	// Populate some data
-	r.GetCurrentMonth()[0][0].RecordsPerPeriod.Store(7)
-	r.GetCurrentMonth()[5][12].RecordsPerPeriod.Store(13)
-	r.GetCurrentMonth()[30][23].RecordsPerPeriod.Store(2)
+	r.GetActiveSlot()[0][0].RecordsPerPeriod.Store(7)
+	r.GetActiveSlot()[5][12].RecordsPerPeriod.Store(13)
+	r.GetActiveSlot()[30][23].RecordsPerPeriod.Store(2)
 
 	got := r.CurrentMonthTotalRecords()
 
@@ -77,9 +77,9 @@ func TestCurrentMonthTotalRecordsForDay(t *testing.T) {
 	r := NewRegistry()
 
 	// day 8: hours 2, 11, 20 have data
-	r.GetCurrentMonth()[8][2].RecordsPerPeriod.Store(4)
-	r.GetCurrentMonth()[8][11].RecordsPerPeriod.Store(9)
-	r.GetCurrentMonth()[8][20].RecordsPerPeriod.Store(16)
+	r.GetActiveSlot()[8][2].RecordsPerPeriod.Store(4)
+	r.GetActiveSlot()[8][11].RecordsPerPeriod.Store(9)
+	r.GetActiveSlot()[8][20].RecordsPerPeriod.Store(16)
 
 	got := r.CurrentMonthTotalRecordsForDay(8)
 
@@ -99,20 +99,20 @@ func TestPreviousMonthAggregateTopN(t *testing.T) {
 	r := NewRegistry()
 
 	// Bucket 1
-	r.GetPreviousMonth()[0][0].RecordsPerPeriod.Store(1)
-	r.GetPreviousMonth()[0][0].TopIPs.Increment("1.1.1.1", 3)
-	r.GetPreviousMonth()[0][0].TopCountries.Increment("RO", 2)
+	r.GetPreviousSlot()[0][0].RecordsPerPeriod.Store(1)
+	r.GetPreviousSlot()[0][0].TopIPs.Increment("1.1.1.1", 3)
+	r.GetPreviousSlot()[0][0].TopCountries.Increment("RO", 2)
 
 	// Bucket 2
-	r.GetPreviousMonth()[5][12].RecordsPerPeriod.Store(1)
-	r.GetPreviousMonth()[5][12].TopIPs.Increment("1.1.1.1", 7)
-	r.GetPreviousMonth()[5][12].TopIPs.Increment("8.8.8.8", 4)
-	r.GetPreviousMonth()[5][12].TopCountries.Increment("US", 5)
+	r.GetPreviousSlot()[5][12].RecordsPerPeriod.Store(1)
+	r.GetPreviousSlot()[5][12].TopIPs.Increment("1.1.1.1", 7)
+	r.GetPreviousSlot()[5][12].TopIPs.Increment("8.8.8.8", 4)
+	r.GetPreviousSlot()[5][12].TopCountries.Increment("US", 5)
 
 	// Bucket 3
-	r.GetPreviousMonth()[30][23].RecordsPerPeriod.Store(1)
-	r.GetPreviousMonth()[30][23].TopCountries.Increment("RO", 1)
-	r.GetPreviousMonth()[30][23].TopASN.Increment("AS1234", 9)
+	r.GetPreviousSlot()[30][23].RecordsPerPeriod.Store(1)
+	r.GetPreviousSlot()[30][23].TopCountries.Increment("RO", 1)
+	r.GetPreviousSlot()[30][23].TopASN.Increment("AS1234", 9)
 
 	agg := r.PreviousMonthAggregateTopN()
 
@@ -132,20 +132,20 @@ func TestCurrentMonthAggregateTopN(t *testing.T) {
 	r := NewRegistry()
 
 	// Bucket 1
-	r.GetCurrentMonth()[0][0].RecordsPerPeriod.Store(1)
-	r.GetCurrentMonth()[0][0].TopIPs.Increment("1.1.1.1", 3)
-	r.GetCurrentMonth()[0][0].TopCountries.Increment("RO", 2)
+	r.GetActiveSlot()[0][0].RecordsPerPeriod.Store(1)
+	r.GetActiveSlot()[0][0].TopIPs.Increment("1.1.1.1", 3)
+	r.GetActiveSlot()[0][0].TopCountries.Increment("RO", 2)
 
 	// Bucket 2
-	r.GetCurrentMonth()[5][12].RecordsPerPeriod.Store(1)
-	r.GetCurrentMonth()[5][12].TopIPs.Increment("1.1.1.1", 7)
-	r.GetCurrentMonth()[5][12].TopIPs.Increment("8.8.8.8", 4)
-	r.GetCurrentMonth()[5][12].TopCountries.Increment("US", 5)
+	r.GetActiveSlot()[5][12].RecordsPerPeriod.Store(1)
+	r.GetActiveSlot()[5][12].TopIPs.Increment("1.1.1.1", 7)
+	r.GetActiveSlot()[5][12].TopIPs.Increment("8.8.8.8", 4)
+	r.GetActiveSlot()[5][12].TopCountries.Increment("US", 5)
 
 	// Bucket 3
-	r.GetCurrentMonth()[30][23].RecordsPerPeriod.Store(1)
-	r.GetCurrentMonth()[30][23].TopCountries.Increment("RO", 1)
-	r.GetCurrentMonth()[30][23].TopASN.Increment("AS1234", 9)
+	r.GetActiveSlot()[30][23].RecordsPerPeriod.Store(1)
+	r.GetActiveSlot()[30][23].TopCountries.Increment("RO", 1)
+	r.GetActiveSlot()[30][23].TopASN.Increment("AS1234", 9)
 
 	agg := r.CurrentMonthAggregateTopN()
 

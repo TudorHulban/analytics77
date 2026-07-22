@@ -13,18 +13,18 @@ type Site string
 
 // Stores in UTC times.
 // Converts only at the boundaries.
-type DataCenter[T analytics.Ingestable[analytics.TMetric], D analytics.TMetric] struct {
-	data map[Site]*analytics.Registry[T, D]
+type DataCenter struct {
+	data map[Site]*analytics.Registry
 	mu   sync.RWMutex
 }
 
-func NewDataCenter[T analytics.Ingestable[analytics.TMetric], D analytics.TMetric]() *DataCenter[T, D] {
-	return &DataCenter[T, D]{
-		data: map[Site]*analytics.Registry[T, D]{},
+func NewDataCenter() *DataCenter {
+	return &DataCenter{
+		data: map[Site]*analytics.Registry{},
 	}
 }
 
-func (dc *DataCenter[T, D]) String() string {
+func (dc *DataCenter) String() string {
 	dc.mu.RLock()
 	defer dc.mu.RUnlock()
 

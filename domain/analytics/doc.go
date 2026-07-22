@@ -140,3 +140,34 @@ Do not use it for:
     - dynamic schemas
     - general‑purpose BI workloads
 */
+
+// Ring invariants:
+//
+// 1. The ring contains N fixed slots. Slots are never added, removed, or reordered.
+//    Their memory addresses remain stable for the lifetime of the Ring.
+//
+// 2. Exactly one slot is "active" at any time. The active slot index is stored in
+//    r.current and read atomically.
+//
+// 3. Ingestion writes ONLY to the active slot. No ingestion touches any other slot.
+//
+// 4. All non-active slots are treated as read-only history. Queries may read any
+//    history slot, but MUST NOT read the active slot unless explicitly performing
+//    a "current" query.
+//
+// 5. Switching the active slot is done by atomically updating r.current. No other
+//    synchronization is required. Slot switching never races with ingestion because
+//    ingestion always reads r.current before writing.
+//
+// 6. A slot becomes the new active slot only after it has been fully zeroed or
+//    reset. Zeroing MUST occur before the atomic index update.
+//
+// 7. No method may mix reads from the active slot and history slots. Query semantics
+//    must be strictly either "current" or "history", never both.
+//
+// 8. Slots store values (not pointers). This guarantees stable memory layout,
+//    eliminates pointer races, improves cache locality, and prevents accidental
+//    slot replacement.
+//
+// These invariants make the Ring a lock-free, time-partitioned structure with
+// deterministic ingestion and query behavior.

@@ -32,38 +32,25 @@ func monthActiveString(label string, month []analytics.DayActive, b *strings.Bui
 	}
 }
 
-func monthArchivedString(label string, month []analytics.DayArchived, b *strings.Builder) {
-	for ixDay := range month {
-		day := &month[ixDay] // pointer, no copy
-
-		for ixHour := range day {
-			m := &day[ixHour] // pointer, no copy
-
-			noRecords := m.RecordsPerPeriod
-			if noRecords == 0 {
-				continue
-			}
-
-			fmt.Fprintf(
-				b,
-				"  %-10s day%02d hour%02d  records:%d\n",
-
-				label,
-				ixDay,
-				ixHour,
-				noRecords,
-			)
-		}
-	}
-}
-
 func registryString(r *analytics.Registry, b *strings.Builder) {
-	monthActiveString("current", r.GetCurrentMonth()[:], b)
-	monthActiveString("previous", r.GetPreviousMonth()[:], b)
+	monthActiveString("current", r.GetActiveSlot()[:], b)
+	monthActiveString("previous", r.GetPreviousSlot()[:], b)
 
-	for ix, month := range r.History {
-		monthArchivedString(
-			fmt.Sprintf("history[%d]", ix),
+	// archived months (the remaining 5 slots)
+	for ix := 0; ix < 7; ix++ {
+		month := &r.Slots[ix]
+
+		// skip current and previous
+		if ix == int(r.CurrentSlot.Load()) {
+			continue
+		}
+
+		if ix == int((r.CurrentSlot.Load()+7-1)%7) {
+			continue
+		}
+
+		monthActiveString(
+			fmt.Sprintf("slot[%d]", ix),
 			month[:],
 			b,
 		)

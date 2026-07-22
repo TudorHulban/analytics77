@@ -3,13 +3,13 @@ package analytics
 import "strings"
 
 type AggregatedTopN struct {
-	IPs       MetaArchived[string]
-	ASN       MetaArchived[string]
-	Countries MetaArchived[string]
-	Cities    MetaArchived[string]
-	URL       MetaArchived[string]
-	OS        MetaArchived[OS]
-	Browsers  MetaArchived[Browser]
+	IPs       MetaActive[string]
+	ASN       MetaActive[string]
+	Countries MetaActive[string]
+	Cities    MetaActive[string]
+	URL       MetaActive[string]
+	OS        MetaActive[OS]
+	Browsers  MetaActive[Browser]
 }
 
 func (a AggregatedTopN) String() string {

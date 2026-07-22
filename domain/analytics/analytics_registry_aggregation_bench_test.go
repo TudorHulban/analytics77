@@ -8,7 +8,9 @@ func BenchmarkPreviousMonthAggregateTopN(b *testing.B) {
 
 	for day := range int8(31) {
 		for hour := range int8(24) {
-			m := &r.GetPreviousMonth()[day][hour]
+			previousSlot := r.GetPreviousSlot()
+
+			m := (*previousSlot).GetMetric(day, hour)
 			m.RecordsPerPeriod.Store(1)
 
 			m.TopIPs.Increment("1.1.1.1", uint32(day+1))
@@ -36,7 +38,9 @@ func BenchmarkCurrentMonthAggregateTopN(b *testing.B) {
 
 	for day := range int8(31) {
 		for hour := range int8(24) {
-			m := &r.GetCurrentMonth()[day][hour]
+			currentSlot := r.GetActiveSlot()
+
+			m := (*currentSlot).GetMetric(day, hour)
 			m.RecordsPerPeriod.Store(1)
 
 			m.TopIPs.Increment("1.1.1.1", uint32(day+1))
@@ -62,20 +66,30 @@ func BenchmarkHistoryAggregateTopN(b *testing.B) {
 	// 1. Prepare registry with synthetic data
 	r := NewRegistry()
 
-	for week := range 7 {
-		for day := range int8(31) {
-			for hour := range int8(24) {
-				m := &r.History[week][day][hour]
-				m.RecordsPerPeriod = 1
+	for week := 0; week < 7; week++ {
+		for day := int8(0); day < 31; day++ {
+			for hour := int8(0); hour < 24; hour++ {
+				m := &r.Slots[week][day][hour]
 
-				m.TopIPs.Names[0] = "1.1.1.1"
-				m.TopIPs.Values[0] = uint32(day + hour + 1)
+				m.RecordsPerPeriod.Store(1)
 
-				m.TopCountries.Names[0] = "RO"
-				m.TopCountries.Values[0] = uint32((week+1)*3 + int(day))
+				ip := "1.1.1.1"
+				m.TopIPs.Names[0].Store(&ip)
 
-				m.TopASN.Names[0] = "AS1234"
-				m.TopASN.Values[0] = uint32(hour + 5)
+				ipOccurences := uint32(day + hour + 1)
+				m.TopIPs.Values[0].Store(ipOccurences)
+
+				nameCountry := "RO"
+				m.TopCountries.Names[0].Store(&nameCountry)
+
+				occurencesCountry := uint32((week+1)*3 + int(day))
+				m.TopCountries.Values[0].Store(occurencesCountry)
+
+				nameASN := "AS1234"
+				m.TopASN.Names[0].Store(&nameASN)
+
+				valueASN := uint32(hour + 5)
+				m.TopASN.Values[0].Store(valueASN)
 			}
 		}
 	}

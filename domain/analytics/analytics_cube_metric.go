@@ -7,7 +7,7 @@ type MetricActive struct {
 	TopASN              MetaActive[string]
 	TopCountries        MetaActive[string]
 	TopCities           MetaActive[string]
-	TopURL              MetaActive[string]
+	TopURL              MetaActive[string] // TODO: TopURLs
 	TopOperatingSystems MetaActive[OS]
 	TopBrowsers         MetaActive[Browser]
 
@@ -17,6 +17,34 @@ type MetricActive struct {
 
 func (m *MetricActive) GetRecordsPerPeriod() uint32 {
 	return m.RecordsPerPeriod.Load()
+}
+
+func (m *MetricActive) GetTopIPs() *MetaActive[string] {
+	return &m.TopIPs
+}
+
+func (m *MetricActive) GetTopASNs() *MetaActive[string] {
+	return &m.TopASN
+}
+
+func (m *MetricActive) GetTopCountries() *MetaActive[string] {
+	return &m.TopCountries
+}
+
+func (m *MetricActive) GetTopCities() *MetaActive[string] {
+	return &m.TopCities
+}
+
+func (m *MetricActive) GetTopURLs() *MetaActive[string] {
+	return &m.TopCountries
+}
+
+func (m *MetricActive) GetTopOperatingSystems() *MetaActive[OS] {
+	return &m.TopOperatingSystems
+}
+
+func (m *MetricActive) GetTopBrowsers() *MetaActive[Browser] {
+	return &m.TopBrowsers
 }
 
 func (m *MetricActive) IsZero() bool {

@@ -52,15 +52,15 @@ func TestPreviousHourAcrossAprilToMay(t *testing.T) {
 	require.Empty(t, dc.AddEvents(&reqApril30))
 
 	registry := dc.GetRegistry(datacenter.Site(site))
-	require.False(t, registry.GetCurrentMonth().IsZero())
-	require.False(t, registry.GetPreviousMonth().IsZero())
+	require.False(t, registry.GetActiveSlot().IsZero())
+	require.False(t, registry.GetPreviousSlot().IsZero())
 
 	var bufBefore strings.Builder
 
 	registry.Snapshot(&bufBefore)
 	t.Log("registry before rollover:\n", bufBefore.String())
 
-	registry.Rollover() // move April in history as month 0.
+	registry.Advance() // move April in history as month 0.
 
 	var bufAfter strings.Builder
 

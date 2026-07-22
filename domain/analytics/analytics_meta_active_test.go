@@ -112,62 +112,6 @@ func TestMetaActiveDeepCopyInto(t *testing.T) {
 	require.Equal(t, uint32(5), dst.Count("US"))
 }
 
-func TestMetaActiveAsMetaArchive(t *testing.T) {
-	var m MetaActive[string]
-
-	// (1) Normal ingestion
-	m.Increment("RO", 3)
-	m.Increment("DE", 7)
-	m.Increment("US", 5)
-
-	// (2) Duplicate key in another slot (Space-Saving behavior)
-	// We manually install this because Increment will not create duplicates.
-	kdup := new(string)
-	*kdup = "RO"
-	m.Names[3].Store(kdup)
-	m.Values[3].Store(4)
-	m.setOccupied(3)
-
-	// (3) Nil pointer slot (occupied)
-	m.Names[4].Store(nil)
-	m.Values[4].Store(99)
-	m.setOccupied(4)
-
-	// (4) Nil pointer slot (not occupied)
-	m.Names[5].Store(nil)
-
-	// (5) Pointer but not occupied (Count sees it, archive does NOT)
-	kghost := new(string)
-	*kghost = "GHOST"
-	m.Names[6].Store(kghost)
-	m.Values[6].Store(11)
-	// no occupied bit
-
-	arch := m.AsMetaArchive()
-
-	// (6) RO must be merged: 3 + 4 = 7
-	require.Equal(t, "RO", arch.Names[0])
-	require.Equal(t, uint32(7), arch.Values[0])
-
-	// (7) DE must appear with value 7
-	require.Equal(t, "DE", arch.Names[1])
-	require.Equal(t, uint32(7), arch.Values[1])
-
-	// (8) US must appear with value 5
-	require.Equal(t, "US", arch.Names[2])
-	require.Equal(t, uint32(5), arch.Values[2])
-
-	// (9) GHOST must NOT appear (not occupied)
-	require.NotEqual(t, "GHOST", arch.Names[0])
-	require.NotEqual(t, "GHOST", arch.Names[1])
-	require.NotEqual(t, "GHOST", arch.Names[2])
-
-	// (10) Nil slots must NOT appear
-	require.NotEqual(t, "", arch.Names[0])
-	require.NotEqual(t, "", arch.Names[1])
-	require.NotEqual(t, "", arch.Names[2])
-}
-
 func BenchmarkMetaActiveIncrement_Parallel(b *testing.B) {
 	gomaxprocsValues := []int{1, 2, 3, 4, 8}
 	key := "RO"

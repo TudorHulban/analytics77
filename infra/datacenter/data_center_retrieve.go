@@ -104,11 +104,11 @@ func (dc *DataCenter) previousHourRecordsPerSiteAt(nowUTC int64, offsets *helper
 
 		switch prevMonth {
 		case registry.CalendarMonthCurrentNumber:
-			month = registry.GetCurrentMonth()
+			month = registry.GetActiveSlot()
 
 		default:
 			// The hour we're after fell into the previous calendar month.
-			month = registry.GetPreviousMonth()
+			month = registry.GetPreviousSlot()
 		}
 
 		result[string(siteKey)] = month[dhelpers.CalendarDayToIndex(prevDay)][prevHour].RecordsPerPeriod.Load()
@@ -130,8 +130,7 @@ func (dc *DataCenter) GetCurrentHourRecordsPerSite(offsets *helpers.TimestampOff
 	result := make(map[string]uint32, len(dc.data))
 
 	for siteKey, registry := range dc.data {
-		result[string(siteKey)] = registry.
-			GetCurrentMonth()[dhelpers.CalendarDayToIndex(ixDay)][ixHour].RecordsPerPeriod.Load()
+		result[string(siteKey)] = registry.GetActiveSlot()[dhelpers.CalendarDayToIndex(ixDay)][ixHour].RecordsPerPeriod.Load()
 	}
 
 	dc.mu.RUnlock()

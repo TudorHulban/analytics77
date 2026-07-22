@@ -9,16 +9,20 @@ import (
 // The second return value is the number of valid entries in the array.
 //
 // This avoids heap allocation: callers must iterate only up to `count`.
-func (r *Registry[T, TData]) PreviousMonthDaysWithData() ([31]int8, int8) {
+func (r *Registry) PreviousMonthDaysWithData() ([31]int8, int8) {
 	var (
 		out   [31]int8
 		count int8
 	)
 
+	previousSlot := r.GetPreviousSlot()
+
 	for day := range int8(31) {
 		// Scan hours for any non‑zero record
 		for hour := range int8(24) {
-			if r.GetPreviousMonth()[day][hour].RecordsPerPeriod.Load() != 0 {
+			m := (*previousSlot).GetMetric(day, hour)
+
+			if (*m).GetRecordsPerPeriod() != 0 {
 				out[count] = day
 				count++
 
@@ -55,7 +59,7 @@ func (r *Registry[T, TData]) PreviousMonthDaysWithData() ([31]int8, int8) {
 // The second return value is the number of valid entries.
 //
 // This avoids heap allocation: callers must iterate only up to `count`.
-func (r *Registry[T, TData]) PreviousMonthHoursWithData(forCalendarDay int8) ([24]int8, int8) {
+func (r *Registry) PreviousMonthHoursWithData(forCalendarDay int8) ([24]int8, int8) {
 	var (
 		hoursWithData [24]int8
 		count         int8
@@ -65,13 +69,14 @@ func (r *Registry[T, TData]) PreviousMonthHoursWithData(forCalendarDay int8) ([2
 		return hoursWithData, 0
 	}
 
-	day := &r.
-		GetPreviousMonth()[dhelpers.CalendarDayToIndex(forCalendarDay)]
+	dayIndex := dhelpers.CalendarDayToIndex(forCalendarDay)
+	prev := r.GetPreviousSlot()
 
-	for hour := range int8(24) {
-		if day[hour].RecordsPerPeriod.Load() != 0 {
+	for hour := int8(0); hour < 24; hour++ {
+		slot := (*prev).GetMetric(dayIndex, hour)
+
+		if (*slot).GetRecordsPerPeriod() != 0 {
 			hoursWithData[count] = hour
-
 			count++
 		}
 	}
@@ -84,34 +89,36 @@ func (r *Registry[T, TData]) PreviousMonthHoursWithData(forCalendarDay int8) ([2
 // The second return value is the number of valid entries.
 //
 // This avoids heap allocation: callers must iterate only up to `count`.
-func (r *Registry[T, TData]) CurrentMonthHoursWithData(forCalendarDay int8) ([24]int8, int8) {
+func (r *Registry) CurrentMonthHoursWithData(forCalendarDay int8) ([24]int8, int8) {
 	var (
 		hoursWithData [24]int8
-		howMany       int8
+		count         int8
 	)
 
 	if forCalendarDay < 1 || forCalendarDay > 31 {
 		return hoursWithData, 0
 	}
 
-	day := &r.
-		GetCurrentMonth()[dhelpers.CalendarDayToIndex(forCalendarDay)]
+	dayIndex := dhelpers.CalendarDayToIndex(forCalendarDay)
+	curr := r.GetActiveSlot()
 
-	for hour := range int8(24) {
-		if day[hour].RecordsPerPeriod.Load() != 0 {
-			hoursWithData[howMany] = hour
-			howMany++
+	for hour := int8(0); hour < 24; hour++ {
+		slot := (*curr).GetMetric(dayIndex, hour)
+
+		if (*slot).GetRecordsPerPeriod() != 0 {
+			hoursWithData[count] = hour
+			count++
 		}
 	}
 
-	return hoursWithData, howMany
+	return hoursWithData, count
 }
 
 // Registry stores storage days so
 // the day numbers need to be translated to calendar days.
 //
 // Registry stores storage hours as UTC time.
-func (r *Registry[T, TData]) CurrentDayHoursWithData(timestampUTC, offsetUTCHours int64) ([24]int8, int8) {
+func (r *Registry) CurrentDayHoursWithData(timestampUTC, offsetUTCHours int64) ([24]int8, int8) {
 	_, currentDay, _ := helpers.ExtractMonthDayHour(
 		timestampUTC,
 		&helpers.TimestampOffsets{
@@ -133,15 +140,19 @@ func (r *Registry[T, TData]) CurrentDayHoursWithData(timestampUTC, offsetUTCHour
 //
 // Registry stores storage days so
 // the day numbers need to be translated to calendar days.
-func (r *Registry[T, TData]) CurrentMonthDaysWithData() ([31]int8, int8) {
+func (r *Registry) CurrentMonthDaysWithData() ([31]int8, int8) {
 	var (
 		daysWithData [31]int8
 		howMany      int8
 	)
 
+	activeSlot := r.GetActiveSlot()
+
 	for day := range int8(31) {
 		for hour := range int8(24) {
-			if r.GetCurrentMonth()[day][hour].RecordsPerPeriod.Load() != 0 {
+			slot := (*activeSlot).GetMetric(day, hour)
+
+			if (*slot).GetRecordsPerPeriod() != 0 {
 				daysWithData[howMany] = day
 				howMany++
 

@@ -50,7 +50,7 @@ import (
 //
 // No time mocking, no abstraction layers, no background rollover.
 // Month transitions are strictly event-driven.
-func (dc *DataCenter[T, D]) AddEvents(events ...*shared.ParamsAddEvent) []error {
+func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 	if len(events) == 0 {
 		return nil
 	}
@@ -93,7 +93,7 @@ func (dc *DataCenter[T, D]) AddEvents(events ...*shared.ParamsAddEvent) []error 
 
 		registrySite, exists := dc.data[site]
 		if !exists {
-			registrySite = analytics.NewRegistry[T, D]()
+			registrySite = analytics.NewRegistry()
 			dc.data[site] = registrySite
 		}
 
@@ -115,20 +115,20 @@ func (dc *DataCenter[T, D]) AddEvents(events ...*shared.ParamsAddEvent) []error 
 		case evCalendarMonth == registrySite.CalendarMonthCurrentNumber:
 			// Same calendar month → current month buffer.
 			resolved[outIx] = &registrySite.
-				GetCurrentMonth()[dhelpers.CalendarDayToIndex(evCalendarDay)][evHour]
+				GetActiveSlot()[dhelpers.CalendarDayToIndex(evCalendarDay)][evHour]
 
 		case evCalendarMonth+1 == registrySite.CalendarMonthCurrentNumber || (evCalendarMonth == 12 && registrySite.CalendarMonthCurrentNumber == 1):
 			// Event belongs to previous calendar month.
 			resolved[outIx] = &registrySite.
-				GetPreviousMonth()[dhelpers.CalendarDayToIndex(evCalendarDay)][evHour]
+				GetPreviousSlot()[dhelpers.CalendarDayToIndex(evCalendarDay)][evHour]
 
 		case evCalendarMonth-1 == registrySite.CalendarMonthCurrentNumber:
 			// Event belongs to next calendar month → rollover required.
-			registrySite.Rollover()
+			registrySite.Advance()
 
 			// After rollover, the new month becomes current.
 			resolved[outIx] = &registrySite.
-				GetCurrentMonth()[dhelpers.CalendarDayToIndex(evCalendarDay)][evHour]
+				GetActiveSlot()[dhelpers.CalendarDayToIndex(evCalendarDay)][evHour]
 
 		default:
 			// Older than previous month → either archive or ignore.
