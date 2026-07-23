@@ -7,7 +7,7 @@ type MetricActive struct {
 	TopASN              MetaActive[string]
 	TopCountries        MetaActive[string]
 	TopCities           MetaActive[string]
-	TopURL              MetaActive[string] // TODO: TopURLs
+	TopURLs             MetaActive[string]
 	TopOperatingSystems MetaActive[OS]
 	TopBrowsers         MetaActive[Browser]
 
@@ -58,7 +58,7 @@ func (m *MetricActive) IsZero() bool {
 		m.TopASN.occupied.Load() != 0 ||
 		m.TopCountries.occupied.Load() != 0 ||
 		m.TopCities.occupied.Load() != 0 ||
-		m.TopURL.occupied.Load() != 0 ||
+		m.TopURLs.occupied.Load() != 0 ||
 		m.TopOperatingSystems.occupied.Load() != 0 ||
 		m.TopBrowsers.occupied.Load() != 0 {
 		return false
@@ -74,7 +74,7 @@ func (m *MetricActive) DeepCopyInto(dst *MetricActive) {
 	m.TopASN.DeepCopyInto(&dst.TopASN)
 	m.TopCountries.DeepCopyInto(&dst.TopCountries)
 	m.TopCities.DeepCopyInto(&dst.TopCities)
-	m.TopURL.DeepCopyInto(&dst.TopURL)
+	m.TopURLs.DeepCopyInto(&dst.TopURLs)
 	m.TopOperatingSystems.DeepCopyInto(&dst.TopOperatingSystems)
 	m.TopBrowsers.DeepCopyInto(&dst.TopBrowsers)
 

@@ -48,9 +48,7 @@ func (r *Registry) PreviousMonthTotalRecords() uint32 {
 
 	for day := range int8(31) {
 		for hour := range int8(24) {
-			m := (*previousMonth).GetMetric(day, hour)
-
-			result = result + (*m).GetRecordsPerPeriod()
+			result = result + (*previousMonth).GetMetric(day, hour).GetRecordsPerPeriod()
 		}
 	}
 
@@ -85,9 +83,7 @@ func (r *Registry) CurrentMonthTotalRecords() uint32 {
 
 	for day := range int8(31) {
 		for hour := range int8(24) {
-			m := (*currentSlot).GetMetric(day, hour)
-
-			result = result + (*m).GetRecordsPerPeriod()
+			result = result + (*currentSlot).GetMetric(day, hour).GetRecordsPerPeriod()
 		}
 	}
 
@@ -112,19 +108,19 @@ func (r *Registry) CurrentMonthTotalRecordsForDay(day int8) uint32 {
 	return result
 }
 
-func (*Registry) mergeHourInto(fromMetric *MetricActive, dst *AggregatedTopN) {
-	if (*fromMetric).GetRecordsPerPeriod() == 0 {
+func (*Registry) mergeHourInto(from *MetricActive, dst *AggregatedTopN) {
+	if from.GetRecordsPerPeriod() == 0 {
 		return
 	}
 
-	dst.IPs = *(*fromMetric).GetTopIPs()
-	dst.ASN = *(*fromMetric).GetTopASNs()
-	dst.Countries = *(*fromMetric).GetTopCountries()
-	dst.Cities = *(*fromMetric).GetTopCities()
-	dst.URL = *(*fromMetric).GetTopURLs()
+	dst.IPs.MergeFrom(from.GetTopIPs())
+	dst.ASN.MergeFrom(from.GetTopASNs())
+	dst.Countries.MergeFrom(from.GetTopCountries())
+	dst.Cities.MergeFrom(from.GetTopCities())
+	dst.URL.MergeFrom(from.GetTopURLs())
 
-	dst.OS = *(*fromMetric).GetTopOperatingSystems()
-	dst.Browsers = *(*fromMetric).GetTopBrowsers()
+	dst.OS.MergeFrom(from.GetTopOperatingSystems())
+	dst.Browsers.MergeFrom(from.GetTopBrowsers())
 }
 
 func (r *Registry) PreviousMonthAggregateTopNForDay(day int8) (*AggregatedTopN, error) {
@@ -144,6 +140,11 @@ func (r *Registry) PreviousMonthAggregateTopNForDay(day int8) (*AggregatedTopN, 
 	return &result, nil
 }
 
+// PreviousMonthAggregateTopN aggregates Top‑N metrics
+// across the entire previous month.
+// It traverses every hour of the previous month
+// and merges its Top‑N counters into a single cumulative Top‑N structure.
+// It accumulates all Top‑N metrics across the entire previous month.
 func (r *Registry) PreviousMonthAggregateTopN() *AggregatedTopN {
 	var result AggregatedTopN
 

@@ -2,6 +2,7 @@ package analytics
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"sync/atomic"
 )
@@ -222,4 +223,76 @@ func (m *MetaActive[T]) GetValue(byKey T) (uint32, error) {
 	}
 
 	return 0, ErrKeyNotFound
+}
+
+// MergeFrom accumulates the contents of src into the receiver.
+// It sums values for identical keys, then re-sorts and truncates
+// to the fixed Top-N capacity (7 entries).
+func (m *MetaActive[T]) MergeFrom(src *MetaActive[T]) {
+	// temporary accumulator
+	acc := make(map[T]uint32, 14)
+
+	// accumulate
+	for i := range len(m.Names) {
+		namePtr := m.Names[i].Load()
+		if namePtr == nil {
+			continue
+		}
+
+		acc[*namePtr] = acc[*namePtr] + m.Values[i].Load()
+	}
+
+	// accumulate src
+	for i := range len(src.Names) {
+		namePtr := src.Names[i].Load()
+		if namePtr == nil {
+			continue
+		}
+
+		acc[*namePtr] = acc[*namePtr] + src.Values[i].Load()
+	}
+
+	// convert to slice
+	type kv struct {
+		name  T
+		value uint32
+	}
+
+	list := make([]kv, 0, len(acc))
+	for k, v := range acc {
+		list = append(list, kv{k, v})
+	}
+
+	// sort descending by value
+	sort.Slice(
+		list,
+		func(i, j int) bool {
+			return list[i].value > list[j].value
+		},
+	)
+
+	// write back top 7
+	for i := range len(m.Names) {
+		if i < len(list) {
+			// allocate new T for atomic.Pointer
+			name := list[i].name
+
+			m.Names[i].Store(&name)
+			m.Values[i].Store(list[i].value)
+		} else {
+			m.Names[i].Store(nil)
+			m.Values[i].Store(0)
+		}
+	}
+
+	// update occupancy bitmask
+	var occ uint32
+
+	for i := range len(m.Names) {
+		if m.Names[i].Load() != nil {
+			occ |= 1 << uint(i)
+		}
+	}
+
+	m.occupied.Store(occ)
 }

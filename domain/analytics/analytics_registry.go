@@ -65,9 +65,9 @@ func (r *Registry) zeroSlot(slotNo int32) {
 			}
 
 			// reset TopURL
-			for i := range m.TopURL.Names {
-				m.TopURL.Names[i].Store(&defaultString)
-				m.TopURL.Values[i].Store(0)
+			for i := range m.TopURLs.Names {
+				m.TopURLs.Names[i].Store(&defaultString)
+				m.TopURLs.Values[i].Store(0)
 			}
 
 			// reset TopOperatingSystems
@@ -112,11 +112,15 @@ func (r *Registry) GetPreviousSlot() *MonthActive {
 //
 // monthsBack = 1 → two months ago
 //
-// ...
+// monthsBack = 2 → three months ago
 //
-// monthsBack = 6 → oldest month in the ring
+// monthsBack = 3 → four months ago
+//
+// monthsBack = 4 → five months ago
+//
+// monthsBack = 5 → six months ago
 func (r *Registry) GetHistorySlot(monthsBack uint8) (*MonthActive, error) {
-	if monthsBack > uint8(len(r.Slots)) {
+	if monthsBack >= uint8(len(r.Slots)) {
 		return nil,
 			ErrInvalidInput
 	}

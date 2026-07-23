@@ -13,10 +13,10 @@ func TestPreviousMonthDaysWithData(t *testing.T) {
 
 	// day 0: empty
 	// day 1: hour 5 has data
-	r.GetPreviousMonth()[1][5].RecordsPerPeriod.Store(10)
+	r.GetPreviousSlot()[1][5].RecordsPerPeriod.Store(10)
 
 	// day 7: hour 0 has data
-	r.GetPreviousMonth()[7][0].RecordsPerPeriod.Store(1)
+	r.GetPreviousSlot()[7][0].RecordsPerPeriod.Store(1)
 
 	daysWithData, howMany := r.PreviousMonthDaysWithData()
 
@@ -42,9 +42,9 @@ func TestPreviousMonthHoursWithData(t *testing.T) {
 	const dayStorage int8 = 3
 
 	// day 3: hours 0, 5, 23 have data
-	r.GetPreviousMonth()[dayStorage][0].RecordsPerPeriod.Store(1)
-	r.GetPreviousMonth()[dayStorage][5].RecordsPerPeriod.Store(10)
-	r.GetPreviousMonth()[dayStorage][23].RecordsPerPeriod.Store(7)
+	r.GetPreviousSlot()[dayStorage][0].RecordsPerPeriod.Store(1)
+	r.GetPreviousSlot()[dayStorage][5].RecordsPerPeriod.Store(10)
+	r.GetPreviousSlot()[dayStorage][23].RecordsPerPeriod.Store(7)
 
 	daysWithData, howMany := r.PreviousMonthHoursWithData(dhelpers.IndexToCalendarDay(dayStorage))
 
@@ -69,10 +69,10 @@ func TestCurrentMonthDaysWithData(t *testing.T) {
 
 	// day 0: empty
 	// day 2: hour 10 has data
-	r.GetCurrentMonth()[2][10].RecordsPerPeriod.Store(5)
+	r.GetActiveSlot()[2][10].RecordsPerPeriod.Store(5)
 
 	// day 15: hour 0 has data
-	r.GetCurrentMonth()[15][0].RecordsPerPeriod.Store(1)
+	r.GetActiveSlot()[15][0].RecordsPerPeriod.Store(1)
 
 	daysWithData, howMany := r.CurrentMonthDaysWithData()
 
@@ -98,9 +98,9 @@ func TestCurrentMonthHoursWithData(t *testing.T) {
 	storageDay := 4
 
 	// day 4: hours 1, 7, 22 have data
-	r.GetCurrentMonth()[storageDay][1].RecordsPerPeriod.Store(3)
-	r.GetCurrentMonth()[storageDay][7].RecordsPerPeriod.Store(9)
-	r.GetCurrentMonth()[storageDay][22].RecordsPerPeriod.Store(1)
+	r.GetActiveSlot()[storageDay][1].RecordsPerPeriod.Store(3)
+	r.GetActiveSlot()[storageDay][7].RecordsPerPeriod.Store(9)
+	r.GetActiveSlot()[storageDay][22].RecordsPerPeriod.Store(1)
 
 	daysWithData, howMany := r.
 		CurrentMonthHoursWithData(dhelpers.IndexToCalendarDay(int8(storageDay)))

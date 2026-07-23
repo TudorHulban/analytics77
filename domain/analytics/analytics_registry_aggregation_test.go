@@ -1,6 +1,7 @@
 package analytics
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -9,11 +10,13 @@ import (
 func TestPreviousMonthTotalRecords(t *testing.T) {
 	r := NewRegistry()
 
+	previousSlot := r.GetPreviousSlot()
+
 	// Populate some data
-	r.GetPreviousSlot()[0][0].RecordsPerPeriod.Store(5)
-	r.GetPreviousSlot()[0][1].RecordsPerPeriod.Store(3)
-	r.GetPreviousSlot()[10][5].RecordsPerPeriod.Store(12)
-	r.GetPreviousSlot()[30][23].RecordsPerPeriod.Store(20)
+	previousSlot[0][0].RecordsPerPeriod.Store(5)
+	previousSlot[0][1].RecordsPerPeriod.Store(3)
+	previousSlot[10][5].RecordsPerPeriod.Store(12)
+	previousSlot[30][23].RecordsPerPeriod.Store(20)
 
 	got := r.PreviousMonthTotalRecords()
 
@@ -32,10 +35,13 @@ func TestPreviousMonthTotalRecords(t *testing.T) {
 func TestPreviousMonthTotalRecordsForDay(t *testing.T) {
 	r := NewRegistry()
 
+	previousSlot := r.GetPreviousSlot()
+
+	// Populate some data
 	// day 12: hours 0, 3, 7 have data
-	r.GetPreviousSlot()[12][0].RecordsPerPeriod.Store(5)
-	r.GetPreviousSlot()[12][3].RecordsPerPeriod.Store(8)
-	r.GetPreviousSlot()[12][7].RecordsPerPeriod.Store(20)
+	previousSlot[12][0].RecordsPerPeriod.Store(5)
+	previousSlot[12][3].RecordsPerPeriod.Store(8)
+	previousSlot[12][7].RecordsPerPeriod.Store(20)
 
 	got := r.PreviousMonthTotalRecordsForDay(12)
 
@@ -54,10 +60,12 @@ func TestPreviousMonthTotalRecordsForDay(t *testing.T) {
 func TestCurrentMonthTotalRecords(t *testing.T) {
 	r := NewRegistry()
 
+	activeSlot := r.GetActiveSlot()
+
 	// Populate some data
-	r.GetActiveSlot()[0][0].RecordsPerPeriod.Store(7)
-	r.GetActiveSlot()[5][12].RecordsPerPeriod.Store(13)
-	r.GetActiveSlot()[30][23].RecordsPerPeriod.Store(2)
+	activeSlot[0][0].RecordsPerPeriod.Store(7)
+	activeSlot[5][12].RecordsPerPeriod.Store(13)
+	activeSlot[30][23].RecordsPerPeriod.Store(2)
 
 	got := r.CurrentMonthTotalRecords()
 
@@ -76,12 +84,17 @@ func TestCurrentMonthTotalRecords(t *testing.T) {
 func TestCurrentMonthTotalRecordsForDay(t *testing.T) {
 	r := NewRegistry()
 
+	activeSlot := r.GetActiveSlot()
+
+	// Populate some data for
 	// day 8: hours 2, 11, 20 have data
-	r.GetActiveSlot()[8][2].RecordsPerPeriod.Store(4)
-	r.GetActiveSlot()[8][11].RecordsPerPeriod.Store(9)
-	r.GetActiveSlot()[8][20].RecordsPerPeriod.Store(16)
+	activeSlot[8][2].RecordsPerPeriod.Store(4)
+	activeSlot[8][11].RecordsPerPeriod.Store(9)
+	activeSlot[8][20].RecordsPerPeriod.Store(16)
 
 	got := r.CurrentMonthTotalRecordsForDay(8)
+
+	require.Zero(t, r.CurrentMonthTotalRecordsForDay(7))
 
 	want := int32(4 + 9 + 16)
 
@@ -98,27 +111,37 @@ func TestCurrentMonthTotalRecordsForDay(t *testing.T) {
 func TestPreviousMonthAggregateTopN(t *testing.T) {
 	r := NewRegistry()
 
+	previousSlot := r.GetPreviousSlot()
+
 	// Bucket 1
-	r.GetPreviousSlot()[0][0].RecordsPerPeriod.Store(1)
-	r.GetPreviousSlot()[0][0].TopIPs.Increment("1.1.1.1", 3)
-	r.GetPreviousSlot()[0][0].TopCountries.Increment("RO", 2)
+	previousSlot[0][0].RecordsPerPeriod.Store(1)
+	previousSlot[0][0].TopIPs.Increment("1.1.1.1", 3)
+	previousSlot[0][0].TopCountries.Increment("RO", 2)
 
 	// Bucket 2
-	r.GetPreviousSlot()[5][12].RecordsPerPeriod.Store(1)
-	r.GetPreviousSlot()[5][12].TopIPs.Increment("1.1.1.1", 7)
-	r.GetPreviousSlot()[5][12].TopIPs.Increment("8.8.8.8", 4)
-	r.GetPreviousSlot()[5][12].TopCountries.Increment("US", 5)
+	previousSlot[5][12].RecordsPerPeriod.Store(1)
+	previousSlot[5][12].TopIPs.Increment("1.1.1.1", 7)
+	previousSlot[5][12].TopIPs.Increment("8.8.8.8", 4)
+	previousSlot[5][12].TopCountries.Increment("US", 5)
 
 	// Bucket 3
-	r.GetPreviousSlot()[30][23].RecordsPerPeriod.Store(1)
-	r.GetPreviousSlot()[30][23].TopCountries.Increment("RO", 1)
-	r.GetPreviousSlot()[30][23].TopASN.Increment("AS1234", 9)
+	previousSlot[30][23].RecordsPerPeriod.Store(1)
+	previousSlot[30][23].TopCountries.Increment("RO", 1)
+	previousSlot[30][23].TopASN.Increment("AS1234", 9)
 
 	agg := r.PreviousMonthAggregateTopN()
 
+	fmt.Println(agg.String())
+
 	// IPs
-	require.Equal(t, uint32(10), agg.IPs.Count("1.1.1.1"))
-	require.Equal(t, uint32(4), agg.IPs.Count("8.8.8.8"))
+	require.Equal(t,
+		uint32(10),
+		agg.IPs.Count("1.1.1.1"),
+	)
+	require.Equal(t,
+		uint32(4),
+		agg.IPs.Count("8.8.8.8"),
+	)
 
 	// Countries
 	require.Equal(t, uint32(3), agg.Countries.Count("RO"))

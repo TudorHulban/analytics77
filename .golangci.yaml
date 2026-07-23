@@ -181,6 +181,9 @@ linters:
         - name: use-waitgroup-go
           disabled: true
 
+        - name: use-slices-sort
+          disabled: true
+
         - name: unexported-return
           disabled: true
 

@@ -10,9 +10,9 @@ func TestPreviousMonthForEach(t *testing.T) {
 	r := NewRegistry()
 
 	// Populate some data
-	r.GetPreviousMonth()[2][5].RecordsPerPeriod.Store(10)
-	r.GetPreviousMonth()[2][7].RecordsPerPeriod.Store(3)
-	r.GetPreviousMonth()[10][0].RecordsPerPeriod.Store(1)
+	r.GetPreviousSlot()[2][5].RecordsPerPeriod.Store(10)
+	r.GetPreviousSlot()[2][7].RecordsPerPeriod.Store(3)
+	r.GetPreviousSlot()[10][0].RecordsPerPeriod.Store(1)
 
 	var calls []struct {
 		day  int8
@@ -61,9 +61,9 @@ func TestCurrentMonthForEach(t *testing.T) {
 	r := NewRegistry()
 
 	// Populate some data
-	r.GetCurrentMonth()[0][3].RecordsPerPeriod.Store(5)
-	r.GetCurrentMonth()[4][10].RecordsPerPeriod.Store(2)
-	r.GetCurrentMonth()[30][23].RecordsPerPeriod.Store(9)
+	r.GetActiveSlot()[0][3].RecordsPerPeriod.Store(5)
+	r.GetActiveSlot()[4][10].RecordsPerPeriod.Store(2)
+	r.GetActiveSlot()[30][23].RecordsPerPeriod.Store(9)
 
 	var calls []struct {
 		day  int8
@@ -112,10 +112,21 @@ func TestCurrentMonthForEach(t *testing.T) {
 func TestHistoryForEach(t *testing.T) {
 	r := NewRegistry()
 
+	slot1, errHistory0 := r.GetHistorySlot(0)
+	require.NoError(t, errHistory0)
+
 	// Populate some archived data
-	r.History[0][1][5].RecordsPerPeriod = 11
-	r.History[3][10][0].RecordsPerPeriod = 4
-	r.History[6][30][23].RecordsPerPeriod = 99
+	slot1[1][5].RecordsPerPeriod.Store(11)
+
+	slot3, errHistory2 := r.GetHistorySlot(2)
+	require.NoError(t, errHistory2)
+
+	slot3[10][0].RecordsPerPeriod.Store(4)
+
+	slot6, errHistory6 := r.GetHistorySlot(5)
+	require.NoError(t, errHistory6)
+
+	slot6[30][23].RecordsPerPeriod.Store(99)
 
 	type record struct {
 		month int8
@@ -128,14 +139,14 @@ func TestHistoryForEach(t *testing.T) {
 	var records []record
 
 	r.HistoryForEach(
-		func(month, day, hour int8, m *MetricArchived) {
+		func(month, day, hour int8, m *MetricActive) {
 			records = append(
 				records,
 				record{
 					month: month,
 					day:   day,
 					hour:  hour,
-					value: m.RecordsPerPeriod,
+					value: m.RecordsPerPeriod.Load(),
 				},
 			)
 		},
