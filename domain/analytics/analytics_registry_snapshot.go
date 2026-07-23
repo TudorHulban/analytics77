@@ -31,13 +31,13 @@ func (r *Registry) Snapshot(w io.Writer) error {
 	}
 
 	// --- history months (including previous) ---
-	for monthsBack := range uint8(len(r.Slots)) {
-		slot, err := r.GetHistorySlot(monthsBack)
+	for months := range uint8(len(r.Slots)) {
+		slot, err := r.GetHistorySlot(MonthsBack(months))
 		if err != nil {
 			continue
 		}
 
-		label := fmt.Sprintf("history[%d]", monthsBack)
+		label := fmt.Sprintf("history[%d]", months)
 
 		for day := range 31 {
 			for hour := range 24 {

@@ -131,8 +131,6 @@ func TestPreviousMonthAggregateTopN(t *testing.T) {
 
 	agg := r.PreviousMonthAggregateTopN()
 
-	fmt.Println(agg.String())
-
 	// IPs
 	require.Equal(t,
 		uint32(10),
@@ -172,8 +170,18 @@ func TestCurrentMonthAggregateTopN(t *testing.T) {
 
 	agg := r.CurrentMonthAggregateTopN()
 
+	fmt.Println(agg)
+
 	// IPs
-	require.Equal(t, uint32(10), agg.IPs.Count("1.1.1.1"))
+	require.Equal(t,
+		uint32(10),
+		agg.IPs.Count("1.1.1.1"),
+
+		"expected: %d but got: %d",
+		uint32(10),
+		agg.IPs.Count("1.1.1.1"),
+	)
+
 	require.Equal(t, uint32(4), agg.IPs.Count("8.8.8.8"))
 
 	// Countries

@@ -36,20 +36,39 @@ func (r *Registry) CurrentMonthForEach(action func(day, hour int8, m *MetricActi
 	}
 }
 
-func (r *Registry) HistoryForEach(action func(monthIndex, day, hour int8, m *MetricActive)) {
+func (*Registry) MonthForEach(slot *MonthActive, action func(day, hour int8, m *MetricActive)) {
+	if action == nil || slot == nil {
+		return
+	}
+
+	for day := range int8(31) {
+		for hour := range int8(24) {
+			m := slot.GetMetric(day, hour)
+
+			if m.GetRecordsPerPeriod() != 0 {
+				action(day, hour, m)
+			}
+		}
+	}
+}
+
+func (r *Registry) HistoryForEach(action func(monthsBack, day, hour int8, m *MetricActive)) {
 	if action == nil {
 		return
 	}
 
-	for month := range int8(7) {
-		slot := &r.Slots[month]
+	for months := range uint8(len(r.Slots)) {
+		slot, err := r.GetHistorySlot(MonthsBack(months))
+		if err != nil {
+			continue
+		}
 
 		for day := range int8(31) {
 			for hour := range int8(24) {
 				m := (*slot).GetMetric(day, hour)
 
 				if m.GetRecordsPerPeriod() != 0 {
-					action(month, day, hour, m)
+					action(int8(months), day, hour, m)
 				}
 			}
 		}

@@ -108,28 +108,6 @@ func (r *Registry) GetPreviousSlot() *MonthActive {
 	return &r.Slots[prev]
 }
 
-// monthsBack = 0 → previous month
-//
-// monthsBack = 1 → two months ago
-//
-// monthsBack = 2 → three months ago
-//
-// monthsBack = 3 → four months ago
-//
-// monthsBack = 4 → five months ago
-//
-// monthsBack = 5 → six months ago
-func (r *Registry) GetHistorySlot(monthsBack uint8) (*MonthActive, error) {
-	if monthsBack >= uint8(len(r.Slots)) {
-		return nil,
-			ErrInvalidInput
-	}
-
-	prev := (r.CurrentSlot.Load() + int32(len(r.Slots)) - int32(monthsBack+1)) % int32(len(r.Slots))
-
-	return &r.Slots[prev], nil
-}
-
 func (*Registry) ForEachMetric(slot *MonthActive, fn func(day int8, hour int8, m *MetricActive)) {
 	for day := range int8(31) {
 		for hour := range int8(24) {

@@ -178,15 +178,8 @@ func (r *Registry) CurrentMonthAggregateTopN() *AggregatedTopN {
 	var result AggregatedTopN
 
 	r.CurrentMonthForEach(
-		func(day int8, hour int8, fromMetric *MetricActive) {
-			result.IPs = *(*fromMetric).GetTopIPs()
-			result.ASN = *(*fromMetric).GetTopASNs()
-			result.Countries = *(*fromMetric).GetTopCountries()
-			result.Cities = *(*fromMetric).GetTopCities()
-			result.URL = *(*fromMetric).GetTopURLs()
-
-			result.OS = *(*fromMetric).GetTopOperatingSystems()
-			result.Browsers = *(*fromMetric).GetTopBrowsers()
+		func(_, _ int8, m *MetricActive) {
+			r.mergeHourInto(m, &result)
 		},
 	)
 
@@ -286,27 +279,19 @@ func (r *Registry) HistoryAggregateTopNForHour(month, day, hour int8) (*Aggregat
 func (r *Registry) HistoryAggregateTopN() *AggregatedTopN {
 	var result AggregatedTopN
 
-	for month := range int8(7) {
-		slot := &r.Slots[month]
-
-		for day := range int8(31) {
-			for hour := range int8(24) {
-				fromMetric := (*slot).GetMetric(day, hour)
-
-				if (*fromMetric).GetRecordsPerPeriod() == 0 {
-					continue
-				}
-
-				result.IPs = *(*fromMetric).GetTopIPs()
-				result.ASN = *(*fromMetric).GetTopASNs()
-				result.Countries = *(*fromMetric).GetTopCountries()
-				result.Cities = *(*fromMetric).GetTopCities()
-				result.URL = *(*fromMetric).GetTopURLs()
-
-				result.OS = *(*fromMetric).GetTopOperatingSystems()
-				result.Browsers = *(*fromMetric).GetTopBrowsers()
-			}
+	// iterate all history months (0 = previous, 1 = two months ago, ...)
+	for months := range uint8(len(r.Slots)) {
+		slot, err := r.GetHistorySlot(MonthsBack(months))
+		if err != nil {
+			continue
 		}
+
+		// reuse the existing aggregator for a single month
+		r.MonthForEach(slot,
+			func(_, _ int8, m *MetricActive) {
+				r.mergeHourInto(m, &result)
+			},
+		)
 	}
 
 	return &result

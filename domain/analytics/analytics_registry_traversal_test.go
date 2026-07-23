@@ -112,18 +112,18 @@ func TestCurrentMonthForEach(t *testing.T) {
 func TestHistoryForEach(t *testing.T) {
 	r := NewRegistry()
 
-	slot1, errHistory0 := r.GetHistorySlot(0)
+	slot1, errHistory0 := r.GetHistorySlot(FromPreviousMonth)
 	require.NoError(t, errHistory0)
 
 	// Populate some archived data
 	slot1[1][5].RecordsPerPeriod.Store(11)
 
-	slot3, errHistory2 := r.GetHistorySlot(2)
+	slot3, errHistory2 := r.GetHistorySlot(FromThreeMonthsAgo)
 	require.NoError(t, errHistory2)
 
 	slot3[10][0].RecordsPerPeriod.Store(4)
 
-	slot6, errHistory6 := r.GetHistorySlot(5)
+	slot6, errHistory6 := r.GetHistorySlot(FromLastHistoryMonth)
 	require.NoError(t, errHistory6)
 
 	slot6[30][23].RecordsPerPeriod.Store(99)
@@ -160,17 +160,26 @@ func TestHistoryForEach(t *testing.T) {
 		len(records),
 	)
 
-	require.Equal(t, int8(0), records[0].month)
+	require.Equal(t,
+		int8(FromPreviousMonth),
+		records[0].month,
+	)
 	require.Equal(t, int8(1), records[0].day)
 	require.Equal(t, int8(5), records[0].hour)
 	require.Equal(t, uint32(11), records[0].value)
 
-	require.Equal(t, int8(3), records[1].month)
+	require.Equal(t,
+		int8(FromThreeMonthsAgo),
+		records[1].month,
+	)
 	require.Equal(t, int8(10), records[1].day)
 	require.Equal(t, int8(0), records[1].hour)
 	require.Equal(t, uint32(4), records[1].value)
 
-	require.Equal(t, int8(6), records[2].month)
+	require.Equal(t,
+		int8(FromLastHistoryMonth),
+		records[2].month,
+	)
 	require.Equal(t, int8(30), records[2].day)
 	require.Equal(t, int8(23), records[2].hour)
 	require.Equal(t, uint32(99), records[2].value)
