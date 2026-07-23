@@ -66,9 +66,9 @@ func BenchmarkHistoryAggregateTopN(b *testing.B) {
 	// 1. Prepare registry with synthetic data
 	r := NewRegistry()
 
-	for week := 0; week < 7; week++ {
-		for day := int8(0); day < 31; day++ {
-			for hour := int8(0); hour < 24; hour++ {
+	for week := range 7 {
+		for day := range int8(31) {
+			for hour := range int8(24) {
 				m := &r.Slots[week][day][hour]
 
 				m.RecordsPerPeriod.Store(1)

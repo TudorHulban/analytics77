@@ -72,7 +72,7 @@ func (r *Registry) PreviousMonthHoursWithData(forCalendarDay int8) ([24]int8, in
 	dayIndex := dhelpers.CalendarDayToIndex(forCalendarDay)
 	prev := r.GetPreviousSlot()
 
-	for hour := int8(0); hour < 24; hour++ {
+	for hour := range int8(24) {
 		slot := (*prev).GetMetric(dayIndex, hour)
 
 		if (*slot).GetRecordsPerPeriod() != 0 {
@@ -102,7 +102,7 @@ func (r *Registry) CurrentMonthHoursWithData(forCalendarDay int8) ([24]int8, int
 	dayIndex := dhelpers.CalendarDayToIndex(forCalendarDay)
 	curr := r.GetActiveSlot()
 
-	for hour := int8(0); hour < 24; hour++ {
+	for hour := range int8(24) {
 		slot := (*curr).GetMetric(dayIndex, hour)
 
 		if (*slot).GetRecordsPerPeriod() != 0 {

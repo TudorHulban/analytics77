@@ -1,74 +1,66 @@
 package analytics
 
+import (
+	"fmt"
+	"io"
+)
+
 // Snapshot writes a textual snapshot of the registry into w.
-// func (r *Registry) Snapshot(w io.Writer) error {
-// 	currentMonth := r.GetCurrentMonth()
+func (r *Registry) Snapshot(w io.Writer) error {
+	currentMonth := r.GetActiveSlot()
 
-// 	for day := range 31 {
-// 		for hour := range 24 {
-// 			m := &currentMonth[day][hour]
+	for day := range 31 {
+		for hour := range 24 {
+			m := &currentMonth[day][hour]
 
-// 			if m.RecordsPerPeriod.Load() == 0 {
-// 				continue
-// 			}
+			rec := m.RecordsPerPeriod.Load()
+			if rec == 0 {
+				continue
+			}
 
-// 			if _, errPrintCurrent := fmt.Fprintf(
-// 				w,
+			if _, err := fmt.Fprintf(
+				w,
+				"current day:%02d hour:%02d records:%d\n",
+				day,
+				hour,
+				rec,
+			); err != nil {
+				return err
+			}
+		}
+	}
 
-// 				"current day:'%02d' hour:'%02d' records:'%d'\n",
-// 				day,
-// 				hour,
-// 				m.RecordsPerPeriod.Load(),
-// 			); errPrintCurrent != nil {
-// 				return errPrintCurrent
-// 			}
-// 		}
-// 	}
+	// --- history months (including previous) ---
+	for monthsBack := range uint8(len(r.Slots)) {
+		slot, err := r.GetHistorySlot(monthsBack)
+		if err != nil {
+			continue
+		}
 
-// 	previousMonth := r.GetPreviousMonth()
+		label := fmt.Sprintf("history[%d]", monthsBack)
 
-// 	for day := range 31 {
-// 		for hour := range 24 {
-// 			m := &previousMonth[day][hour]
-// 			if m.RecordsPerPeriod.Load() == 0 {
-// 				continue
-// 			}
+		for day := range 31 {
+			for hour := range 24 {
+				m := &slot[day][hour]
 
-// 			if _, errPrintPrevious := fmt.Fprintf(
-// 				w,
+				rec := m.RecordsPerPeriod.Load()
+				if rec == 0 {
+					continue
+				}
 
-// 				"previous day: %02d hour: %02d records:%d\n",
-// 				day,
-// 				hour,
-// 				m.RecordsPerPeriod.Load(),
-// 			); errPrintPrevious != nil {
-// 				return errPrintPrevious
-// 			}
-// 		}
-// 	}
+				if _, err := fmt.Fprintf(
+					w,
+					"%s day:%02d hour:%02d records:%d\n",
+					label,
+					day,
+					hour,
+					rec,
+				); err != nil {
+					return err
+				}
+			}
+		}
+	}
 
-// 	for h := range 7 {
-// 		for day := range 31 {
-// 			for hour := range 24 {
-// 				m := &r.History[h][day][hour]
-// 				if m.RecordsPerPeriod == 0 {
-// 					continue
-// 				}
-
-// 				if _, errPrintHistory := fmt.Fprintf(
-// 					w,
-
-// 					"history[%d] day: %02d hour: %02d records:%d\n",
-// 					h,
-// 					day,
-// 					hour,
-// 					m.RecordsPerPeriod,
-// 				); errPrintHistory != nil {
-// 					return errPrintHistory
-// 				}
-// 			}
-// 		}
-// 	}
-
-// 	return nil
-// }
+	return nil
+}

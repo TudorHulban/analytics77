@@ -12,7 +12,7 @@ type AggregatedTopN struct {
 	Browsers  MetaActive[Browser]
 }
 
-func (a AggregatedTopN) String() string {
+func (a *AggregatedTopN) String() string {
 	var b strings.Builder
 
 	b.WriteString("IPs:\n")

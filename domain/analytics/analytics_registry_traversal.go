@@ -7,8 +7,8 @@ func (r *Registry) PreviousMonthForEach(action func(day, hour int8, m *MetricAct
 
 	previousSlot := r.GetPreviousSlot()
 
-	for day := int8(0); day < 31; day++ {
-		for hour := int8(0); hour < 24; hour++ {
+	for day := range int8(31) {
+		for hour := range int8(24) {
 			m := (*previousSlot).GetMetric(day, hour)
 
 			if m.GetRecordsPerPeriod() != 0 {
@@ -41,11 +41,11 @@ func (r *Registry) HistoryForEach(action func(monthIndex, day, hour int8, m *Met
 		return
 	}
 
-	for month := int8(0); month < 7; month++ {
+	for month := range int8(7) {
 		slot := &r.Slots[month]
 
-		for day := int8(0); day < 31; day++ {
-			for hour := int8(0); hour < 24; hour++ {
+		for day := range int8(31) {
+			for hour := range int8(24) {
 				m := (*slot).GetMetric(day, hour)
 
 				if m.GetRecordsPerPeriod() != 0 {

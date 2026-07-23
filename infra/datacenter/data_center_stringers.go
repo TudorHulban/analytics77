@@ -37,7 +37,7 @@ func registryString(r *analytics.Registry, b *strings.Builder) {
 	monthActiveString("previous", r.GetPreviousSlot()[:], b)
 
 	// archived months (the remaining 5 slots)
-	for ix := 0; ix < 7; ix++ {
+	for ix := range 7 {
 		month := &r.Slots[ix]
 
 		// skip current and previous

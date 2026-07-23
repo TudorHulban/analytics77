@@ -68,11 +68,11 @@ func TestPreviousHourAcrossAprilToMay(t *testing.T) {
 	t.Log("registry after rollover:\n", bufAfter.String())
 
 	// Query April 30 aggregated data.
-	aggApril30 := registry.
-		HistoryAggregateTopNForDay(
-			0,
-			dhelpers.CalendarDayToIndex(int8(april30.Day())),
-		)
+	aggApril30, errHistory := registry.HistoryAggregateTopNForDay(
+		0,
+		dhelpers.CalendarDayToIndex(int8(april30.Day())),
+	)
+	require.NoError(t, errHistory)
 
 	// April 30 slot must contain the event.
 	require.False(t,

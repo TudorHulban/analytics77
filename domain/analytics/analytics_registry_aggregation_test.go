@@ -164,34 +164,64 @@ func TestCurrentMonthAggregateTopN(t *testing.T) {
 func TestHistoryAggregateTopN(t *testing.T) {
 	r := NewRegistry()
 
+	_, errHistory7 := r.GetHistorySlot(7)
+	require.Error(t, errHistory7)
+
 	// Month 0
-	r.History[0][1][5].RecordsPerPeriod = 1
-	r.History[0][1][5].TopIPs.Names[0] = "1.1.1.1"
-	r.History[0][1][5].TopIPs.Values[0] = 3
+	slot0, errHistory0 := r.GetHistorySlot(0)
+	require.NoError(t, errHistory0)
+
+	ip := "1.1.1.1"
+	countryRO := "RO"
+	countryUS := "US"
+
+	slot0[1][5].RecordsPerPeriod.Store(1)
+	slot0[1][5].TopIPs.Names[0].Store(&ip)
+	slot0[1][5].TopIPs.Values[0].Store(3)
 
 	// Month 3
-	r.History[3][10][0].RecordsPerPeriod = 1
-	r.History[3][10][0].TopIPs.Names[0] = "1.1.1.1"
-	r.History[3][10][0].TopIPs.Values[0] = 4
-	r.History[3][10][0].TopCountries.Names[0] = "US"
-	r.History[3][10][0].TopCountries.Values[0] = 5
+	slot3, errHistory3 := r.GetHistorySlot(3)
+	require.NoError(t, errHistory3)
+
+	slot3[10][0].RecordsPerPeriod.Store(1)
+	slot3[10][0].TopIPs.Names[0].Store(&ip)
+	slot3[10][0].TopIPs.Values[0].Store(4)
+	slot3[10][0].TopCountries.Names[0].Store(&countryUS)
+	slot3[10][0].TopCountries.Values[0].Store(5)
 
 	// Month 6
-	r.History[6][30][23].RecordsPerPeriod = 1
-	r.History[6][30][23].TopCountries.Names[0] = "RO"
-	r.History[6][30][23].TopCountries.Values[0] = 1
-	r.History[6][30][23].TopASN.Names[0] = "AS1234"
-	r.History[6][30][23].TopASN.Values[0] = 9
+	slot6, errHistory6 := r.GetHistorySlot(6)
+	require.NoError(t, errHistory6)
+
+	asn := "AS1234"
+
+	slot6[30][23].RecordsPerPeriod.Store(1)
+	slot6[30][23].TopCountries.Names[0].Store(&countryRO)
+	slot6[30][23].TopCountries.Values[0].Store(1)
+	slot6[30][23].TopASN.Names[0].Store(&asn)
+	slot6[30][23].TopASN.Values[0].Store(9)
 
 	agg := r.HistoryAggregateTopN()
 
 	// IPs
-	require.Equal(t, uint32(7), agg.IPs.Count("1.1.1.1"))
+	require.Equal(t,
+		uint32(7),
+		agg.IPs.Count(ip),
+	)
 
 	// Countries
-	require.Equal(t, uint32(1), agg.Countries.Count("RO"))
-	require.Equal(t, uint32(5), agg.Countries.Count("US"))
+	require.Equal(t,
+		uint32(1),
+		agg.Countries.Count(countryRO),
+	)
+	require.Equal(t,
+		uint32(5),
+		agg.Countries.Count(countryUS),
+	)
 
 	// ASN
-	require.Equal(t, uint32(9), agg.ASN.Count("AS1234"))
+	require.Equal(t,
+		uint32(9),
+		agg.ASN.Count(asn),
+	)
 }
