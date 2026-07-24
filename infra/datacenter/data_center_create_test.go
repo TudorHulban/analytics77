@@ -90,10 +90,10 @@ func TestAddEventsAcrossBoundaries(t *testing.T) {
 
 				registry := dc.GetRegistry(Site(site))
 				require.NotNil(t, registry)
-				require.NotZero(t, registry.CalendarMonthCurrentNumber)
+				require.NotZero(t, registry.CalendarMonthCurrentNumber.Load())
 
 				days, noDays := registry.CurrentMonthDaysWithData()
-				require.EqualValues(t, noDays, 1)
+				require.EqualValues(t, 1, noDays, "number of days not matching")
 				assert.EqualValues(t,
 					tc.utcExpectedDay,
 					dhelpers.IndexToCalendarDay(days[0]),

@@ -110,7 +110,7 @@ func TestCurrentMonthForEach(t *testing.T) {
 }
 
 func TestHistoryForEach(t *testing.T) {
-	r := NewRegistry(0)
+	r := NewRegistry(January)
 
 	slot1, errHistory0 := r.GetHistorySlot(FromPreviousMonth)
 	require.NoError(t, errHistory0)
@@ -161,15 +161,15 @@ func TestHistoryForEach(t *testing.T) {
 	)
 
 	require.Equal(t,
-		int8(FromPreviousMonth),
+		int8(slotSix),
 		records[0].month,
 	)
-	require.Equal(t, int8(1), records[0].day)
-	require.Equal(t, int8(5), records[0].hour)
-	require.Equal(t, uint32(11), records[0].value)
+	require.Equal(t, int8(30), records[0].day)
+	require.Equal(t, int8(23), records[0].hour)
+	require.Equal(t, uint32(99), records[0].value)
 
 	require.Equal(t,
-		int8(FromThreeMonthsAgo),
+		int8(slotThree),
 		records[1].month,
 	)
 	require.Equal(t, int8(10), records[1].day)
@@ -177,10 +177,17 @@ func TestHistoryForEach(t *testing.T) {
 	require.Equal(t, uint32(4), records[1].value)
 
 	require.Equal(t,
-		int8(FromLastHistoryMonth),
+		int8(slotOne),
 		records[2].month,
 	)
-	require.Equal(t, int8(30), records[2].day)
-	require.Equal(t, int8(23), records[2].hour)
-	require.Equal(t, uint32(99), records[2].value)
+	require.Equal(t, int8(1), records[2].day)
+	require.Equal(t, int8(5), records[2].hour)
+	require.Equal(t,
+		uint32(11),
+		records[2].value,
+
+		"expected: %d vs. %d",
+		uint32(11),
+		records[2].value,
+	)
 }

@@ -1,6 +1,8 @@
 package analytics
 
-import "sync/atomic"
+import (
+	"sync/atomic"
+)
 
 // Registry keeps info as per UTC times.
 type Registry struct {
@@ -10,13 +12,37 @@ type Registry struct {
 	TimestampDSTSpring int64
 
 	CurrentSlot                atomic.Int32
-	CalendarMonthCurrentNumber int8
+	CalendarMonthCurrentNumber atomic.Int32
 }
 
+// NewRegistry initial slots:
+//
+// Slots[0] = current month
+//
+// Slots[1] = 1 month back
+//
+// Slots[2] = 2 months back
+//
+// Slots[3] = 3 months back
+//
+// Slots[4] = 4 months back
+//
+// Slots[5] = 5 months back
+//
+// Slots[6] = 6 months back
 func NewRegistry(inMonth int8, dstTimestamps ...int64) *Registry {
-	result := Registry{
-		CalendarMonthCurrentNumber: inMonth,
+	var month int32
+
+	if inMonth < 1 {
+		month = 1
+	} else if inMonth > 12 {
+		month = 12
+	} else {
+		month = int32(inMonth)
 	}
+
+	result := Registry{}
+	result.CalendarMonthCurrentNumber.Store(month)
 
 	for i := range result.Slots {
 		result.Slots[i] = &MonthActive{}
@@ -50,67 +76,65 @@ func (r *Registry) zeroSlot(slotNo int32) {
 			for i := range m.TopIPs.Names {
 				m.TopIPs.Names[i].Store(&defaultString)
 				m.TopIPs.Values[i].Store(0)
+				m.TopIPs.isLocked[i].Store(false)
 			}
+
 			m.TopIPs.occupied.Store(0)
 
 			// reset TopCountries
 			for i := range m.TopCountries.Names {
 				m.TopCountries.Names[i].Store(&defaultString)
 				m.TopCountries.Values[i].Store(0)
+				m.TopCountries.isLocked[i].Store(false)
 			}
+
 			m.TopCountries.occupied.Store(0)
 
 			// reset TopASN
 			for i := range m.TopASN.Names {
 				m.TopASN.Names[i].Store(&defaultString)
 				m.TopASN.Values[i].Store(0)
+				m.TopASN.isLocked[i].Store(false)
 			}
+
 			m.TopASN.occupied.Store(0)
 
 			// reset TopCities
 			for i := range m.TopCities.Names {
 				m.TopCities.Names[i].Store(&defaultString)
 				m.TopCities.Values[i].Store(0)
+				m.TopCities.isLocked[i].Store(false)
 			}
+
 			m.TopCities.occupied.Store(0)
 
 			// reset TopURL
 			for i := range m.TopURLs.Names {
 				m.TopURLs.Names[i].Store(&defaultString)
 				m.TopURLs.Values[i].Store(0)
+				m.TopURLs.isLocked[i].Store(false)
 			}
+
 			m.TopURLs.occupied.Store(0)
 
 			// reset TopOperatingSystems
 			for i := range m.TopOperatingSystems.Names {
 				m.TopOperatingSystems.Names[i].Store(&defaultOS)
 				m.TopOperatingSystems.Values[i].Store(0)
+				m.TopOperatingSystems.isLocked[i].Store(false)
 			}
+
 			m.TopOperatingSystems.occupied.Store(0)
 
 			// reset TopBrowsers
 			for i := range m.TopBrowsers.Names {
 				m.TopBrowsers.Names[i].Store(&defaultBrowser)
 				m.TopBrowsers.Values[i].Store(0)
+				m.TopBrowsers.isLocked[i].Store(false)
 			}
+
 			m.TopBrowsers.occupied.Store(0)
 		}
-	}
-}
-
-func (r *Registry) Advance() {
-	next := (r.CurrentSlot.Load() + 1) % int32(len(r.Slots))
-
-	// new current month slot: just zero the existing MonthActive
-	r.zeroSlot(next)
-
-	// move current pointer
-	r.CurrentSlot.Store(next)
-
-	// calendar tick (if you want to keep this here)
-	r.CalendarMonthCurrentNumber++
-	if r.CalendarMonthCurrentNumber > 12 {
-		r.CalendarMonthCurrentNumber = 1
 	}
 }
 

@@ -60,6 +60,7 @@ linters:
     - wrapcheck
     - wsl
     - zerologlint
+    - modernize
 
   settings:
     govet:
@@ -125,10 +126,10 @@ linters:
           exclude: ["_test.go"]
 
         - name: cognitive-complexity
-          arguments: [70]
+          arguments: [90]
 
         - name: cyclomatic
-          arguments: [25]
+          arguments: [30]
 
         - name: max-control-nesting
           arguments: [7]

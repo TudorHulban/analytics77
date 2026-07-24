@@ -107,22 +107,22 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 			},
 		)
 
-		if registrySite.CalendarMonthCurrentNumber == 0 {
-			registrySite.CalendarMonthCurrentNumber = evCalendarMonth
-		}
+		registrySite.CalendarMonthCurrentNumber.CompareAndSwap(0, int32(evCalendarMonth))
+
+		monthNumber := registrySite.CalendarMonthCurrentNumber.Load()
 
 		switch {
-		case evCalendarMonth == registrySite.CalendarMonthCurrentNumber:
+		case evCalendarMonth == int8(monthNumber):
 			// Same calendar month → current month buffer.
 			resolved[outIx] = &registrySite.
 				GetActiveSlot()[dhelpers.CalendarDayToIndex(evCalendarDay)][evHour]
 
-		case evCalendarMonth+1 == registrySite.CalendarMonthCurrentNumber || (evCalendarMonth == 12 && registrySite.CalendarMonthCurrentNumber == 1):
+		case evCalendarMonth+1 == int8(monthNumber) || (evCalendarMonth == 12 && monthNumber == 1):
 			// Event belongs to previous calendar month.
 			resolved[outIx] = &registrySite.
 				GetPreviousSlot()[dhelpers.CalendarDayToIndex(evCalendarDay)][evHour]
 
-		case evCalendarMonth-1 == registrySite.CalendarMonthCurrentNumber:
+		case evCalendarMonth-1 == int8(monthNumber):
 			// Event belongs to next calendar month → rollover required.
 			registrySite.Advance()
 

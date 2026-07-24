@@ -220,8 +220,7 @@ func (r *Registry) HistoryAggregateTopNForDay(month MonthsBack, day int8) (*Aggr
 
 func (r *Registry) HistoryAggregateTopNForMonth(month int8) (*AggregatedTopN, error) {
 	if month < 0 || month >= 7 {
-		return nil,
-			ErrInvalidInput
+		return nil, ErrInvalidInput
 	}
 
 	var result AggregatedTopN
@@ -232,18 +231,108 @@ func (r *Registry) HistoryAggregateTopNForMonth(month int8) (*AggregatedTopN, er
 		for hour := range int8(24) {
 			fromMetric := (*slot).GetMetric(day, hour)
 
-			if (*fromMetric).GetRecordsPerPeriod() == 0 {
+			records := (*fromMetric).GetRecordsPerPeriod()
+			if records == 0 {
 				continue
 			}
 
-			result.IPs = *(*fromMetric).GetTopIPs()
-			result.ASN = *(*fromMetric).GetTopASNs()
-			result.Countries = *(*fromMetric).GetTopCountries()
-			result.Cities = *(*fromMetric).GetTopCities()
-			result.URL = *(*fromMetric).GetTopURLs()
+			// Aggregate IPs
+			topIPs := (*fromMetric).GetTopIPs()
+			for i := range topIPs.Names {
+				namePtr := topIPs.Names[i].Load()
+				if namePtr == nil {
+					continue
+				}
 
-			result.OS = *(*fromMetric).GetTopOperatingSystems()
-			result.Browsers = *(*fromMetric).GetTopBrowsers()
+				val := topIPs.Values[i].Load()
+				if val > 0 {
+					result.IPs.Increment(*namePtr, val)
+				}
+			}
+
+			// Aggregate ASN
+			topASN := (*fromMetric).GetTopASNs()
+			for i := range topASN.Names {
+				namePtr := topASN.Names[i].Load()
+				if namePtr == nil {
+					continue
+				}
+
+				val := topASN.Values[i].Load()
+				if val > 0 {
+					result.ASN.Increment(*namePtr, val)
+				}
+			}
+
+			// Aggregate Countries
+			topCountries := (*fromMetric).GetTopCountries()
+			for i := range topCountries.Names {
+				namePtr := topCountries.Names[i].Load()
+				if namePtr == nil {
+					continue
+				}
+
+				val := topCountries.Values[i].Load()
+				if val > 0 {
+					result.Countries.Increment(*namePtr, val)
+				}
+			}
+
+			// Aggregate Cities
+			topCities := (*fromMetric).GetTopCities()
+			for i := range topCities.Names {
+				namePtr := topCities.Names[i].Load()
+				if namePtr == nil {
+					continue
+				}
+
+				val := topCities.Values[i].Load()
+				if val > 0 {
+					result.Cities.Increment(*namePtr, val)
+				}
+			}
+
+			// Aggregate URLs
+			topURLs := (*fromMetric).GetTopURLs()
+			for i := range topURLs.Names {
+				namePtr := topURLs.Names[i].Load()
+				if namePtr == nil {
+					continue
+				}
+
+				val := topURLs.Values[i].Load()
+				if val > 0 {
+					result.URL.Increment(*namePtr, val)
+				}
+			}
+
+			// Aggregate Operating Systems
+			topOS := (*fromMetric).GetTopOperatingSystems()
+			for i := range topOS.Names {
+				namePtr := topOS.Names[i].Load()
+				if namePtr == nil {
+					continue
+				}
+
+				val := topOS.Values[i].Load()
+				if val > 0 {
+					result.OS.Increment(*namePtr, val)
+				}
+			}
+
+			// Aggregate Browsers
+			topBrowsers := (*fromMetric).GetTopBrowsers()
+			for i := range topBrowsers.Names {
+				namePtr := topBrowsers.Names[i].Load()
+				if namePtr == nil {
+					continue
+				}
+
+				val := topBrowsers.Values[i].Load()
+				if val > 0 {
+					result.Browsers.Increment(*namePtr, val)
+				}
+			}
 		}
 	}
 
@@ -303,13 +392,11 @@ func (r *Registry) HistoryTotalRecords() uint32 {
 	var result uint32
 
 	for month := range int8(7) {
-		slot := &r.Slots[month]
+		slot := r.Slots[month]
 
 		for day := range int8(31) {
 			for hour := range int8(24) {
-				m := (*slot).GetMetric(day, hour)
-
-				result = result + (*m).GetRecordsPerPeriod()
+				result = result + (*slot).GetMetric(day, hour).GetRecordsPerPeriod()
 			}
 		}
 	}
@@ -317,52 +404,59 @@ func (r *Registry) HistoryTotalRecords() uint32 {
 	return result
 }
 
-func (r *Registry) HistoryTotalRecordsForMonth(month int8) uint32 {
-	if month < 0 || month >= 7 {
+// HistoryTotalRecordsForMonth returns the total RecordsPerPeriod for the
+// logical history month specified by `monthsBack` (0..5). The function resolves
+// the corresponding physical slot via GetHistorySlot and sums only archived
+// metrics. The current slot is never included.
+func (r *Registry) HistoryTotalRecordsForMonth(monthsBack MonthsBack) uint32 {
+	if monthsBack >= 6 {
 		return 0
 	}
 
-	slot := r.Slots[month]
+	slot, errGetHistorySlot := r.GetHistorySlot(monthsBack)
+	if errGetHistorySlot != nil {
+		return 0
+	}
 
 	var result uint32
 
-	for day := range int8(31) {
-		for hour := range int8(24) {
-			m := slot.GetMetric(day, hour)
-
-			result = result + (*m).GetRecordsPerPeriod()
+	for day := int8(0); day < 31; day++ {
+		for hour := int8(0); hour < 24; hour++ {
+			result = result + slot.GetMetric(day, hour).GetRecordsPerPeriod()
 		}
 	}
 
 	return result
 }
 
-func (r *Registry) HistoryTotalRecordsForDay(month, day int8) uint32 {
-	if month < 0 || month >= 7 || day < 0 || day >= 31 {
+func (r *Registry) HistoryTotalRecordsForDay(monthsBack MonthsBack, day int8) uint32 {
+	if monthsBack >= 6 || day < 0 || day >= 31 {
 		return 0
 	}
 
-	slot := r.Slots[month]
+	slot, errGetHistorySlot := r.GetHistorySlot(monthsBack)
+	if errGetHistorySlot != nil {
+		return 0
+	}
 
 	var result uint32
 
 	for hour := range int8(24) {
-		m := slot.GetMetric(day, hour)
-
-		result = result + (*m).GetRecordsPerPeriod()
+		result = result + slot.GetMetric(day, hour).GetRecordsPerPeriod()
 	}
 
 	return result
 }
 
-func (r *Registry) HistoryTotalRecordsForHour(month, day, hour int8) uint32 {
-	if month < 0 || month >= 7 || day < 0 || day >= 31 || hour < 0 || hour >= 24 {
+func (r *Registry) HistoryTotalRecordsForHour(monthsBack MonthsBack, day, hour int8) uint32 {
+	if monthsBack >= 6 || day < 0 || day >= 31 || hour < 0 || hour >= 24 {
 		return 0
 	}
 
-	slot := r.Slots[month]
+	slot, errGetHistorySlot := r.GetHistorySlot(monthsBack)
+	if errGetHistorySlot != nil {
+		return 0
+	}
 
-	m := slot.GetMetric(day, hour)
-
-	return (*m).GetRecordsPerPeriod()
+	return slot.GetMetric(day, hour).GetRecordsPerPeriod()
 }
