@@ -1,5 +1,7 @@
 package analytics
 
+import "fmt"
+
 type MonthsBack uint8
 
 var (
@@ -10,6 +12,26 @@ var (
 	FromFiveMonthsAgo    MonthsBack = 4
 	FromLastHistoryMonth MonthsBack = 5
 )
+
+func (m MonthsBack) String() string {
+	switch m {
+	case FromPreviousMonth:
+		return "previous month"
+	case FromTwoMonthsAgo:
+		return "two months ago"
+	case FromThreeMonthsAgo:
+		return "three months ago"
+	case FromFourMonthsAgo:
+		return "four months ago"
+	case FromFiveMonthsAgo:
+		return "five months ago"
+	case FromLastHistoryMonth:
+		return "six months ago"
+
+	default:
+		return fmt.Sprintf("monthsBack(%d)", uint8(m))
+	}
+}
 
 // monthsBack = 0 → previous month
 //

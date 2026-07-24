@@ -7,7 +7,7 @@ import (
 )
 
 func TestPreviousMonthForEach(t *testing.T) {
-	r := NewRegistry()
+	r := NewRegistry(0)
 
 	// Populate some data
 	r.GetPreviousSlot()[2][5].RecordsPerPeriod.Store(10)
@@ -58,7 +58,7 @@ func TestPreviousMonthForEach(t *testing.T) {
 }
 
 func TestCurrentMonthForEach(t *testing.T) {
-	r := NewRegistry()
+	r := NewRegistry(0)
 
 	// Populate some data
 	r.GetActiveSlot()[0][3].RecordsPerPeriod.Store(5)
@@ -110,7 +110,7 @@ func TestCurrentMonthForEach(t *testing.T) {
 }
 
 func TestHistoryForEach(t *testing.T) {
-	r := NewRegistry()
+	r := NewRegistry(0)
 
 	slot1, errHistory0 := r.GetHistorySlot(FromPreviousMonth)
 	require.NoError(t, errHistory0)

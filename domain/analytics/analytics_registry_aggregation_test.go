@@ -8,7 +8,7 @@ import (
 )
 
 func TestPreviousMonthTotalRecords(t *testing.T) {
-	r := NewRegistry()
+	r := NewRegistry(0)
 
 	previousSlot := r.GetPreviousSlot()
 
@@ -33,7 +33,7 @@ func TestPreviousMonthTotalRecords(t *testing.T) {
 }
 
 func TestPreviousMonthTotalRecordsForDay(t *testing.T) {
-	r := NewRegistry()
+	r := NewRegistry(0)
 
 	previousSlot := r.GetPreviousSlot()
 
@@ -58,7 +58,7 @@ func TestPreviousMonthTotalRecordsForDay(t *testing.T) {
 }
 
 func TestCurrentMonthTotalRecords(t *testing.T) {
-	r := NewRegistry()
+	r := NewRegistry(0)
 
 	activeSlot := r.GetActiveSlot()
 
@@ -82,7 +82,7 @@ func TestCurrentMonthTotalRecords(t *testing.T) {
 }
 
 func TestCurrentMonthTotalRecordsForDay(t *testing.T) {
-	r := NewRegistry()
+	r := NewRegistry(0)
 
 	activeSlot := r.GetActiveSlot()
 
@@ -109,7 +109,7 @@ func TestCurrentMonthTotalRecordsForDay(t *testing.T) {
 }
 
 func TestPreviousMonthAggregateTopN(t *testing.T) {
-	r := NewRegistry()
+	r := NewRegistry(0)
 
 	previousSlot := r.GetPreviousSlot()
 
@@ -150,7 +150,7 @@ func TestPreviousMonthAggregateTopN(t *testing.T) {
 }
 
 func TestCurrentMonthAggregateTopN(t *testing.T) {
-	r := NewRegistry()
+	r := NewRegistry(0)
 
 	// Bucket 1
 	r.GetActiveSlot()[0][0].RecordsPerPeriod.Store(1)
@@ -193,7 +193,7 @@ func TestCurrentMonthAggregateTopN(t *testing.T) {
 }
 
 func TestHistoryAggregateTopN(t *testing.T) {
-	r := NewRegistry()
+	r := NewRegistry(0)
 
 	_, errHistory7 := r.GetHistorySlot(7)
 	require.Error(t, errHistory7)

@@ -186,31 +186,33 @@ func (r *Registry) CurrentMonthAggregateTopN() *AggregatedTopN {
 	return &result
 }
 
-func (r *Registry) HistoryAggregateTopNForDay(month, day int8) (*AggregatedTopN, error) {
-	if month < 0 || month >= 7 || day < 0 || day >= 31 {
-		return nil,
-			ErrInvalidInput
+func (r *Registry) HistoryAggregateTopNForDay(month MonthsBack, day int8) (*AggregatedTopN, error) {
+	if month >= 6 || day < 0 || day >= 31 {
+		return nil, ErrInvalidInput
 	}
 
 	var result AggregatedTopN
 
-	slot := &r.Slots[month]
+	slotHistory, errHistory := r.GetHistorySlot(month)
+	if errHistory != nil {
+		return nil,
+			errHistory
+	}
 
 	for hour := range int8(24) {
-		fromMetric := (*slot).GetMetric(day, hour)
+		m := slotHistory.GetMetric(day, hour)
 
-		if (*fromMetric).GetRecordsPerPeriod() == 0 {
+		if m.GetRecordsPerPeriod() == 0 {
 			continue
 		}
 
-		result.IPs = *(*fromMetric).GetTopIPs()
-		result.ASN = *(*fromMetric).GetTopASNs()
-		result.Countries = *(*fromMetric).GetTopCountries()
-		result.Cities = *(*fromMetric).GetTopCities()
-		result.URL = *(*fromMetric).GetTopURLs()
-
-		result.OS = *(*fromMetric).GetTopOperatingSystems()
-		result.Browsers = *(*fromMetric).GetTopBrowsers()
+		result.IPs.MergeFrom(m.GetTopIPs())
+		result.ASN.MergeFrom(m.GetTopASNs())
+		result.Countries.MergeFrom(m.GetTopCountries())
+		result.Cities.MergeFrom(m.GetTopCities())
+		result.URL.MergeFrom(m.GetTopURLs())
+		result.OS.MergeFrom(m.GetTopOperatingSystems())
+		result.Browsers.MergeFrom(m.GetTopBrowsers())
 	}
 
 	return &result, nil

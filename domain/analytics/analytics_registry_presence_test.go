@@ -9,7 +9,7 @@ import (
 )
 
 func TestPreviousMonthDaysWithData(t *testing.T) {
-	r := NewRegistry()
+	r := NewRegistry(0)
 
 	// day 0: empty
 	// day 1: hour 5 has data
@@ -37,7 +37,7 @@ func TestPreviousMonthDaysWithData(t *testing.T) {
 }
 
 func TestPreviousMonthHoursWithData(t *testing.T) {
-	r := NewRegistry()
+	r := NewRegistry(0)
 
 	const dayStorage int8 = 3
 
@@ -65,7 +65,7 @@ func TestPreviousMonthHoursWithData(t *testing.T) {
 }
 
 func TestCurrentMonthDaysWithData(t *testing.T) {
-	r := NewRegistry()
+	r := NewRegistry(0)
 
 	// day 0: empty
 	// day 2: hour 10 has data
@@ -93,7 +93,7 @@ func TestCurrentMonthDaysWithData(t *testing.T) {
 }
 
 func TestCurrentMonthHoursWithData(t *testing.T) {
-	r := NewRegistry()
+	r := NewRegistry(0)
 
 	storageDay := 4
 

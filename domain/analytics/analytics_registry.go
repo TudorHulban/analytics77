@@ -13,8 +13,10 @@ type Registry struct {
 	CalendarMonthCurrentNumber int8
 }
 
-func NewRegistry(dstTimestamps ...int64) *Registry {
-	result := Registry{}
+func NewRegistry(inMonth int8, dstTimestamps ...int64) *Registry {
+	result := Registry{
+		CalendarMonthCurrentNumber: inMonth,
+	}
 
 	if len(dstTimestamps) == 2 {
 		result.TimestampDSTSpring = dstTimestamps[0]

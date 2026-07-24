@@ -93,7 +93,7 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 
 		registrySite, exists := dc.data[site]
 		if !exists {
-			registrySite = analytics.NewRegistry()
+			registrySite = analytics.NewRegistry(0)
 			dc.data[site] = registrySite
 		}
 

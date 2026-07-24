@@ -58,18 +58,18 @@ func TestPreviousHourAcrossAprilToMay(t *testing.T) {
 	var bufBefore strings.Builder
 
 	registry.Snapshot(&bufBefore)
-	t.Log("registry before rollover:\n", bufBefore.String())
+	t.Log("registry before advance:\n", bufBefore.String())
 
 	registry.Advance() // move April in history as month 0.
 
 	var bufAfter strings.Builder
 
 	registry.Snapshot(&bufAfter)
-	t.Log("registry after rollover:\n", bufAfter.String())
+	t.Log("registry after advance:\n", bufAfter.String())
 
 	// Query April 30 aggregated data.
 	aggApril30, errHistory := registry.HistoryAggregateTopNForDay(
-		0,
+		analytics.FromTwoMonthsAgo,
 		dhelpers.CalendarDayToIndex(int8(april30.Day())),
 	)
 	require.NoError(t, errHistory)

@@ -4,7 +4,7 @@ import "testing"
 
 func BenchmarkPreviousMonthAggregateTopN(b *testing.B) {
 	// 1. Prepare registry with synthetic data
-	r := NewRegistry()
+	r := NewRegistry(0)
 
 	for day := range int8(31) {
 		for hour := range int8(24) {
@@ -34,7 +34,7 @@ func BenchmarkPreviousMonthAggregateTopN(b *testing.B) {
 
 func BenchmarkCurrentMonthAggregateTopN(b *testing.B) {
 	// 1. Prepare registry with synthetic data
-	r := NewRegistry()
+	r := NewRegistry(0)
 
 	for day := range int8(31) {
 		for hour := range int8(24) {
@@ -64,7 +64,7 @@ func BenchmarkCurrentMonthAggregateTopN(b *testing.B) {
 
 func BenchmarkHistoryAggregateTopN(b *testing.B) {
 	// 1. Prepare registry with synthetic data
-	r := NewRegistry()
+	r := NewRegistry(0)
 
 	for week := range 7 {
 		for day := range int8(31) {
