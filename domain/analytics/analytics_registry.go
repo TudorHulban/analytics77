@@ -4,7 +4,7 @@ import "sync/atomic"
 
 // Registry keeps info as per UTC times.
 type Registry struct {
-	Slots [7]MonthActive
+	Slots [7]*MonthActive
 
 	TimestampDSTWinter int64
 	TimestampDSTSpring int64
@@ -18,6 +18,10 @@ func NewRegistry(inMonth int8, dstTimestamps ...int64) *Registry {
 		CalendarMonthCurrentNumber: inMonth,
 	}
 
+	for i := range result.Slots {
+		result.Slots[i] = &MonthActive{}
+	}
+
 	if len(dstTimestamps) == 2 {
 		result.TimestampDSTSpring = dstTimestamps[0]
 		result.TimestampDSTWinter = dstTimestamps[1]
@@ -27,7 +31,7 @@ func NewRegistry(inMonth int8, dstTimestamps ...int64) *Registry {
 }
 
 func (r *Registry) zeroSlot(slotNo int32) {
-	slot := &r.Slots[slotNo]
+	slot := r.Slots[slotNo]
 
 	var (
 		defaultString  string
@@ -90,16 +94,24 @@ func (r *Registry) zeroSlot(slotNo int32) {
 func (r *Registry) Advance() {
 	next := (r.CurrentSlot.Load() + 1) % int32(len(r.Slots))
 
+	// new current month slot: just zero the existing MonthActive
 	r.zeroSlot(next)
 
+	// move current pointer
 	r.CurrentSlot.Store(next)
+
+	// calendar tick (if you want to keep this here)
+	r.CalendarMonthCurrentNumber++
+	if r.CalendarMonthCurrentNumber > 12 {
+		r.CalendarMonthCurrentNumber = 1
+	}
 }
 
 // CurrentMonth returns the active buffer for the current month.
 // Callers must not cache the returned pointer beyond a single logical
 // operation — always re-call CurrentMonth() for the next one.
 func (r *Registry) GetActiveSlot() *MonthActive {
-	return &r.Slots[r.CurrentSlot.Load()]
+	return r.Slots[r.CurrentSlot.Load()]
 }
 
 // PreviousMonth returns the active buffer for the previous month.
@@ -107,7 +119,7 @@ func (r *Registry) GetActiveSlot() *MonthActive {
 func (r *Registry) GetPreviousSlot() *MonthActive {
 	prev := (r.CurrentSlot.Load() + int32(len(r.Slots)) - 1) % int32(len(r.Slots))
 
-	return &r.Slots[prev]
+	return r.Slots[prev]
 }
 
 func (*Registry) ForEachMetric(slot *MonthActive, fn func(day int8, hour int8, m *MetricActive)) {

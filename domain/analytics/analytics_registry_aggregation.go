@@ -322,7 +322,7 @@ func (r *Registry) HistoryTotalRecordsForMonth(month int8) uint32 {
 		return 0
 	}
 
-	slot := &r.Slots[month]
+	slot := r.Slots[month]
 
 	var result uint32
 
@@ -342,7 +342,7 @@ func (r *Registry) HistoryTotalRecordsForDay(month, day int8) uint32 {
 		return 0
 	}
 
-	slot := &r.Slots[month]
+	slot := r.Slots[month]
 
 	var result uint32
 
@@ -360,7 +360,7 @@ func (r *Registry) HistoryTotalRecordsForHour(month, day, hour int8) uint32 {
 		return 0
 	}
 
-	slot := &r.Slots[month]
+	slot := r.Slots[month]
 
 	m := slot.GetMetric(day, hour)
 

@@ -52,5 +52,5 @@ func (r *Registry) GetHistorySlot(monthsBack MonthsBack) (*MonthActive, error) {
 
 	prev := (r.CurrentSlot.Load() + int32(len(r.Slots)) - int32(monthsBack+1)) % int32(len(r.Slots))
 
-	return &r.Slots[prev], nil
+	return r.Slots[prev], nil
 }
