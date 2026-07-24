@@ -45,8 +45,16 @@ func TestMonthActiveDeepCopyInto(t *testing.T) {
 	src[0][0].RecordsPerPeriod.Store(999)
 	src[0][0].TopIPs.Increment("1.1.1.1", 10) // add to existing
 
-	require.Equal(t, uint32(5), dst[0][0].RecordsPerPeriod.Load(),
-		"dst RecordsPerPeriod corrupted by src mutation")
-	require.Equal(t, uint32(3), dst[0][0].TopIPs.Count("1.1.1.1"),
-		"dst TopIPs corrupted by src mutation")
+	require.Equal(t,
+		uint32(5),
+		dst[0][0].RecordsPerPeriod.Load(),
+
+		"dst RecordsPerPeriod corrupted by src mutation",
+	)
+	require.Equal(t,
+		uint32(3),
+		dst[0][0].TopIPs.Count("1.1.1.1"),
+
+		"dst TopIPs corrupted by src mutation",
+	)
 }

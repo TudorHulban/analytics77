@@ -36,7 +36,7 @@ func (m *MetricActive) GetTopCities() *MetaActive[string] {
 }
 
 func (m *MetricActive) GetTopURLs() *MetaActive[string] {
-	return &m.TopCountries
+	return &m.TopURLs
 }
 
 func (m *MetricActive) GetTopOperatingSystems() *MetaActive[OS] {

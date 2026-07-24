@@ -20,6 +20,8 @@ func TestAdvanceAndHistoryShift(t *testing.T) {
 
 	newCurrent := r.CurrentSlot.Load()
 
+	require.True(t, r.Slots[newCurrent].IsZero())
+
 	// newCurrent must be oldCurrent+1 mod 7
 	require.Equal(t,
 		(oldCurrent+1)%7,
