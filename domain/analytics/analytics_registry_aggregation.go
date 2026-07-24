@@ -218,18 +218,23 @@ func (r *Registry) HistoryAggregateTopNForDay(month MonthsBack, day int8) (*Aggr
 	return &result, nil
 }
 
-func (r *Registry) HistoryAggregateTopNForMonth(month int8) (*AggregatedTopN, error) {
-	if month < 0 || month >= 7 {
-		return nil, ErrInvalidInput
+func (r *Registry) HistoryAggregateTopNForMonth(month MonthsBack) (*AggregatedTopN, error) {
+	if month >= 6 {
+		return nil,
+			ErrInvalidInput
 	}
 
 	var result AggregatedTopN
 
-	slot := &r.Slots[month]
+	slotHistory, errHistory := r.GetHistorySlot(month)
+	if errHistory != nil {
+		return nil,
+			errHistory
+	}
 
 	for day := range int8(31) {
 		for hour := range int8(24) {
-			fromMetric := (*slot).GetMetric(day, hour)
+			fromMetric := (*slotHistory).GetMetric(day, hour)
 
 			records := (*fromMetric).GetRecordsPerPeriod()
 			if records == 0 {
@@ -339,17 +344,21 @@ func (r *Registry) HistoryAggregateTopNForMonth(month int8) (*AggregatedTopN, er
 	return &result, nil
 }
 
-func (r *Registry) HistoryAggregateTopNForHour(month, day, hour int8) (*AggregatedTopN, error) {
-	if month < 0 || month >= 7 || day < 0 || day >= 31 || hour < 0 || hour >= 24 {
+func (r *Registry) HistoryAggregateTopNForHour(month MonthsBack, day, hour int8) (*AggregatedTopN, error) {
+	if month >= 6 || day < 0 || day >= 31 || hour < 0 || hour >= 24 {
 		return nil,
 			ErrInvalidInput
 	}
 
 	var result AggregatedTopN
 
-	slot := &r.Slots[month]
+	slotHistory, errHistory := r.GetHistorySlot(month)
+	if errHistory != nil {
+		return nil,
+			errHistory
+	}
 
-	fromMetric := (*slot).GetMetric(day, hour)
+	fromMetric := (*slotHistory).GetMetric(day, hour)
 
 	if (*fromMetric).GetRecordsPerPeriod() == 0 {
 		return &result, nil
@@ -371,9 +380,9 @@ func (r *Registry) HistoryAggregateTopN() *AggregatedTopN {
 	var result AggregatedTopN
 
 	// iterate all history months (0 = previous, 1 = two months ago, ...)
-	for months := range uint8(len(r.Slots)) {
-		slot, err := r.GetHistorySlot(MonthsBack(months))
-		if err != nil {
+	for months := range uint8(len(r.Slots) - 1) {
+		slot, errGetHistorySlot := r.GetHistorySlot(MonthsBack(months))
+		if errGetHistorySlot != nil {
 			continue
 		}
 
@@ -391,8 +400,11 @@ func (r *Registry) HistoryAggregateTopN() *AggregatedTopN {
 func (r *Registry) HistoryTotalRecords() uint32 {
 	var result uint32
 
-	for month := range int8(7) {
-		slot := r.Slots[month]
+	for months := range uint8(len(r.Slots) - 1) {
+		slot, errGetHistorySlot := r.GetHistorySlot(MonthsBack(months))
+		if errGetHistorySlot != nil {
+			continue
+		}
 
 		for day := range int8(31) {
 			for hour := range int8(24) {
