@@ -22,7 +22,7 @@ func TestAdvanceAndHistoryShift(t *testing.T) {
 
 	// newCurrent must be oldCurrent+1 mod 7
 	require.Equal(t,
-		(int32(oldCurrent)+1)%7,
+		(oldCurrent+1)%7,
 		newCurrent,
 		"CurrentSlot did not advance correctly",
 	)

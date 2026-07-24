@@ -20,9 +20,11 @@ import (
 //
 // This mask is the only correct way to determine slot validity in MetaActive.
 type MetaActive[T comparable] struct {
-	Names    [7]atomic.Pointer[T]
-	Values   [7]atomic.Uint32
+	Names  [7]atomic.Pointer[T]
+	Values [7]atomic.Uint32
+
 	occupied atomic.Uint32 // lower 7 bits used
+	isLocked [7]atomic.Bool
 }
 
 // INCREMENT (MetaActive)
@@ -126,21 +128,31 @@ outer:
 				}
 			}
 
-			var newVal uint32
-
-			if lowestVal > maxUint32-byValue {
-				newVal = maxUint32
-			} else {
-				newVal = lowestVal + byValue
+			if !m.isLocked[lowestIdx].CompareAndSwap(false, true) {
+				continue // someone else is evicting this slot
 			}
 
-			if !m.Values[lowestIdx].CompareAndSwap(lowestVal, newVal) {
-				continue
+			for {
+				oldVal := m.Values[lowestIdx].Load()
+
+				var newVal uint32
+
+				if oldVal > maxUint32-byValue {
+					newVal = maxUint32
+				} else {
+					newVal = oldVal + byValue
+				}
+
+				if m.Values[lowestIdx].CompareAndSwap(oldVal, newVal) {
+					break
+				}
 			}
 
 			k := new(T)
 			*k = key
 			m.Names[lowestIdx].Store(k)
+
+			m.isLocked[lowestIdx].Store(false)
 
 			return
 		}
