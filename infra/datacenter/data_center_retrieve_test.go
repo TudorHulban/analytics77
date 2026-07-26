@@ -60,7 +60,7 @@ func TestGetPreviousHourRecordsPerSite_CrossesMonthBoundary(t *testing.T) {
 	require.NotNil(t, registry)
 	require.EqualValues(t,
 		time.March,
-		registry.CalendarMonthCurrentNumber,
+		registry.CalendarMonthCurrentNumber.Load(),
 	)
 
 	// At March 1st 00:30, "the previous hour" is Feb 29 23:xx -> the data

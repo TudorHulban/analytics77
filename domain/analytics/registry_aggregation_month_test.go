@@ -7,7 +7,7 @@ import (
 )
 
 func TestHistoryAggregateTopNForMonth(t *testing.T) {
-	r := NewRegistry(0)
+	r := NewRegistry(January)
 
 	ip1 := "1.1.1.1"
 	ip2 := "2.2.2.2"
@@ -24,28 +24,30 @@ func TestHistoryAggregateTopNForMonth(t *testing.T) {
 	//   ip2 = 12
 	//   ip3 = 11
 
-	slot := r.Slots[0]
+	activeSlot := r.GetActiveSlot()
 
 	// Day 0, Hour 0
-	m00 := slot.GetMetric(0, 0)
-	m00.RecordsPerPeriod.Store(1)
-	m00.TopIPs.Increment(ip1, 10)
-	m00.TopIPs.Increment(ip2, 5)
+	metric00 := activeSlot.GetMetric(0, 0)
+	metric00.RecordsPerPeriod.Store(1)
+	metric00.TopIPs.Increment(ip1, 10)
+	metric00.TopIPs.Increment(ip2, 5)
 
 	// Day 0, Hour 1
-	m01 := slot.GetMetric(0, 1)
-	m01.RecordsPerPeriod.Store(1)
-	m01.TopIPs.Increment(ip1, 3)
+	metric01 := activeSlot.GetMetric(0, 1)
+	metric01.RecordsPerPeriod.Store(1)
+	metric01.TopIPs.Increment(ip1, 3)
 
 	// Day 1, Hour 0
-	m10 := slot.GetMetric(1, 0)
-	m10.RecordsPerPeriod.Store(1)
-	m10.TopIPs.Increment(ip2, 7)
+	metric10 := activeSlot.GetMetric(1, 0)
+	metric10.RecordsPerPeriod.Store(1)
+	metric10.TopIPs.Increment(ip2, 7)
 
 	// Day 2, Hour 5
-	m25 := slot.GetMetric(2, 5)
-	m25.RecordsPerPeriod.Store(1)
-	m25.TopIPs.Increment(ip3, 11)
+	metric25 := activeSlot.GetMetric(2, 5)
+	metric25.RecordsPerPeriod.Store(1)
+	metric25.TopIPs.Increment(ip3, 11)
+
+	r.Advance() // moves to previous month the slot we used for insert.
 
 	// Aggregate
 	agg, err := r.HistoryAggregateTopNForMonth(0)
@@ -74,7 +76,25 @@ func TestHistoryAggregateTopNForMonth(t *testing.T) {
 		}
 	}
 
-	require.EqualValues(t, 13, got1, "aggregated value for IP 1.1.1.1 incorrect")
-	require.EqualValues(t, 12, got2, "aggregated value for IP 2.2.2.2 incorrect")
-	require.EqualValues(t, 11, got3, "aggregated value for IP 3.3.3.3 incorrect")
+	require.EqualValues(t,
+		10+3,
+		got1,
+
+		"aggregated value for IP 1.1.1.1 incorrect, got:%d",
+		got1,
+	)
+	require.EqualValues(t,
+		12,
+		got2,
+
+		"aggregated value for IP 2.2.2.2 incorrect, got:%d",
+		got2,
+	)
+	require.EqualValues(t,
+		11,
+		got3,
+
+		"aggregated value for IP 3.3.3.3 incorrect, got:%d",
+		got3,
+	)
 }

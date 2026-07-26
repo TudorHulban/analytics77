@@ -7,14 +7,14 @@ func (*Registry) aggregateHour(fromMetric *MetricActive) *AggregatedTopN {
 		return &result
 	}
 
-	result.IPs = *(*fromMetric).GetTopIPs()
-	result.ASN = *(*fromMetric).GetTopASNs()
-	result.Countries = *(*fromMetric).GetTopCountries()
-	result.Cities = *(*fromMetric).GetTopCities()
-	result.URL = *(*fromMetric).GetTopURLs()
+	(*fromMetric).GetTopIPs().DeepCopyInto(&result.IPs)
+	(*fromMetric).GetTopASNs().DeepCopyInto(&result.ASN)
+	(*fromMetric).GetTopCountries().DeepCopyInto(&result.Countries)
+	(*fromMetric).GetTopCities().DeepCopyInto(&result.Cities)
+	(*fromMetric).GetTopURLs().DeepCopyInto(&result.URL)
 
-	result.OS = *(*fromMetric).GetTopOperatingSystems()
-	result.Browsers = *(*fromMetric).GetTopBrowsers()
+	(*fromMetric).GetTopOperatingSystems().DeepCopyInto(&result.OS)
+	(*fromMetric).GetTopBrowsers().DeepCopyInto(&result.Browsers)
 
 	return &result
 }
@@ -364,14 +364,14 @@ func (r *Registry) HistoryAggregateTopNForHour(month MonthsBack, day, hour int8)
 		return &result, nil
 	}
 
-	result.IPs = *(*fromMetric).GetTopIPs()
-	result.ASN = *(*fromMetric).GetTopASNs()
-	result.Countries = *(*fromMetric).GetTopCountries()
-	result.Cities = *(*fromMetric).GetTopCities()
-	result.URL = *(*fromMetric).GetTopURLs()
+	(*fromMetric).GetTopIPs().DeepCopyInto(&result.IPs)
+	(*fromMetric).GetTopASNs().DeepCopyInto(&result.ASN)
+	(*fromMetric).GetTopCountries().DeepCopyInto(&result.Countries)
+	(*fromMetric).GetTopCities().DeepCopyInto(&result.Cities)
+	(*fromMetric).GetTopURLs().DeepCopyInto(&result.URL)
 
-	result.OS = *(*fromMetric).GetTopOperatingSystems()
-	result.Browsers = *(*fromMetric).GetTopBrowsers()
+	(*fromMetric).GetTopOperatingSystems().DeepCopyInto(&result.OS)
+	(*fromMetric).GetTopBrowsers().DeepCopyInto(&result.Browsers)
 
 	return &result, nil
 }

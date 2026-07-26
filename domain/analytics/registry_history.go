@@ -45,7 +45,7 @@ func (m MonthsBack) String() string {
 //
 // monthsBack = 5 → six months ago
 func (r *Registry) GetHistorySlot(monthsBack MonthsBack) (*MonthActive, error) {
-	if monthsBack >= MonthsBack(len(r.Slots)) {
+	if monthsBack >= MonthsBack(len(r.Slots)-1) {
 		return nil,
 			ErrInvalidInput
 	}

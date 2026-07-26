@@ -109,7 +109,7 @@ func TestCurrentMonthTotalRecordsForDay(t *testing.T) {
 }
 
 func TestPreviousMonthAggregateTopN(t *testing.T) {
-	r := NewRegistry(0)
+	r := NewRegistry(January)
 
 	previousSlot := r.GetPreviousSlot()
 
@@ -150,7 +150,7 @@ func TestPreviousMonthAggregateTopN(t *testing.T) {
 }
 
 func TestCurrentMonthAggregateTopN(t *testing.T) {
-	r := NewRegistry(0)
+	r := NewRegistry(January)
 
 	// Bucket 1
 	r.GetActiveSlot()[0][0].RecordsPerPeriod.Store(1)
@@ -192,45 +192,53 @@ func TestCurrentMonthAggregateTopN(t *testing.T) {
 	require.Equal(t, uint32(9), agg.ASN.Count("AS1234"))
 }
 
-func TestHistoryAggregateTopN(t *testing.T) {
-	r := NewRegistry(0)
+func TestAggregateTopN_History(t *testing.T) {
+	r := NewRegistry(January)
+
+	slot6, errHistory6 := r.GetHistorySlot(6)
+	require.Error(t, errHistory6)
+	require.Nil(t, slot6)
 
 	_, errHistory7 := r.GetHistorySlot(7)
 	require.Error(t, errHistory7)
 
-	// Month 0
-	slot0, errHistory0 := r.GetHistorySlot(0)
-	require.NoError(t, errHistory0)
+	slotPreviousMonth, errHistoryPreviousMonth := r.GetHistorySlot(FromPreviousMonth)
+	require.NoError(t, errHistoryPreviousMonth)
 
 	ip := "1.1.1.1"
 	countryRO := "RO"
 	countryUS := "US"
 
-	slot0[1][5].RecordsPerPeriod.Store(1)
-	slot0[1][5].TopIPs.Names[0].Store(&ip)
-	slot0[1][5].TopIPs.Values[0].Store(3)
+	// add to active slot to check history picks from right slots
+	// below should not be counted in history
+	activeSlot := r.GetActiveSlot()
+	metric := activeSlot.GetMetric(1, 1)
+	metric.TopCountries.Names[0].Store(&countryRO)
 
-	// Month 3
-	slot3, errHistory3 := r.GetHistorySlot(3)
+	slotPreviousMonth[1][5].RecordsPerPeriod.Store(1)
+	slotPreviousMonth[1][5].TopIPs.Names[0].Store(&ip)
+	slotPreviousMonth[1][5].TopIPs.Values[0].Store(3)
+
+	slotThreeMonthsAgo, errHistory3 := r.GetHistorySlot(FromThreeMonthsAgo)
 	require.NoError(t, errHistory3)
 
-	slot3[10][0].RecordsPerPeriod.Store(1)
-	slot3[10][0].TopIPs.Names[0].Store(&ip)
-	slot3[10][0].TopIPs.Values[0].Store(4)
-	slot3[10][0].TopCountries.Names[0].Store(&countryUS)
-	slot3[10][0].TopCountries.Values[0].Store(5)
+	slotThreeMonthsAgo[10][0].RecordsPerPeriod.Store(1)
+	slotThreeMonthsAgo[10][0].TopIPs.Names[0].Store(&ip)
+	slotThreeMonthsAgo[10][0].TopIPs.Values[0].Store(4)
+	slotThreeMonthsAgo[10][0].TopCountries.Names[0].Store(&countryUS)
+	slotThreeMonthsAgo[10][0].TopCountries.Values[0].Store(5)
 
-	// Month 6
-	slot6, errHistory6 := r.GetHistorySlot(6)
-	require.NoError(t, errHistory6)
+	// Month Last
+	slotLast, errHistoryLast := r.GetHistorySlot(FromLastHistoryMonth)
+	require.NoError(t, errHistoryLast)
 
 	asn := "AS1234"
 
-	slot6[30][23].RecordsPerPeriod.Store(1)
-	slot6[30][23].TopCountries.Names[0].Store(&countryRO)
-	slot6[30][23].TopCountries.Values[0].Store(1)
-	slot6[30][23].TopASN.Names[0].Store(&asn)
-	slot6[30][23].TopASN.Values[0].Store(9)
+	slotLast[30][23].RecordsPerPeriod.Store(1)
+	slotLast[30][23].TopCountries.Names[0].Store(&countryRO)
+	slotLast[30][23].TopCountries.Values[0].Store(1)
+	slotLast[30][23].TopASN.Names[0].Store(&asn)
+	slotLast[30][23].TopASN.Values[0].Store(9)
 
 	agg := r.HistoryAggregateTopN()
 
