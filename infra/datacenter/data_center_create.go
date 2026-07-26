@@ -93,7 +93,9 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 
 		registrySite, exists := dc.data[site]
 		if !exists {
-			registrySite = analytics.NewRegistry(0)
+			registrySite = analytics.NewRegistry(
+				helpers.ExtractMonth(event.TimestampUNIX),
+			)
 			dc.data[site] = registrySite
 		}
 
