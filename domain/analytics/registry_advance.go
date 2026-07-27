@@ -1,5 +1,6 @@
 package analytics
 
+// Advance is not safe for concurrent callers.
 func (r *Registry) Advance() {
 	next := (r.CurrentSlot.Load() + 1) % int32(len(r.Slots))
 

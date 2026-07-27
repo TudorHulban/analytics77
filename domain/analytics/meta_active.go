@@ -24,7 +24,6 @@ type MetaActive[T comparable] struct {
 	Values [7]atomic.Uint32
 
 	occupied atomic.Uint32 // lower 7 bits used
-	isLocked [7]atomic.Bool
 }
 
 // INCREMENT (MetaActive)
@@ -128,10 +127,6 @@ outer:
 				}
 			}
 
-			if !m.isLocked[lowestIdx].CompareAndSwap(false, true) {
-				continue // someone else is evicting this slot
-			}
-
 			for {
 				oldVal := m.Values[lowestIdx].Load()
 
@@ -151,8 +146,6 @@ outer:
 			k := new(T)
 			*k = key
 			m.Names[lowestIdx].Store(k)
-
-			m.isLocked[lowestIdx].Store(false)
 
 			return
 		}
@@ -241,27 +234,26 @@ func (m *MetaActive[T]) GetValue(byKey T) (uint32, error) {
 // It sums values for identical keys, then re-sorts and truncates
 // to the fixed Top-N capacity (7 entries).
 func (m *MetaActive[T]) MergeFrom(src *MetaActive[T]) {
-	// temporary accumulator
-	acc := make(map[T]uint32, 14)
+	accumulator := make(map[T]uint32, 14)
 
 	// accumulate
-	for i := range len(m.Names) {
-		namePtr := m.Names[i].Load()
+	for ix := range len(m.Names) {
+		namePtr := m.Names[ix].Load()
 		if namePtr == nil {
 			continue
 		}
 
-		acc[*namePtr] = acc[*namePtr] + m.Values[i].Load()
+		accumulator[*namePtr] = accumulator[*namePtr] + m.Values[ix].Load()
 	}
 
 	// accumulate src
-	for i := range len(src.Names) {
-		namePtr := src.Names[i].Load()
+	for ix := range len(src.Names) {
+		namePtr := src.Names[ix].Load()
 		if namePtr == nil {
 			continue
 		}
 
-		acc[*namePtr] = acc[*namePtr] + src.Values[i].Load()
+		accumulator[*namePtr] = accumulator[*namePtr] + src.Values[ix].Load()
 	}
 
 	// convert to slice
@@ -270,8 +262,8 @@ func (m *MetaActive[T]) MergeFrom(src *MetaActive[T]) {
 		value uint32
 	}
 
-	list := make([]kv, 0, len(acc))
-	for k, v := range acc {
+	list := make([]kv, 0, len(accumulator))
+	for k, v := range accumulator {
 		list = append(list, kv{k, v})
 	}
 
@@ -284,25 +276,25 @@ func (m *MetaActive[T]) MergeFrom(src *MetaActive[T]) {
 	)
 
 	// write back top 7
-	for i := range len(m.Names) {
-		if i < len(list) {
+	for ix := range len(m.Names) {
+		if ix < len(list) {
 			// allocate new T for atomic.Pointer
-			name := list[i].name
+			name := list[ix].name
 
-			m.Names[i].Store(&name)
-			m.Values[i].Store(list[i].value)
+			m.Names[ix].Store(&name)
+			m.Values[ix].Store(list[ix].value)
 		} else {
-			m.Names[i].Store(nil)
-			m.Values[i].Store(0)
+			m.Names[ix].Store(nil)
+			m.Values[ix].Store(0)
 		}
 	}
 
 	// update occupancy bitmask
 	var occ uint32
 
-	for i := range len(m.Names) {
-		if m.Names[i].Load() != nil {
-			occ |= 1 << uint(i)
+	for ix := range len(m.Names) {
+		if m.Names[ix].Load() != nil {
+			occ |= 1 << uint(ix)
 		}
 	}
 
