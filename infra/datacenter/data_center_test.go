@@ -49,12 +49,12 @@ func TestDataCenter(t *testing.T) {
 	require.EqualValues(t, req1.SiteKey, siteNames[0])
 
 	require.False(t,
-		registry1.GetCurrentMonth().IsZero(),
+		registry1.GetActiveSlot().IsZero(),
 	)
 	require.True(t,
-		registry1.GetPreviousMonth().IsZero(),
+		registry1.GetPreviousSlot().IsZero(),
 	)
-	require.Zero(t, registry1.History)
+	require.True(t, registry1.HistoryAggregateTopN().IsZero())
 
 	hoursWithData, howMany := registry1.CurrentMonthHoursWithData(int8(localTime.Day()))
 	require.EqualValues(t, 1, howMany)
@@ -76,10 +76,14 @@ func TestDataCenter(t *testing.T) {
 	aggregates1 := registry1.CurrentMonthAggregateTopN()
 	require.EqualValues(t,
 		analytics.Brave,
-		aggregates1.Browsers.Names[0],
+		*aggregates1.Browsers.Names[0].Load(),
+
+		"browser want:%s got:%s",
+		analytics.Brave,
+		aggregates1.Browsers.Names[0].Load(),
 	)
 
-	dc.Rollover()
+	dc.Advance(Site(site1))
 
 	require.EqualValues(t,
 		0,
@@ -91,7 +95,7 @@ func TestDataCenter(t *testing.T) {
 		registry1.PreviousMonthTotalRecords(),
 	)
 
-	dc.Rollover()
+	dc.Advance(Site(site1))
 
 	require.EqualValues(t,
 		1,
