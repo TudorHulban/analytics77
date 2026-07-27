@@ -103,7 +103,7 @@ func (dc *DataCenter) previousHourRecordsPerSiteAt(nowUTC int64, offsets *helper
 		var month *analytics.MonthActive
 
 		switch prevMonth {
-		case int8(registry.CalendarMonthCurrentNumber.Load()):
+		case int8(registry.CalendarMonthCurrentNumber.Load()): //nolint:gosec
 			month = registry.GetActiveSlot()
 
 		default:

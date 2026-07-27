@@ -111,7 +111,7 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 
 		registrySite.CalendarMonthCurrentNumber.CompareAndSwap(0, int32(evCalendarMonth))
 
-		monthNumber := int8(registrySite.CalendarMonthCurrentNumber.Load())
+		monthNumber := int8(registrySite.CalendarMonthCurrentNumber.Load()) //nolint:gosec
 
 		switch {
 		case evCalendarMonth == monthNumber:

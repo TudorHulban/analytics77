@@ -69,7 +69,7 @@ func (r *Registry) HistoryForEach(action func(monthsBack, day, hour int8, m *Met
 		return
 	}
 
-	currentSlot := uint8(r.CurrentSlot.Load())
+	currentSlot := uint8(r.CurrentSlot.Load()) //nolint:gosec
 
 	for monthIx := uint8(0); monthIx < uint8(len(r.Slots)); monthIx++ {
 		if monthIx == currentSlot {

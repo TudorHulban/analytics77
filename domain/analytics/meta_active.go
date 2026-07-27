@@ -2,7 +2,6 @@ package analytics
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 	"sync/atomic"
 )
@@ -233,56 +232,74 @@ func (m *MetaActive[T]) GetValue(byKey T) (uint32, error) {
 // MergeFrom accumulates the contents of src into the receiver.
 // It sums values for identical keys, then re-sorts and truncates
 // to the fixed Top-N capacity (7 entries).
+//
+// Zero-allocation: both inputs have at most 7 entries each, so the
+// merge uses a fixed 14-slot stack array with linear-scan accumulation
+// and an insertion sort instead of a map + sort.Slice. For N<=14 this
+// is also faster in practice than hashing — no bucket allocation, no
+// interface boxing for the comparator closure.
 func (m *MetaActive[T]) MergeFrom(src *MetaActive[T]) {
-	accumulator := make(map[T]uint32, 14)
-
-	// accumulate
-	for ix := range len(m.Names) {
-		namePtr := m.Names[ix].Load()
-		if namePtr == nil {
-			continue
-		}
-
-		accumulator[*namePtr] = accumulator[*namePtr] + m.Values[ix].Load()
-	}
-
-	// accumulate src
-	for ix := range len(src.Names) {
-		namePtr := src.Names[ix].Load()
-		if namePtr == nil {
-			continue
-		}
-
-		accumulator[*namePtr] = accumulator[*namePtr] + src.Values[ix].Load()
-	}
-
-	// convert to slice
 	type kv struct {
 		name  T
 		value uint32
 	}
 
-	list := make([]kv, 0, len(accumulator))
-	for k, v := range accumulator {
-		list = append(list, kv{k, v})
+	var (
+		acc   [14]kv
+		count int
+	)
+
+	accumulate := func(names *[7]atomic.Pointer[T], values *[7]atomic.Uint32) {
+		for ix := range 7 {
+			namePtr := names[ix].Load()
+			if namePtr == nil {
+				continue
+			}
+
+			val := values[ix].Load()
+			name := *namePtr
+
+			found := false
+
+			for j := range count {
+				if acc[j].name == name {
+					acc[j].value += val
+					found = true
+
+					break
+				}
+			}
+
+			if !found {
+				acc[count] = kv{name, val}
+				count++
+			}
+		}
 	}
 
-	// sort descending by value
-	sort.Slice(
-		list,
-		func(i, j int) bool {
-			return list[i].value > list[j].value
-		},
-	)
+	accumulate(&m.Names, &m.Values)
+	accumulate(&src.Names, &src.Values)
+
+	// insertion sort descending by value — trivial cost for count<=14
+	for i := 1; i < count; i++ {
+		cur := acc[i]
+		j := i - 1
+
+		for j >= 0 && acc[j].value < cur.value {
+			acc[j+1] = acc[j]
+			j--
+		}
+
+		acc[j+1] = cur
+	}
 
 	// write back top 7
 	for ix := range len(m.Names) {
-		if ix < len(list) {
-			// allocate new T for atomic.Pointer
-			name := list[ix].name
+		if ix < count {
+			name := acc[ix].name
 
 			m.Names[ix].Store(&name)
-			m.Values[ix].Store(list[ix].value)
+			m.Values[ix].Store(acc[ix].value)
 		} else {
 			m.Names[ix].Store(nil)
 			m.Values[ix].Store(0)
