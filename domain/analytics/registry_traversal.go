@@ -9,7 +9,7 @@ func (r *Registry) PreviousMonthForEach(action func(day, hour int8, m *MetricAct
 
 	for day := range int8(31) {
 		for hour := range int8(24) {
-			m := (*previousSlot).GetMetric(day, hour)
+			m := (*previousSlot).getMetric(day, hour)
 
 			if m.GetRecordsPerPeriod() != 0 {
 				action(day, hour, m)
@@ -27,7 +27,7 @@ func (r *Registry) CurrentMonthForEach(action func(day, hour int8, m *MetricActi
 
 	for day := range int8(31) {
 		for hour := range int8(24) {
-			m := (*activeSlot).GetMetric(day, hour)
+			m := (*activeSlot).getMetric(day, hour)
 
 			if m.GetRecordsPerPeriod() != 0 {
 				action(day, hour, m)
@@ -43,7 +43,7 @@ func (*Registry) MonthForEach(slot *MonthActive, action func(day, hour int8, m *
 
 	for day := range int8(31) {
 		for hour := range int8(24) {
-			m := slot.GetMetric(day, hour)
+			m := slot.getMetric(day, hour)
 
 			if m.GetRecordsPerPeriod() != 0 {
 				action(day, hour, m)

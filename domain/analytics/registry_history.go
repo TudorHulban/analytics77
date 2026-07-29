@@ -4,7 +4,7 @@ import "fmt"
 
 type MonthsBack uint8
 
-var (
+const (
 	FromPreviousMonth    MonthsBack = 0 //nolint:revive
 	FromTwoMonthsAgo     MonthsBack = 1
 	FromThreeMonthsAgo   MonthsBack = 2

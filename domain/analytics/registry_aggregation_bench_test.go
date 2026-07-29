@@ -10,7 +10,7 @@ func BenchmarkPreviousMonthAggregateTopN(b *testing.B) {
 		for hour := range int8(24) {
 			previousSlot := r.GetPreviousSlot()
 
-			m := (*previousSlot).GetMetric(day, hour)
+			m := (*previousSlot).getMetric(day, hour)
 			m.RecordsPerPeriod.Store(1)
 
 			m.TopIPs.Increment("1.1.1.1", uint32(day+1))
@@ -40,7 +40,7 @@ func BenchmarkCurrentMonthAggregateTopN(b *testing.B) {
 		for hour := range int8(24) {
 			currentSlot := r.GetActiveSlot()
 
-			m := (*currentSlot).GetMetric(day, hour)
+			m := (*currentSlot).getMetric(day, hour)
 			m.RecordsPerPeriod.Store(1)
 
 			m.TopIPs.Increment("1.1.1.1", uint32(day+1))

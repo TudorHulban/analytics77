@@ -20,7 +20,7 @@ func (r *Registry) PreviousMonthDaysWithData() ([31]int8, int8) {
 	for day := range int8(31) {
 		// Scan hours for any non‑zero record
 		for hour := range int8(24) {
-			m := (*previousSlot).GetMetric(day, hour)
+			m := (*previousSlot).getMetric(day, hour)
 
 			if (*m).GetRecordsPerPeriod() != 0 {
 				out[count] = day
@@ -73,7 +73,7 @@ func (r *Registry) PreviousMonthHoursWithData(forCalendarDay int8) ([24]int8, in
 	prev := r.GetPreviousSlot()
 
 	for hour := range int8(24) {
-		slot := (*prev).GetMetric(dayIndex, hour)
+		slot := (*prev).getMetric(dayIndex, hour)
 
 		if (*slot).GetRecordsPerPeriod() != 0 {
 			hoursWithData[count] = hour
@@ -103,7 +103,7 @@ func (r *Registry) CurrentMonthHoursWithData(forCalendarDay int8) ([24]int8, int
 	curr := r.GetActiveSlot()
 
 	for hour := range int8(24) {
-		slot := (*curr).GetMetric(dayIndex, hour)
+		slot := (*curr).getMetric(dayIndex, hour)
 
 		if (*slot).GetRecordsPerPeriod() != 0 {
 			hoursWithData[count] = hour
@@ -150,7 +150,7 @@ func (r *Registry) CurrentMonthDaysWithData() ([31]int8, int8) {
 
 	for day := range int8(31) {
 		for hour := range int8(24) {
-			slot := (*activeSlot).GetMetric(day, hour)
+			slot := (*activeSlot).getMetric(day, hour)
 
 			if (*slot).GetRecordsPerPeriod() != 0 {
 				daysWithData[howMany] = day

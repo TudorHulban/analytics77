@@ -20,14 +20,8 @@ func (m *MonthActive) DeepCopyInto(dst *MonthActive) {
 	}
 }
 
-func (m *MonthActive) GetMetric(day int8, hour int8) *MetricActive {
-	if day < 0 || day >= 31 {
-		return nil
-	}
-
-	if hour < 0 || hour >= 24 {
-		return nil
-	}
-
+// getMetric does not verify input.
+// Check before calling.
+func (m *MonthActive) getMetric(day, hour int8) *MetricActive {
 	return &m[day][hour]
 }

@@ -27,7 +27,7 @@ func (r *Registry) CurrentMonthAggregateTopNForHour(day, hour int8) (*Aggregated
 
 	currentMonth := r.GetActiveSlot()
 
-	return r.aggregateHour((*currentMonth).GetMetric(day, hour)), nil
+	return r.aggregateHour((*currentMonth).getMetric(day, hour)), nil
 }
 
 func (r *Registry) PreviousMonthAggregateTopNForHour(day, hour int8) (*AggregatedTopN, error) {
@@ -38,7 +38,7 @@ func (r *Registry) PreviousMonthAggregateTopNForHour(day, hour int8) (*Aggregate
 
 	previousMonth := r.GetPreviousSlot()
 
-	return r.aggregateHour((*previousMonth).GetMetric(day, hour)), nil
+	return r.aggregateHour((*previousMonth).getMetric(day, hour)), nil
 }
 
 func (r *Registry) PreviousMonthTotalRecords() uint32 {
@@ -48,7 +48,7 @@ func (r *Registry) PreviousMonthTotalRecords() uint32 {
 
 	for day := range int8(31) {
 		for hour := range int8(24) {
-			result = result + (*previousMonth).GetMetric(day, hour).GetRecordsPerPeriod()
+			result = result + (*previousMonth).getMetric(day, hour).GetRecordsPerPeriod()
 		}
 	}
 
@@ -83,7 +83,7 @@ func (r *Registry) CurrentMonthTotalRecords() uint32 {
 
 	for day := range int8(31) {
 		for hour := range int8(24) {
-			result = result + (*currentSlot).GetMetric(day, hour).GetRecordsPerPeriod()
+			result = result + (*currentSlot).getMetric(day, hour).GetRecordsPerPeriod()
 		}
 	}
 
@@ -100,7 +100,7 @@ func (r *Registry) CurrentMonthTotalRecordsForDay(day int8) uint32 {
 	currentSlot := r.GetActiveSlot()
 
 	for hour := range int8(24) {
-		m := (*currentSlot).GetMetric(day, hour)
+		m := (*currentSlot).getMetric(day, hour)
 
 		result = result + (*m).GetRecordsPerPeriod()
 	}
@@ -134,7 +134,7 @@ func (r *Registry) PreviousMonthAggregateTopNForDay(day int8) (*AggregatedTopN, 
 	previousSlot := r.GetPreviousSlot()
 
 	for hour := range int8(24) {
-		r.mergeHourInto((*previousSlot).GetMetric(day, hour), &result)
+		r.mergeHourInto((*previousSlot).getMetric(day, hour), &result)
 	}
 
 	return &result, nil
@@ -168,7 +168,7 @@ func (r *Registry) CurrentMonthAggregateTopNForDay(day int8) (*AggregatedTopN, e
 	currentSlot := r.GetActiveSlot()
 
 	for hour := range int8(24) {
-		r.mergeHourInto((*currentSlot).GetMetric(day, hour), &result)
+		r.mergeHourInto((*currentSlot).getMetric(day, hour), &result)
 	}
 
 	return &result, nil
@@ -200,7 +200,7 @@ func (r *Registry) HistoryAggregateTopNForDay(month MonthsBack, day int8) (*Aggr
 	}
 
 	for hour := range int8(24) {
-		m := slotHistory.GetMetric(day, hour)
+		m := slotHistory.getMetric(day, hour)
 
 		if m.GetRecordsPerPeriod() == 0 {
 			continue
@@ -234,7 +234,7 @@ func (r *Registry) HistoryAggregateTopNForMonth(month MonthsBack) (*AggregatedTo
 
 	for day := range int8(31) {
 		for hour := range int8(24) {
-			r.mergeHourInto((*slotHistory).GetMetric(day, hour), &result)
+			r.mergeHourInto((*slotHistory).getMetric(day, hour), &result)
 		}
 	}
 
@@ -255,7 +255,7 @@ func (r *Registry) HistoryAggregateTopNForHour(month MonthsBack, day, hour int8)
 			errHistory
 	}
 
-	fromMetric := (*slotHistory).GetMetric(day, hour)
+	fromMetric := (*slotHistory).getMetric(day, hour)
 
 	if (*fromMetric).GetRecordsPerPeriod() == 0 {
 		return &result, nil
@@ -305,7 +305,7 @@ func (r *Registry) HistoryTotalRecords() uint32 {
 
 		for day := range int8(31) {
 			for hour := range int8(24) {
-				result = result + (*slot).GetMetric(day, hour).GetRecordsPerPeriod()
+				result = result + (*slot).getMetric(day, hour).GetRecordsPerPeriod()
 			}
 		}
 	}
@@ -331,7 +331,7 @@ func (r *Registry) HistoryTotalRecordsForMonth(monthsBack MonthsBack) uint32 {
 
 	for day := int8(0); day < 31; day++ {
 		for hour := int8(0); hour < 24; hour++ {
-			result = result + slot.GetMetric(day, hour).GetRecordsPerPeriod()
+			result = result + slot.getMetric(day, hour).GetRecordsPerPeriod()
 		}
 	}
 
@@ -351,7 +351,7 @@ func (r *Registry) HistoryTotalRecordsForDay(monthsBack MonthsBack, day int8) ui
 	var result uint32
 
 	for hour := range int8(24) {
-		result = result + slot.GetMetric(day, hour).GetRecordsPerPeriod()
+		result = result + slot.getMetric(day, hour).GetRecordsPerPeriod()
 	}
 
 	return result
@@ -367,5 +367,5 @@ func (r *Registry) HistoryTotalRecordsForHour(monthsBack MonthsBack, day, hour i
 		return 0
 	}
 
-	return slot.GetMetric(day, hour).GetRecordsPerPeriod()
+	return slot.getMetric(day, hour).GetRecordsPerPeriod()
 }

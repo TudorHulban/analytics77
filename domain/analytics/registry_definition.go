@@ -1,6 +1,7 @@
 package analytics
 
 import (
+	"sync"
 	"sync/atomic"
 )
 
@@ -13,6 +14,8 @@ type Registry struct {
 
 	CurrentSlot                atomic.Int32
 	CalendarMonthCurrentNumber atomic.Int32
+
+	muAdvance sync.Mutex
 }
 
 // NewRegistry initial slots:
@@ -60,13 +63,12 @@ func (r *Registry) zeroSlot(slotNo int32) {
 	slot := r.Slots[slotNo]
 
 	var (
-		defaultString  string
 		defaultOS      OS
 		defaultBrowser Browser
 	)
 
-	for day := range 31 {
-		for hour := range 24 {
+	for day := range int8(31) {
+		for hour := range int8(24) {
 			m := &slot[day][hour]
 
 			// reset atomic counter
@@ -74,7 +76,7 @@ func (r *Registry) zeroSlot(slotNo int32) {
 
 			// reset TopIPs
 			for i := range m.TopIPs.Names {
-				m.TopIPs.Names[i].Store(&defaultString)
+				m.TopIPs.Names[i].Store(nil)
 				m.TopIPs.Values[i].Store(0)
 			}
 
@@ -82,7 +84,7 @@ func (r *Registry) zeroSlot(slotNo int32) {
 
 			// reset TopCountries
 			for i := range m.TopCountries.Names {
-				m.TopCountries.Names[i].Store(&defaultString)
+				m.TopCountries.Names[i].Store(nil)
 				m.TopCountries.Values[i].Store(0)
 			}
 
@@ -90,7 +92,7 @@ func (r *Registry) zeroSlot(slotNo int32) {
 
 			// reset TopASN
 			for i := range m.TopASN.Names {
-				m.TopASN.Names[i].Store(&defaultString)
+				m.TopASN.Names[i].Store(nil)
 				m.TopASN.Values[i].Store(0)
 			}
 
@@ -98,7 +100,7 @@ func (r *Registry) zeroSlot(slotNo int32) {
 
 			// reset TopCities
 			for i := range m.TopCities.Names {
-				m.TopCities.Names[i].Store(&defaultString)
+				m.TopCities.Names[i].Store(nil)
 				m.TopCities.Values[i].Store(0)
 			}
 
@@ -106,7 +108,7 @@ func (r *Registry) zeroSlot(slotNo int32) {
 
 			// reset TopURL
 			for i := range m.TopURLs.Names {
-				m.TopURLs.Names[i].Store(&defaultString)
+				m.TopURLs.Names[i].Store(nil)
 				m.TopURLs.Values[i].Store(0)
 			}
 
@@ -149,7 +151,7 @@ func (r *Registry) GetPreviousSlot() *MonthActive {
 func (*Registry) ForEachMetric(slot *MonthActive, fn func(day int8, hour int8, m *MetricActive)) {
 	for day := range int8(31) {
 		for hour := range int8(24) {
-			metric := (*slot).GetMetric(day, hour)
+			metric := (*slot).getMetric(day, hour)
 
 			fn(day, hour, metric)
 		}

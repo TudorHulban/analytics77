@@ -212,7 +212,7 @@ func TestAggregateTopN_History(t *testing.T) {
 	// add to active slot to check history picks from right slots
 	// below should not be counted in history
 	activeSlot := r.GetActiveSlot()
-	metric := activeSlot.GetMetric(1, 1)
+	metric := activeSlot.getMetric(1, 1)
 	metric.TopCountries.Names[0].Store(&countryRO)
 
 	slotPreviousMonth[1][5].RecordsPerPeriod.Store(1)

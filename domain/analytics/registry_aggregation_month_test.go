@@ -27,23 +27,23 @@ func TestHistoryAggregateTopNForMonth(t *testing.T) {
 	activeSlot := r.GetActiveSlot()
 
 	// Day 0, Hour 0
-	metric00 := activeSlot.GetMetric(0, 0)
-	metric00.RecordsPerPeriod.Store(1)
+	metric00 := activeSlot.getMetric(0, 0)
+	metric00.RecordsPerPeriod.Store(2)
 	metric00.TopIPs.Increment(ip1, 10)
 	metric00.TopIPs.Increment(ip2, 5)
 
 	// Day 0, Hour 1
-	metric01 := activeSlot.GetMetric(0, 1)
+	metric01 := activeSlot.getMetric(0, 1)
 	metric01.RecordsPerPeriod.Store(1)
 	metric01.TopIPs.Increment(ip1, 3)
 
 	// Day 1, Hour 0
-	metric10 := activeSlot.GetMetric(1, 0)
+	metric10 := activeSlot.getMetric(1, 0)
 	metric10.RecordsPerPeriod.Store(1)
 	metric10.TopIPs.Increment(ip2, 7)
 
 	// Day 2, Hour 5
-	metric25 := activeSlot.GetMetric(2, 5)
+	metric25 := activeSlot.getMetric(2, 5)
 	metric25.RecordsPerPeriod.Store(1)
 	metric25.TopIPs.Increment(ip3, 11)
 
