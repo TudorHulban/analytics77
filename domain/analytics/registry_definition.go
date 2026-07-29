@@ -62,73 +62,18 @@ func NewRegistry(inMonth int8, dstTimestamps ...int64) *Registry {
 func (r *Registry) zeroSlot(slotNo int32) {
 	slot := r.Slots[slotNo]
 
-	var (
-		defaultOS      OS
-		defaultBrowser Browser
-	)
-
 	for day := range int8(31) {
 		for hour := range int8(24) {
 			m := &slot[day][hour]
-
-			// reset atomic counter
 			m.RecordsPerPeriod.Store(0)
 
-			// reset TopIPs
-			for i := range m.TopIPs.Names {
-				m.TopIPs.Names[i].Store(nil)
-				m.TopIPs.Values[i].Store(0)
-			}
-
-			m.TopIPs.occupied.Store(0)
-
-			// reset TopCountries
-			for i := range m.TopCountries.Names {
-				m.TopCountries.Names[i].Store(nil)
-				m.TopCountries.Values[i].Store(0)
-			}
-
-			m.TopCountries.occupied.Store(0)
-
-			// reset TopASN
-			for i := range m.TopASN.Names {
-				m.TopASN.Names[i].Store(nil)
-				m.TopASN.Values[i].Store(0)
-			}
-
-			m.TopASN.occupied.Store(0)
-
-			// reset TopCities
-			for i := range m.TopCities.Names {
-				m.TopCities.Names[i].Store(nil)
-				m.TopCities.Values[i].Store(0)
-			}
-
-			m.TopCities.occupied.Store(0)
-
-			// reset TopURL
-			for i := range m.TopURLs.Names {
-				m.TopURLs.Names[i].Store(nil)
-				m.TopURLs.Values[i].Store(0)
-			}
-
-			m.TopURLs.occupied.Store(0)
-
-			// reset TopOperatingSystems
-			for i := range m.TopOperatingSystems.Names {
-				m.TopOperatingSystems.Names[i].Store(&defaultOS)
-				m.TopOperatingSystems.Values[i].Store(0)
-			}
-
-			m.TopOperatingSystems.occupied.Store(0)
-
-			// reset TopBrowsers
-			for i := range m.TopBrowsers.Names {
-				m.TopBrowsers.Names[i].Store(&defaultBrowser)
-				m.TopBrowsers.Values[i].Store(0)
-			}
-
-			m.TopBrowsers.occupied.Store(0)
+			m.TopIPs.reset()
+			m.TopASN.reset()
+			m.TopCountries.reset()
+			m.TopCities.reset()
+			m.TopURLs.reset()
+			m.TopOperatingSystems.reset()
+			m.TopBrowsers.reset()
 		}
 	}
 }

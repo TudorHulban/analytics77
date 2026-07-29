@@ -109,6 +109,6 @@ package analytics
 //     Zeroing MUST occur before the atomic index update.
 //  7. No method may mix reads from the active slot and history slots in a single
 //     logical operation. Query semantics must be strictly either "current" or "history".
-//  8. Slots store values (not pointers to arrays). This guarantees stable memory layout,
+//  8. Slots store atomic pointers to values. This guarantees stable memory layout,
 //     eliminates pointer races, improves cache locality, and prevents accidental
 //     slot replacement.

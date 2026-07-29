@@ -22,7 +22,8 @@ func TestMonthActiveDeepCopyInto(t *testing.T) {
 	src[30][23].TopASN.Increment("AS1234", 9)
 
 	var dst MonthActive
-	src.DeepCopyInto(&dst)
+
+	src.deepCopyInto(&dst)
 
 	// --- Verify copied values match source ---
 	require.Equal(t, uint32(5), dst[0][0].RecordsPerPeriod.Load())

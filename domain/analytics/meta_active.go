@@ -151,7 +151,7 @@ outer:
 	}
 }
 
-func (m *MetaActive[T]) DeepCopyInto(dst *MetaActive[T]) {
+func (m *MetaActive[T]) deepCopyInto(dst *MetaActive[T]) {
 	// 1. Copy non-atomic fields
 	dst.occupied.Store(m.occupied.Load())
 
@@ -329,4 +329,13 @@ func (m *MetaActive[T]) MergeFrom(src *MetaActive[T]) {
 	}
 
 	m.occupied.Store(occ)
+}
+
+func (m *MetaActive[T]) reset() {
+	for i := range m.Names {
+		m.Names[i].Store(nil)
+		m.Values[i].Store(0)
+	}
+
+	m.occupied.Store(0)
 }

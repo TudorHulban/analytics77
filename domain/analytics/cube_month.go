@@ -12,10 +12,10 @@ func (m *MonthActive) IsZero() bool {
 	return true // All 31 days are completely zero
 }
 
-func (m *MonthActive) DeepCopyInto(dst *MonthActive) {
+func (m *MonthActive) deepCopyInto(dst *MonthActive) {
 	for d := range 31 {
 		for h := range 24 {
-			m[d][h].DeepCopyInto(&dst[d][h])
+			m[d][h].deepCopyInto(&dst[d][h])
 		}
 	}
 }

@@ -4,8 +4,5 @@ import "errors"
 
 var (
 	ErrInvalidInput = errors.New("invalid input")
-
-	ErrKeyNotFound = errors.New("key not found")
+	ErrKeyNotFound  = errors.New("key not found")
 )
-
-var ErrReadOnly = errors.New("metric is read-only")

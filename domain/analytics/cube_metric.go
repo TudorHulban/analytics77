@@ -66,14 +66,14 @@ func (m *MetricActive) IsZero() bool {
 	return true
 }
 
-func (m *MetricActive) DeepCopyInto(dst *MetricActive) {
-	m.TopIPs.DeepCopyInto(&dst.TopIPs)
-	m.TopASN.DeepCopyInto(&dst.TopASN)
-	m.TopCountries.DeepCopyInto(&dst.TopCountries)
-	m.TopCities.DeepCopyInto(&dst.TopCities)
-	m.TopURLs.DeepCopyInto(&dst.TopURLs)
-	m.TopOperatingSystems.DeepCopyInto(&dst.TopOperatingSystems)
-	m.TopBrowsers.DeepCopyInto(&dst.TopBrowsers)
+func (m *MetricActive) deepCopyInto(dst *MetricActive) {
+	m.TopIPs.deepCopyInto(&dst.TopIPs)
+	m.TopASN.deepCopyInto(&dst.TopASN)
+	m.TopCountries.deepCopyInto(&dst.TopCountries)
+	m.TopCities.deepCopyInto(&dst.TopCities)
+	m.TopURLs.deepCopyInto(&dst.TopURLs)
+	m.TopOperatingSystems.deepCopyInto(&dst.TopOperatingSystems)
+	m.TopBrowsers.deepCopyInto(&dst.TopBrowsers)
 
 	dst.RecordsPerPeriod.Store(m.RecordsPerPeriod.Load())
 }
