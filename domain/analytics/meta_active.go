@@ -203,13 +203,19 @@ func (m *MetaActive[T]) String() string {
 	return b.String()
 }
 
-func (m *MetaActive[T]) Count(key T) uint32 {
+func (m *MetaActive[T]) Count(forKey T) uint32 {
 	if m == nil {
 		return 0
 	}
 
+	mask := m.occupied.Load()
+
 	for ix := range 7 {
-		if ptr := m.Names[ix].Load(); ptr != nil && *ptr == key {
+		if mask&(1<<ix) == 0 {
+			continue // slot not occupied — Names[ix] may be stale, do not trust it
+		}
+
+		if ptr := m.Names[ix].Load(); ptr != nil && *ptr == forKey {
 			return m.Values[ix].Load()
 		}
 	}
@@ -218,7 +224,13 @@ func (m *MetaActive[T]) Count(key T) uint32 {
 }
 
 func (m *MetaActive[T]) GetValue(byKey T) (uint32, error) {
+	mask := m.occupied.Load()
+
 	for ix := range 7 {
+		if mask&(1<<ix) == 0 {
+			continue // slot not occupied — Names[ix] may be stale, do not trust it
+		}
+
 		ptr := m.Names[ix].Load()
 
 		if ptr != nil && *ptr == byKey {
@@ -226,7 +238,8 @@ func (m *MetaActive[T]) GetValue(byKey T) (uint32, error) {
 		}
 	}
 
-	return 0, ErrKeyNotFound
+	return 0,
+		ErrKeyNotFound
 }
 
 // MergeFrom accumulates the contents of src into the receiver.
