@@ -2,6 +2,7 @@ package appanalytics
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"os"
 
@@ -23,8 +24,20 @@ type ParamsInitializeApp struct {
 	OffsetUTCHours int64
 }
 
-// TODO: refactor with passed writer for more testability.
-func InitializeApp(params *ParamsInitializeApp) *App {
+type PiersInitializeApp struct {
+	Writer   io.Writer
+	FuncExit func(int)
+}
+
+func InitializeApp(params *ParamsInitializeApp, piers *PiersInitializeApp) *App {
+	if piers.Writer == nil {
+		piers.Writer = os.Stderr
+	}
+
+	if piers.FuncExit == nil {
+		piers.FuncExit = os.Exit
+	}
+
 	listener, errListener := net.Listen( //nolint:noctx
 		"tcp",
 		fmt.Sprintf(
@@ -33,24 +46,26 @@ func InitializeApp(params *ParamsInitializeApp) *App {
 		),
 	)
 	if errListener != nil {
-		fmt.Printf(
+		fmt.Fprintf(
+			piers.Writer,
 			"error create listener: %s\n",
 			errListener.Error(),
 		)
 
-		os.Exit(
+		piers.FuncExit(
 			hxerrors.OSExitForConnectivityIssues,
 		)
 	}
 
 	serviceLogging, fnCloseLogging, erCrServiceLogging := slogging.NewServiceLogging(params.PathLogFile, os.Stdout)
 	if erCrServiceLogging != nil {
-		fmt.Printf(
+		fmt.Fprintf(
+			piers.Writer,
 			"error create servce logging: %s\n",
 			erCrServiceLogging.Error(),
 		)
 
-		os.Exit(
+		piers.FuncExit(
 			hxerrors.OSExitForLoggingIssues,
 		)
 	}
@@ -66,12 +81,13 @@ func InitializeApp(params *ParamsInitializeApp) *App {
 		},
 	)
 	if errInitialization != nil {
-		fmt.Printf(
+		fmt.Fprintf(
+			piers.Writer,
 			"error create listener: %s\n",
 			errInitialization.Error(),
 		)
 
-		os.Exit(
+		piers.FuncExit(
 			hxerrors.OSExitForConnectivityIssues,
 		)
 	}
@@ -84,12 +100,13 @@ func InitializeApp(params *ParamsInitializeApp) *App {
 		},
 	)
 	if errCrTransport != nil {
-		fmt.Printf(
+		fmt.Fprintf(
+			piers.Writer,
 			"error create transport TCP: %s\n",
 			errCrTransport.Error(),
 		)
 
-		os.Exit(
+		piers.FuncExit(
 			hxerrors.OSExitForConnectivityIssues,
 		)
 	}

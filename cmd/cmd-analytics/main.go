@@ -33,6 +33,11 @@ func main() {
 			PathLogFile:       configuration.nameLogfile,
 			KeyGeolocationAPI: os.Getenv(cmd.OSAPIGeolocation),
 		},
+
+		&appanalytics.PiersInitializeApp{
+			Writer:   os.Stderr,
+			FuncExit: os.Exit,
+		},
 	)
 
 	fmt.Println(
