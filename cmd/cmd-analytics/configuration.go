@@ -62,7 +62,7 @@ func extractConfiguration(raw map[string]any) (*configuration, error) {
 			)
 	}
 
-	offset, couldCastOffset := initialization["utcOffsetHours"].(int64)
+	offset, couldCastOffset := initialization["utcOffsetHours"].(float64)
 	if !couldCastOffset {
 		return nil,
 			fmt.Errorf(
@@ -76,7 +76,7 @@ func extractConfiguration(raw map[string]any) (*configuration, error) {
 			portHTTP:    strconv.Itoa(int(portHTTP)),
 			nameLogfile: nameLogfile,
 
-			utcOffsetHours: offset,
+			utcOffsetHours: int64(offset),
 		},
 		nil
 }
