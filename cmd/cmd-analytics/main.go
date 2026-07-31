@@ -75,6 +75,8 @@ func main() {
 			errStart.Error(),
 		)
 
-		os.Exit(1)
+		os.Exit(
+			hxerrors.OSExitForApplicationIssues,
+		)
 	}
 }

@@ -57,12 +57,12 @@ func InitializeApp(params *ParamsInitializeApp, piers *PiersInitializeApp) *App 
 		)
 	}
 
-	serviceLogging, fnCloseLogging, erCrServiceLogging := slogging.NewServiceLogging(params.PathLogFile, os.Stdout)
-	if erCrServiceLogging != nil {
+	serviceLogging, fnCloseLogging, errCrServiceLogging := slogging.NewServiceLogging(params.PathLogFile, os.Stdout)
+	if errCrServiceLogging != nil {
 		fmt.Fprintf(
 			piers.Writer,
 			"error create servce logging: %s\n",
-			erCrServiceLogging.Error(),
+			errCrServiceLogging.Error(),
 		)
 
 		piers.FuncExit(

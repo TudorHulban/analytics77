@@ -2,7 +2,9 @@ package appanalytics
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"runtime"
 	"sync"
 )
@@ -38,7 +40,12 @@ func (a *App) Start(ctx context.Context) error {
 
 	go startElement(
 		func() error {
-			return a.transportHTTP.Listen(a.root())
+			errTransport := a.transportHTTP.Listen(a.root())
+			if errors.Is(errTransport, http.ErrServerClosed) {
+				return nil
+			}
+
+			return errTransport
 		},
 	)
 
