@@ -15,10 +15,14 @@ func (r *Registry) PreviousMonthDaysWithData() ([31]int8, int8) {
 		count int8
 	)
 
+	previousSlot := r.GetPreviousSlot()
+
 	for day := range int8(31) {
 		// Scan hours for any non‑zero record
 		for hour := range int8(24) {
-			if r.GetPreviousMonth()[day][hour].RecordsPerPeriod.Load() != 0 {
+			m := (*previousSlot).getMetric(day, hour)
+
+			if (*m).GetRecordsPerPeriod() != 0 {
 				out[count] = day
 				count++
 
@@ -65,13 +69,14 @@ func (r *Registry) PreviousMonthHoursWithData(forCalendarDay int8) ([24]int8, in
 		return hoursWithData, 0
 	}
 
-	day := &r.
-		GetPreviousMonth()[dhelpers.CalendarDayToIndex(forCalendarDay)]
+	dayIndex := dhelpers.CalendarDayToIndex(forCalendarDay)
+	prev := r.GetPreviousSlot()
 
 	for hour := range int8(24) {
-		if day[hour].RecordsPerPeriod.Load() != 0 {
-			hoursWithData[count] = hour
+		slot := (*prev).getMetric(dayIndex, hour)
 
+		if (*slot).GetRecordsPerPeriod() != 0 {
+			hoursWithData[count] = hour
 			count++
 		}
 	}
@@ -87,24 +92,26 @@ func (r *Registry) PreviousMonthHoursWithData(forCalendarDay int8) ([24]int8, in
 func (r *Registry) CurrentMonthHoursWithData(forCalendarDay int8) ([24]int8, int8) {
 	var (
 		hoursWithData [24]int8
-		howMany       int8
+		count         int8
 	)
 
 	if forCalendarDay < 1 || forCalendarDay > 31 {
 		return hoursWithData, 0
 	}
 
-	day := &r.
-		GetCurrentMonth()[dhelpers.CalendarDayToIndex(forCalendarDay)]
+	dayIndex := dhelpers.CalendarDayToIndex(forCalendarDay)
+	curr := r.GetActiveSlot()
 
 	for hour := range int8(24) {
-		if day[hour].RecordsPerPeriod.Load() != 0 {
-			hoursWithData[howMany] = hour
-			howMany++
+		slot := (*curr).getMetric(dayIndex, hour)
+
+		if (*slot).GetRecordsPerPeriod() != 0 {
+			hoursWithData[count] = hour
+			count++
 		}
 	}
 
-	return hoursWithData, howMany
+	return hoursWithData, count
 }
 
 // Registry stores storage days so
@@ -139,9 +146,13 @@ func (r *Registry) CurrentMonthDaysWithData() ([31]int8, int8) {
 		howMany      int8
 	)
 
+	activeSlot := r.GetActiveSlot()
+
 	for day := range int8(31) {
 		for hour := range int8(24) {
-			if r.GetCurrentMonth()[day][hour].RecordsPerPeriod.Load() != 0 {
+			slot := (*activeSlot).getMetric(day, hour)
+
+			if (*slot).GetRecordsPerPeriod() != 0 {
 				daysWithData[howMany] = day
 				howMany++
 

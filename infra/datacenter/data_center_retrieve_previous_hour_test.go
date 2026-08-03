@@ -51,7 +51,7 @@ func TestPreviousHourRecords(t *testing.T) {
 	registryBefore := dc.GetRegistry(Site(site))
 	require.EqualValues(t,
 		localTime.Month(),
-		registryBefore.CalendarMonthCurrentNumber,
+		registryBefore.CalendarMonthCurrentNumber.Load(),
 	)
 
 	recordsPreviousHourBefore := dc.GetPreviousHourRecordsPerSite(

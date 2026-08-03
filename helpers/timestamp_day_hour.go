@@ -81,3 +81,35 @@ func ExtractMonthDayHour(timestampUTC int64, offsets *TimestampOffsets) (int8, i
 
 	return int8(mp), int8(day), int8(hour)
 }
+
+func ExtractMonth(timestampUTC int64) int8 {
+	totalDays := timestampUTC / 86400
+	if timestampUTC < 0 && timestampUTC%86400 != 0 {
+		totalDays--
+	}
+
+	// Shift epoch to March 1, 0000
+	totalDays = totalDays + 719468
+
+	// Position within the 400-year Gregorian cycle (146,097 days)
+	doe := totalDays % 146097
+	if doe < 0 {
+		doe += 146097
+	}
+
+	// Year within the era (0..399)
+	yoe := (doe - doe/1460 + doe/36524 - doe/146096) / 365
+
+	// Day within the shifted year (0 = March 1st)
+	doy := doe - (365*yoe + yoe/4 - yoe/100)
+
+	// Month in shifted calendar (0 = March, 1 = April, ..., 11 = February)
+	mp := (5*doy + 2) / 153
+
+	// Convert shifted calendar month to standard 1..12 month
+	if mp < 10 {
+		return int8(mp + 3)
+	}
+
+	return int8(mp - 9)
+}

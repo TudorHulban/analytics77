@@ -3,16 +3,30 @@ package analytics
 import "strings"
 
 type AggregatedTopN struct {
-	IPs       MetaArchived[string]
-	ASN       MetaArchived[string]
-	Countries MetaArchived[string]
-	Cities    MetaArchived[string]
-	URL       MetaArchived[string]
-	OS        MetaArchived[string]
-	Browsers  MetaArchived[Browser]
+	IPs       MetaActive[string]
+	ASN       MetaActive[string]
+	Countries MetaActive[string]
+	Cities    MetaActive[string]
+	URL       MetaActive[string]
+	OS        MetaActive[OS]
+	Browsers  MetaActive[Browser]
 }
 
-func (a AggregatedTopN) String() string {
+func (a *AggregatedTopN) IsZero() bool {
+	if a == nil {
+		return true
+	}
+
+	return a.IPs.IsZero() &&
+		a.ASN.IsZero() &&
+		a.Countries.IsZero() &&
+		a.Cities.IsZero() &&
+		a.URL.IsZero() &&
+		a.OS.IsZero() &&
+		a.Browsers.IsZero()
+}
+
+func (a *AggregatedTopN) String() string {
 	var b strings.Builder
 
 	b.WriteString("IPs:\n")

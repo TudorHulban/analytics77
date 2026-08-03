@@ -1,0 +1,266 @@
+package analytics
+
+import (
+	"fmt"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+)
+
+func TestPreviousMonthTotalRecords(t *testing.T) {
+	r := NewRegistry(0)
+
+	previousSlot := r.GetPreviousSlot()
+
+	// Populate some data
+	previousSlot[0][0].RecordsPerPeriod.Store(5)
+	previousSlot[0][1].RecordsPerPeriod.Store(3)
+	previousSlot[10][5].RecordsPerPeriod.Store(12)
+	previousSlot[30][23].RecordsPerPeriod.Store(20)
+
+	got := r.PreviousMonthTotalRecords()
+
+	want := int32(5 + 3 + 12 + 20)
+
+	require.EqualValues(t,
+		want,
+		got,
+
+		"total mismatch: got %d want %d",
+		got,
+		want,
+	)
+}
+
+func TestPreviousMonthTotalRecordsForDay(t *testing.T) {
+	r := NewRegistry(0)
+
+	previousSlot := r.GetPreviousSlot()
+
+	// Populate some data
+	// day 12: hours 0, 3, 7 have data
+	previousSlot[12][0].RecordsPerPeriod.Store(5)
+	previousSlot[12][3].RecordsPerPeriod.Store(8)
+	previousSlot[12][7].RecordsPerPeriod.Store(20)
+
+	got := r.PreviousMonthTotalRecordsForDay(12)
+
+	want := int32(5 + 8 + 20)
+
+	require.EqualValues(t,
+		want,
+		got,
+
+		"total mismatch: got %d want %d",
+		got,
+		want,
+	)
+}
+
+func TestCurrentMonthTotalRecords(t *testing.T) {
+	r := NewRegistry(0)
+
+	activeSlot := r.GetActiveSlot()
+
+	// Populate some data
+	activeSlot[0][0].RecordsPerPeriod.Store(7)
+	activeSlot[5][12].RecordsPerPeriod.Store(13)
+	activeSlot[30][23].RecordsPerPeriod.Store(2)
+
+	got := r.CurrentMonthTotalRecords()
+
+	want := int32(7 + 13 + 2)
+
+	require.EqualValues(t,
+		want,
+		got,
+
+		"total mismatch: got %d want %d",
+		got,
+		want,
+	)
+}
+
+func TestCurrentMonthTotalRecordsForDay(t *testing.T) {
+	r := NewRegistry(0)
+
+	activeSlot := r.GetActiveSlot()
+
+	// Populate some data for
+	// day 8: hours 2, 11, 20 have data
+	activeSlot[8][2].RecordsPerPeriod.Store(4)
+	activeSlot[8][11].RecordsPerPeriod.Store(9)
+	activeSlot[8][20].RecordsPerPeriod.Store(16)
+
+	got := r.CurrentMonthTotalRecordsForDay(8)
+
+	require.Zero(t, r.CurrentMonthTotalRecordsForDay(7))
+
+	want := int32(4 + 9 + 16)
+
+	require.EqualValues(t,
+		want,
+		got,
+
+		"total mismatch: got %d want %d",
+		got,
+		want,
+	)
+}
+
+func TestPreviousMonthAggregateTopN(t *testing.T) {
+	r := NewRegistry(January)
+
+	previousSlot := r.GetPreviousSlot()
+
+	// Bucket 1
+	previousSlot[0][0].RecordsPerPeriod.Store(1)
+	previousSlot[0][0].TopIPs.Increment("1.1.1.1", 3)
+	previousSlot[0][0].TopCountries.Increment("RO", 2)
+
+	// Bucket 2
+	previousSlot[5][12].RecordsPerPeriod.Store(1)
+	previousSlot[5][12].TopIPs.Increment("1.1.1.1", 7)
+	previousSlot[5][12].TopIPs.Increment("8.8.8.8", 4)
+	previousSlot[5][12].TopCountries.Increment("US", 5)
+
+	// Bucket 3
+	previousSlot[30][23].RecordsPerPeriod.Store(1)
+	previousSlot[30][23].TopCountries.Increment("RO", 1)
+	previousSlot[30][23].TopASN.Increment("AS1234", 9)
+
+	agg := r.PreviousMonthAggregateTopN()
+
+	// IPs
+	require.Equal(t,
+		uint32(10),
+		agg.IPs.Count("1.1.1.1"),
+	)
+	require.Equal(t,
+		uint32(4),
+		agg.IPs.Count("8.8.8.8"),
+	)
+
+	// Countries
+	require.Equal(t, uint32(3), agg.Countries.Count("RO"))
+	require.Equal(t, uint32(5), agg.Countries.Count("US"))
+
+	// ASN
+	require.Equal(t, uint32(9), agg.ASN.Count("AS1234"))
+}
+
+func TestCurrentMonthAggregateTopN(t *testing.T) {
+	r := NewRegistry(January)
+
+	// Bucket 1
+	r.GetActiveSlot()[0][0].RecordsPerPeriod.Store(1)
+	r.GetActiveSlot()[0][0].TopIPs.Increment("1.1.1.1", 3)
+	r.GetActiveSlot()[0][0].TopCountries.Increment("RO", 2)
+
+	// Bucket 2
+	r.GetActiveSlot()[5][12].RecordsPerPeriod.Store(1)
+	r.GetActiveSlot()[5][12].TopIPs.Increment("1.1.1.1", 7)
+	r.GetActiveSlot()[5][12].TopIPs.Increment("8.8.8.8", 4)
+	r.GetActiveSlot()[5][12].TopCountries.Increment("US", 5)
+
+	// Bucket 3
+	r.GetActiveSlot()[30][23].RecordsPerPeriod.Store(1)
+	r.GetActiveSlot()[30][23].TopCountries.Increment("RO", 1)
+	r.GetActiveSlot()[30][23].TopASN.Increment("AS1234", 9)
+
+	agg := r.CurrentMonthAggregateTopN()
+
+	fmt.Println(agg)
+
+	// IPs
+	require.Equal(t,
+		uint32(10),
+		agg.IPs.Count("1.1.1.1"),
+
+		"expected: %d but got: %d",
+		uint32(10),
+		agg.IPs.Count("1.1.1.1"),
+	)
+
+	require.Equal(t, uint32(4), agg.IPs.Count("8.8.8.8"))
+
+	// Countries
+	require.Equal(t, uint32(3), agg.Countries.Count("RO"))
+	require.Equal(t, uint32(5), agg.Countries.Count("US"))
+
+	// ASN
+	require.Equal(t, uint32(9), agg.ASN.Count("AS1234"))
+}
+
+func TestAggregateTopN_History(t *testing.T) {
+	r := NewRegistry(January)
+
+	slot6, errHistory6 := r.GetHistorySlot(6)
+	require.Error(t, errHistory6)
+	require.Nil(t, slot6)
+
+	_, errHistory7 := r.GetHistorySlot(7)
+	require.Error(t, errHistory7)
+
+	slotPreviousMonth, errHistoryPreviousMonth := r.GetHistorySlot(FromPreviousMonth)
+	require.NoError(t, errHistoryPreviousMonth)
+
+	ip := "1.1.1.1"
+	countryRO := "RO"
+	countryUS := "US"
+
+	// add to active slot to check history picks from right slots
+	// below should not be counted in history
+	activeSlot := r.GetActiveSlot()
+	metric := activeSlot.getMetric(1, 1)
+	metric.TopCountries.Names[0].Store(&countryRO)
+
+	slotPreviousMonth[1][5].RecordsPerPeriod.Store(1)
+	slotPreviousMonth[1][5].TopIPs.Names[0].Store(&ip)
+	slotPreviousMonth[1][5].TopIPs.Values[0].Store(3)
+
+	slotThreeMonthsAgo, errHistory3 := r.GetHistorySlot(FromThreeMonthsAgo)
+	require.NoError(t, errHistory3)
+
+	slotThreeMonthsAgo[10][0].RecordsPerPeriod.Store(1)
+	slotThreeMonthsAgo[10][0].TopIPs.Names[0].Store(&ip)
+	slotThreeMonthsAgo[10][0].TopIPs.Values[0].Store(4)
+	slotThreeMonthsAgo[10][0].TopCountries.Names[0].Store(&countryUS)
+	slotThreeMonthsAgo[10][0].TopCountries.Values[0].Store(5)
+
+	// Month Last
+	slotLast, errHistoryLast := r.GetHistorySlot(FromLastHistoryMonth)
+	require.NoError(t, errHistoryLast)
+
+	asn := "AS1234"
+
+	slotLast[30][23].RecordsPerPeriod.Store(1)
+	slotLast[30][23].TopCountries.Names[0].Store(&countryRO)
+	slotLast[30][23].TopCountries.Values[0].Store(1)
+	slotLast[30][23].TopASN.Names[0].Store(&asn)
+	slotLast[30][23].TopASN.Values[0].Store(9)
+
+	agg := r.HistoryAggregateTopN()
+
+	// IPs
+	require.Equal(t,
+		uint32(7),
+		agg.IPs.Count(ip),
+	)
+
+	// Countries
+	require.Equal(t,
+		uint32(1),
+		agg.Countries.Count(countryRO),
+	)
+	require.Equal(t,
+		uint32(5),
+		agg.Countries.Count(countryUS),
+	)
+
+	// ASN
+	require.Equal(t,
+		uint32(9),
+		agg.ASN.Count(asn),
+	)
+}

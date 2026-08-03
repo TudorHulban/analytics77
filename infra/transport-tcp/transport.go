@@ -23,7 +23,6 @@ type TransportTCP struct {
 
 	logContext *arenalog.LogContext
 
-	chQuit             chan struct{}
 	wgHandleConnection sync.WaitGroup
 }
 
@@ -47,8 +46,6 @@ func NewTransportTCP(l net.Listener, dependencies *PiersNewTransportTCP) (*Trans
 			serviceAnalytics: dependencies.ServiceAnalytics,
 			serviceLogging:   dependencies.ServiceLogging,
 			logContext:       logContext,
-
-			chQuit: make(chan struct{}),
 		},
 		nil
 }
@@ -71,6 +68,7 @@ func (s *TransportTCP) handleConnection(conn net.Conn) {
 		s.logContext.Print(
 			fmt.Sprintf(
 				"failed to decode payload from %s: %s\n",
+
 				conn.RemoteAddr(),
 				errDecode.Error(),
 			),
@@ -88,11 +86,14 @@ func (s *TransportTCP) handleConnection(conn net.Conn) {
 	)
 
 	// Process the data.
-	errsValidationEvents, errsProcessEvents := s.serviceAnalytics.RecordEvents(batch)
+	errsValidationEvents, errsProcessEvents := s.
+		serviceAnalytics.
+		RecordEvents(batch)
 	if len(errsValidationEvents) > 0 {
 		s.logContext.Print(
 			fmt.Sprintf(
 				"handleConnection - validation error(s)(%d) from %s: %v",
+
 				len(errsValidationEvents),
 				conn.RemoteAddr(),
 				errsValidationEvents,
@@ -106,6 +107,7 @@ func (s *TransportTCP) handleConnection(conn net.Conn) {
 		s.logContext.Print(
 			fmt.Sprintf(
 				"handleConnection - processing error(s)(%d) from %s: %v",
+
 				len(errsProcessEvents),
 				conn.RemoteAddr(),
 				errsProcessEvents,
@@ -116,6 +118,7 @@ func (s *TransportTCP) handleConnection(conn net.Conn) {
 	s.logContext.Print(
 		fmt.Sprintf(
 			"processed with no errors %d request(s) from %s",
+
 			len(batch),
 			conn.RemoteAddr(),
 		),
@@ -128,12 +131,6 @@ func (s *TransportTCP) Start() error {
 			"TCP transport started, listening on %s",
 			s.listener.Addr().String()),
 	)
-
-	go func() {
-		<-s.chQuit
-
-		_ = s.listener.Close()
-	}()
 
 	for {
 		conn, errAccept := s.listener.Accept()
@@ -154,8 +151,6 @@ func (s *TransportTCP) Start() error {
 }
 
 func (s *TransportTCP) Stop() {
-	close(s.chQuit)
-
 	_ = s.listener.Close()
 
 	s.wgHandleConnection.Wait() // Waits for active connections to finish processing

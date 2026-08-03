@@ -52,27 +52,27 @@ func TestPreviousHourAcrossAprilToMay(t *testing.T) {
 	require.Empty(t, dc.AddEvents(&reqApril30))
 
 	registry := dc.GetRegistry(datacenter.Site(site))
-	require.False(t, registry.GetCurrentMonth().IsZero())
-	require.False(t, registry.GetPreviousMonth().IsZero())
+	require.False(t, registry.GetActiveSlot().IsZero())
+	require.False(t, registry.GetPreviousSlot().IsZero())
 
 	var bufBefore strings.Builder
 
 	registry.Snapshot(&bufBefore)
-	t.Log("registry before rollover:\n", bufBefore.String())
+	t.Log("registry before advance:\n", bufBefore.String())
 
-	registry.Rollover() // move April in history as month 0.
+	registry.Advance() // move April in history as month 0.
 
 	var bufAfter strings.Builder
 
 	registry.Snapshot(&bufAfter)
-	t.Log("registry after rollover:\n", bufAfter.String())
+	t.Log("registry after advance:\n", bufAfter.String())
 
 	// Query April 30 aggregated data.
-	aggApril30 := registry.
-		HistoryAggregateTopNForDay(
-			0,
-			dhelpers.CalendarDayToIndex(int8(april30.Day())),
-		)
+	aggApril30, errHistory := registry.HistoryAggregateTopNForDay(
+		analytics.FromTwoMonthsAgo,
+		dhelpers.CalendarDayToIndex(int8(april30.Day())),
+	)
+	require.NoError(t, errHistory)
 
 	// April 30 slot must contain the event.
 	require.False(t,

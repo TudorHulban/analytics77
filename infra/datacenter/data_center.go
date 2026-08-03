@@ -24,6 +24,15 @@ func NewDataCenter() *DataCenter {
 	}
 }
 
+// Advance is not safe for concurrent callers.
+func (dc *DataCenter) Advance(sites ...Site) {
+	for site, registry := range dc.data {
+		if slices.Contains(sites, site) {
+			registry.Advance()
+		}
+	}
+}
+
 func (dc *DataCenter) String() string {
 	dc.mu.RLock()
 	defer dc.mu.RUnlock()

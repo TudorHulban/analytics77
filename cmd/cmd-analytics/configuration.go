@@ -12,7 +12,8 @@ type configuration struct {
 	portRPC  string
 	portHTTP string
 
-	nameLogfile string
+	nameLogfile    string
+	utcOffsetHours int64
 }
 
 func extractConfiguration(raw map[string]any) (*configuration, error) {
@@ -53,10 +54,29 @@ func extractConfiguration(raw map[string]any) (*configuration, error) {
 			)
 	}
 
+	initialization, exists := raw["initialization"].(map[string]any)
+	if !exists {
+		return nil,
+			errors.New(
+				"invalid or missing initialization section",
+			)
+	}
+
+	offset, couldCastOffset := initialization["utcOffsetHours"].(float64)
+	if !couldCastOffset {
+		return nil,
+			fmt.Errorf(
+				"invalid initialization value as %v",
+				initialization["utcOffsetHours"],
+			)
+	}
+
 	return &configuration{
 			portRPC:     strconv.Itoa(int(portRPC)),
 			portHTTP:    strconv.Itoa(int(portHTTP)),
 			nameLogfile: nameLogfile,
+
+			utcOffsetHours: int64(offset),
 		},
 		nil
 }

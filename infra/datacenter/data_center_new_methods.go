@@ -40,16 +40,6 @@ func (dc *DataCenter) GetSiteNames() []Site {
 	return result
 }
 
-func (dc *DataCenter) Rollover() {
-	dc.mu.Lock()
-
-	for _, registry := range dc.data {
-		registry.Rollover()
-	}
-
-	dc.mu.Unlock()
-}
-
 // Snapshot writes snapshots of all registries into w.
 // It acquires a read lock and delegates snapshotting to each Registry.
 func (dc *DataCenter) Snapshot(w io.Writer) error {

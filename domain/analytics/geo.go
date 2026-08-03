@@ -6,6 +6,7 @@ type GeoIP struct {
 		Organization string `json:"organization"`
 		Country      string `json:"country"`
 	} `json:"asn"`
+
 	Location struct {
 		City        string `json:"city"`
 		District    string `json:"district"`
@@ -13,5 +14,6 @@ type GeoIP struct {
 		Postcode    string `json:"zipcode"`
 		IsEU        bool   `json:"is_eu"`
 	} `json:"location"`
+
 	IsPrivate bool `json:"is_private"`
 }
