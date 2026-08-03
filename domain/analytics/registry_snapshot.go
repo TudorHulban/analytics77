@@ -18,14 +18,15 @@ func (r *Registry) Snapshot(w io.Writer) error {
 				continue
 			}
 
-			if _, err := fmt.Fprintf(
+			if _, errPrint := fmt.Fprintf(
 				w,
-				"current day:%02d hour:%02d records:%d\n",
+
+				"current day: '%02d' hour: '%02d' records: '%d'\n",
 				day,
 				hour,
 				rec,
-			); err != nil {
-				return err
+			); errPrint != nil {
+				return errPrint
 			}
 		}
 	}
@@ -47,15 +48,16 @@ func (r *Registry) Snapshot(w io.Writer) error {
 					continue
 				}
 
-				if _, err := fmt.Fprintf(
+				if _, errPrint := fmt.Fprintf(
 					w,
-					"%s day:%02d hour:%02d records:%d\n",
+
+					"%s day: '%02d' hour: '%02d' records: '%d'\n",
 					label,
 					day,
 					hour,
 					rec,
-				); err != nil {
-					return err
+				); errPrint != nil {
+					return errPrint
 				}
 			}
 		}
