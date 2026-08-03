@@ -109,7 +109,7 @@ outer:
 			k := new(T)
 			*k = key
 			m.Names[claimed].Store(k)
-			m.Values[claimed].Store(byValue)
+			m.Values[claimed].Add(byValue)
 
 			return
 		}

@@ -9,6 +9,8 @@ func (a *App) Stop() {
 		"shutting down HTTP transport",
 	)
 
+	a.transportTCP.Stop()
+
 	errStopFiber := a.transportHTTP.Shutdown()
 	if errStopFiber != nil {
 		a.serviceLogging.Logger.

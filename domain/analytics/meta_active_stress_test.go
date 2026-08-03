@@ -60,7 +60,10 @@ func TestMetaActiveIncrement_ConcurrentHighCardinality(t *testing.T) {
 	require.EqualValues(t,
 		numGoroutines*incrementsPerGoro,
 		sum,
-		"sum of Values must equal total increment calls; a lower sum means a lost update (race) in Increment",
+
+		"sum of Values must equal total increment calls; a lower sum (%d vs %d) means a lost update (race) in Increment",
+		sum,
+		numGoroutines*incrementsPerGoro,
 	)
 
 	// Sanity: occupancy mask must show all 7 slots full given >>7 distinct keys.
@@ -90,8 +93,8 @@ func TestMetaActiveIncrement_ConcurrentSameKeys(t *testing.T) {
 		go func(seed int) {
 			defer wg.Done()
 
-			for i := range incrementsPerGoro {
-				m.Increment(keys[(seed+i)%len(keys)], 1)
+			for ix := range incrementsPerGoro {
+				m.Increment(keys[(seed+ix)%len(keys)], 1)
 			}
 		}(g)
 	}
@@ -105,6 +108,10 @@ func TestMetaActiveIncrement_ConcurrentSameKeys(t *testing.T) {
 	}
 
 	require.EqualValues(t,
+		numGoroutines*incrementsPerGoro,
+		sum,
+
+		"expected: %d, got: %d",
 		numGoroutines*incrementsPerGoro,
 		sum,
 	)

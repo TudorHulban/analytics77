@@ -23,7 +23,6 @@ type TransportTCP struct {
 
 	logContext *arenalog.LogContext
 
-	chQuit             chan struct{}
 	wgHandleConnection sync.WaitGroup
 }
 
@@ -47,8 +46,6 @@ func NewTransportTCP(l net.Listener, dependencies *PiersNewTransportTCP) (*Trans
 			serviceAnalytics: dependencies.ServiceAnalytics,
 			serviceLogging:   dependencies.ServiceLogging,
 			logContext:       logContext,
-
-			chQuit: make(chan struct{}),
 		},
 		nil
 }
@@ -135,12 +132,6 @@ func (s *TransportTCP) Start() error {
 			s.listener.Addr().String()),
 	)
 
-	go func() {
-		<-s.chQuit
-
-		_ = s.listener.Close()
-	}()
-
 	for {
 		conn, errAccept := s.listener.Accept()
 		if errAccept != nil {
@@ -160,8 +151,6 @@ func (s *TransportTCP) Start() error {
 }
 
 func (s *TransportTCP) Stop() {
-	close(s.chQuit)
-
 	_ = s.listener.Close()
 
 	s.wgHandleConnection.Wait() // Waits for active connections to finish processing

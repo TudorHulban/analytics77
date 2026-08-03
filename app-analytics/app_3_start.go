@@ -58,7 +58,6 @@ func (a *App) Start(ctx context.Context) error {
 	var stopOnce sync.Once
 
 	stopElements := func() {
-		a.transportTCP.Stop()
 		a.Stop()
 	}
 
