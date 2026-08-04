@@ -75,7 +75,7 @@ func (s *ServiceGeo) GetIPGeo(ip netip.Addr) (*analytics.GeoIP, error) {
 		return kvValue, nil
 	}
 
-	providerValue, errGetGeolocation := requestgeo.GetLocationByIP(
+	geoValue, errGetGeolocation := requestgeo.GetLocationByIP(
 		&requestgeo.ParamsGetLocationByIP{
 			Client:    s.httpClient,
 			APIKey:    s.apiKeyGeolocation,
@@ -87,8 +87,8 @@ func (s *ServiceGeo) GetIPGeo(ip netip.Addr) (*analytics.GeoIP, error) {
 			errGetGeolocation
 	}
 
-	_ = s.serviceStorage.PutGeoIP(providerValue)
-	s.cache.Put(ipStr, *providerValue)
+	_ = s.serviceStorage.PutGeoIP(geoValue)
+	s.cache.Put(ipStr, *geoValue)
 
-	return providerValue, nil
+	return geoValue, nil
 }

@@ -64,7 +64,7 @@ func (dc *DataCenter) String() string {
 	for _, k := range keys {
 		fmt.Fprintf(&b, "\n[%s]\n", k)
 
-		registryString(dc.data[k], &b)
+		dc.data[k].WriteTo(&b)
 	}
 
 	return b.String()
