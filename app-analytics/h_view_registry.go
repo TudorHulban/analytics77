@@ -1,11 +1,19 @@
 package appanalytics
 
-import "github.com/gofiber/fiber/v3"
+import (
+	"strings"
+
+	"github.com/gofiber/fiber/v3"
+)
 
 func (a *App) HandlerViewRegistry(c fiber.Ctx) error {
 	c.Set("Content-Type", "text/html")
 
-	return c.SendString(
+	data := []string{
 		a.serviceAnalytics.DC.String(),
+	}
+
+	return c.SendString(
+		strings.Join(data, "\n"),
 	)
 }

@@ -9,6 +9,8 @@ import (
 	"github.com/tudorhulban/analytics77/domain/analytics"
 )
 
+// Site is localhost if there is collection from several sites.
+// TODO: take site from configuration
 type Site string
 
 // Stores in UTC times.
