@@ -62,12 +62,6 @@ func (r ResponseRecordsPerSite) String() string {
 	return builder.String()
 }
 
-// GetPreviousHourRecordsPerSite returns, per site, the record count for the
-// hour immediately preceding the current one.
-func (dc *DataCenter) GetPreviousHourRecordsPerSite(offsets *helpers.TimestampOffsets) ResponseRecordsPerSite {
-	return dc.previousHourRecordsPerSiteAt(time.Now().Unix(), offsets)
-}
-
 // previousHourRecordsPerSiteAt does the real work, parameterized on "now" so
 // tests can land deterministically on month/DST boundaries.
 //
@@ -117,6 +111,12 @@ func (dc *DataCenter) previousHourRecordsPerSiteAt(nowUTC int64, offsets *helper
 	dc.mu.RUnlock()
 
 	return result
+}
+
+// GetPreviousHourRecordsPerSite returns, per site, the record count for the
+// hour immediately preceding the current one.
+func (dc *DataCenter) GetPreviousHourRecordsPerSite(offsets *helpers.TimestampOffsets) ResponseRecordsPerSite {
+	return dc.previousHourRecordsPerSiteAt(time.Now().Unix(), offsets)
 }
 
 func (dc *DataCenter) GetCurrentHourRecordsPerSite(offsets *helpers.TimestampOffsets) ResponseRecordsPerSite {
