@@ -51,7 +51,9 @@ func TestPreviousHourAcrossAprilToMay(t *testing.T) {
 	}
 	require.Empty(t, dc.AddEvents(&reqApril30))
 
-	registry := dc.GetRegistry(datacenter.Site(site))
+	registry, exists := dc.GetRegistry(datacenter.Site(site))
+	require.True(t, exists)
+
 	require.False(t, registry.GetActiveSlot().IsZero())
 	require.False(t, registry.GetPreviousSlot().IsZero())
 

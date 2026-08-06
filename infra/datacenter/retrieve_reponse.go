@@ -11,9 +11,9 @@ import (
 	"github.com/tudorhulban/analytics77/helpers"
 )
 
-type ResponseRecordsPerSite map[string]uint32
+type ResponseRecordsPerSite map[Site]uint32
 
-func (r ResponseRecordsPerSite) Verify(keys []string, values []uint32) bool {
+func (r ResponseRecordsPerSite) Verify(keys []Site, values []uint32) bool {
 	if len(keys) != len(values) {
 		return false
 	}
@@ -34,7 +34,7 @@ func (r ResponseRecordsPerSite) String() string {
 		return "{}"
 	}
 
-	keys := make([]string, 0, len(r))
+	keys := make([]Site, 0, len(r))
 
 	for k := range r {
 		keys = append(keys, k)
@@ -81,7 +81,7 @@ func (dc *DataCenter) previousHourRecordsPerSiteAt(nowUTC int64, offsets *helper
 
 	dc.mu.RLock()
 
-	result := make(map[string]uint32, len(dc.data))
+	result := make(map[Site]uint32, len(dc.data))
 
 	for siteKey, registry := range dc.data {
 		prevMonth, prevDay, prevHour := helpers.ExtractMonthDayHour(
@@ -105,7 +105,7 @@ func (dc *DataCenter) previousHourRecordsPerSiteAt(nowUTC int64, offsets *helper
 			month = registry.GetPreviousSlot()
 		}
 
-		result[string(siteKey)] = month[dhelpers.CalendarDayToIndex(prevDay)][prevHour].RecordsPerPeriod.Load()
+		result[siteKey] = month[dhelpers.CalendarDayToIndex(prevDay)][prevHour].RecordsPerPeriod.Load()
 	}
 
 	dc.mu.RUnlock()
@@ -127,10 +127,10 @@ func (dc *DataCenter) GetCurrentHourRecordsPerSite(offsets *helpers.TimestampOff
 
 	dc.mu.RLock()
 
-	result := make(map[string]uint32, len(dc.data))
+	result := make(map[Site]uint32, len(dc.data))
 
 	for siteKey, registry := range dc.data {
-		result[string(siteKey)] = registry.GetActiveSlot()[dhelpers.CalendarDayToIndex(ixDay)][ixHour].RecordsPerPeriod.Load()
+		result[siteKey] = registry.GetActiveSlot()[dhelpers.CalendarDayToIndex(ixDay)][ixHour].RecordsPerPeriod.Load()
 	}
 
 	dc.mu.RUnlock()
@@ -148,7 +148,7 @@ func (dc *DataCenter) CurrentDayHoursWithData(offsets *helpers.TimestampOffsets)
 	now := time.Now().Unix()
 
 	for _, site := range sites {
-		registry := dc.GetRegistry(site)
+		registry, _ := dc.GetRegistry(site)
 
 		// Pass the offsets pointer down into the registry method
 		hoursWithData, howMany := registry.CurrentDayHoursWithData(now, offsets.OffsetUTCHours)
