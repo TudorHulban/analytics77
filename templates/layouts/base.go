@@ -12,6 +12,11 @@ type Page struct {
 }
 
 func (p *Page) Build() dsl.Node {
+	body := make([]dsl.Node, 0, len(p.Body)+len(_JS))
+
+	body = append(body, p.Body...)
+	body = append(body, _JS...)
+
 	return dsl.Doctype(
 		dsl.HTML(
 			dsl.Lang(p.Language),
@@ -29,6 +34,9 @@ func (p *Page) Build() dsl.Node {
 						dsl.Title(
 							dsl.Text(p.Title),
 						),
+
+						_LinkCSSStyles,
+
 						dsl.If(
 							len(p.Description) > 0,
 							dsl.Meta(
@@ -42,7 +50,7 @@ func (p *Page) Build() dsl.Node {
 			),
 
 			dsl.Body(
-				p.Body...,
+				body...,
 			),
 		),
 	)
