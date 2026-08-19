@@ -14,6 +14,13 @@ type Page struct {
 func (p *Page) Build() dsl.Node {
 	body := make([]dsl.Node, 0, len(p.Body)+len(_JS))
 
+	body = append(body,
+		dsl.Div(
+			dsl.Class("modal"),
+			dsl.AttrID("modal-container"),
+		),
+	)
+
 	body = append(body, p.Body...)
 	body = append(body, _JS...)
 
