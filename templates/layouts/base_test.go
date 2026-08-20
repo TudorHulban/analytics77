@@ -11,6 +11,10 @@ import (
 func TestBase(t *testing.T) {
 	el := Page{
 		Title: "Title",
+
+		Body: []dsl.Node{
+			LayoutMobile(dsl.Node{}),
+		},
 	}
 
 	app := fiber.New()
