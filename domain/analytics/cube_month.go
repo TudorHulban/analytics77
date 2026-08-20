@@ -1,5 +1,10 @@
 package analytics
 
+import (
+	"fmt"
+	"strings"
+)
+
 type MonthActive [31]DayActive
 
 func (m *MonthActive) IsZero() bool {
@@ -24,4 +29,29 @@ func (m *MonthActive) deepCopyInto(dst *MonthActive) {
 // Check before calling.
 func (m *MonthActive) getMetric(day, hour int8) *MetricActive {
 	return &m[day][hour]
+}
+
+func (m *MonthActive) WriteTo(b *strings.Builder, withLabel string) {
+	for ixDay := range m {
+		day := &m[ixDay] // pointer, no copy
+
+		for ixHour := range day {
+			m := &day[ixHour] // pointer, no copy
+
+			noRecords := m.RecordsPerPeriod.Load()
+			if noRecords == 0 {
+				continue
+			}
+
+			fmt.Fprintf(
+				b,
+				"  %-10s day: %02d hour: %02d  records: %d\n",
+
+				withLabel,
+				ixDay,
+				ixHour,
+				noRecords,
+			)
+		}
+	}
 }

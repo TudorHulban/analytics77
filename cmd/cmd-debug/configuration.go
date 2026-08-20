@@ -7,7 +7,7 @@ import (
 	"github.com/tudorhulban/analytics77/cmd"
 )
 
-func extractConfiguration(raw map[string]any) (string, error) {
+func extractServerSocketConfig(raw map[string]any) (string, error) {
 	debug, exists := raw["debug"].(map[string]any)
 	if !exists {
 		return "",
@@ -18,12 +18,12 @@ func extractConfiguration(raw map[string]any) (string, error) {
 
 	// Go defaults JSON numbers to float64.
 	// Type assertions return the zero-value (empty string / 0) if they fail.
-	host, couldCastHost := debug["host"].(string)
+	host, couldCastHost := debug[_HostServer].(string)
 	if !couldCastHost {
 		return "",
 			fmt.Errorf(
 				"invalid host as %v",
-				debug["host"],
+				debug[_HostServer],
 			)
 	}
 
@@ -43,4 +43,26 @@ func extractConfiguration(raw map[string]any) (string, error) {
 			int(port),
 		),
 		nil
+}
+
+func extractSiteName(raw map[string]any) (string, error) {
+	initialization, exists := raw[_NameSectionInit].(map[string]any)
+	if !exists {
+		return "",
+			fmt.Errorf(
+				"invalid or missing %s configuration",
+				_NameSectionInit,
+			)
+	}
+
+	nameLocal, couldCastSiteName := initialization[_NameSite].(string)
+	if !couldCastSiteName {
+		return "",
+			fmt.Errorf(
+				"invalid site / local name as %v",
+				initialization[_NameSite],
+			)
+	}
+
+	return nameLocal, nil
 }

@@ -14,14 +14,14 @@ import (
 // This method uses a read lock because it does not mutate the DataCenter.
 // The caller must treat the returned pointer as read‑only unless they
 // explicitly coordinate ingestion through AddEvents.
-func (dc *DataCenter) GetRegistry(site Site) *analytics.Registry {
+func (dc *DataCenter) GetRegistry(site Site) (*analytics.Registry, bool) {
 	dc.mu.RLock()
 
-	result := dc.data[site]
+	result, exists := dc.data[site]
 
 	dc.mu.RUnlock()
 
-	return result
+	return result, exists
 }
 
 // ListSites returns a snapshot of all sites currently present in the DataCenter.
@@ -31,6 +31,7 @@ func (dc *DataCenter) GetSiteNames() []Site {
 	dc.mu.RLock()
 
 	result := make([]Site, 0, len(dc.data))
+
 	for site := range dc.data {
 		result = append(result, site)
 	}

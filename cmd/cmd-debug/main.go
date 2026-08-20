@@ -42,7 +42,19 @@ func main() {
 
 	configRaw := initialization.Configuration(cmd.PathConfig)
 
-	configSocket, errParse := extractConfiguration(configRaw)
+	configSiteName, errParseSite := extractSiteName(configRaw)
+	if errParseSite != nil {
+		fmt.Printf(
+			"error extract configuration: %s\n",
+			errParseSite.Error(),
+		)
+
+		os.Exit(
+			hxerrors.OSExitForConfigurationIssues,
+		)
+	}
+
+	configSocket, errParse := extractServerSocketConfig(configRaw)
 	if errParse != nil {
 		fmt.Printf(
 			"error extract configuration: %s\n",
@@ -69,7 +81,7 @@ func main() {
 		)
 	}
 
-	request := fixtures.NewRequests(ip.String())
+	request := fixtures.NewRequests(configSiteName, ip.String())
 
 	if errTransmit := gob.NewEncoder(connClient).Encode(&request); errTransmit != nil {
 		fmt.Printf(
