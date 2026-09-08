@@ -15,7 +15,11 @@ func (a *App) HandlerPage(c fiber.Ctx) error {
 		Language:    "Eng",
 	}
 
+	content := dsl.RenderFast(p.Build())
+
+	// fmt.Println(string(content))
+
 	return c.Send(
-		dsl.RenderFast(p.Build()),
+		content,
 	)
 }

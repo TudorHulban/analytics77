@@ -8,23 +8,23 @@ var _LinkCSSStyles = dsl.Link(
 )
 
 var _JSCore = dsl.Script(
-	dsl.Src("/public/hxgo_core_ws.js"),
+	dsl.Src("../../public/hxgo/js/hxgo_core_ws.js"),
 )
 
 var _JSCache = dsl.Script(
-	dsl.Src("/public/hxgo_plugin_cache.js"),
+	dsl.Src("../../public/hxgo_plugin_cache.js"),
 )
 
 var _JSListeners = dsl.Script(
-	dsl.Src("/public/hxgo_plugin_listeners.js"),
+	dsl.Src("../../public/hxgo_plugin_listeners.js"),
 )
 
 var _JSUI = dsl.Script(
-	dsl.Src("/public/hxgo_plugin_ui.js"),
+	dsl.Src("../../public/hxgo_plugin_ui.js"),
 )
 
 var _JSValidation = dsl.Script(
-	dsl.Src("/public/hxgo_plugin_validation.js"),
+	dsl.Src("../../public/hxgo_plugin_validation.js"),
 )
 
 var _JSChart = dsl.Script(

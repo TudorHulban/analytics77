@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/static"
 	"github.com/tudorhulban/analytics77/helpers"
 	"github.com/tudorhulban/analytics77/infra/initialization"
 	transporttcp "github.com/tudorhulban/analytics77/infra/transport-tcp"
@@ -15,8 +16,9 @@ import (
 )
 
 type ParamsInitializeApp struct {
-	ConfigPortRPC  string
-	ConfigPortHTTP string
+	ConfigPortRPC   string
+	ConfigPortHTTP  string
+	PathFilesPublic string
 
 	KeyGeolocationAPI string
 	PathLogFile       string
@@ -111,12 +113,16 @@ func InitializeApp(params *ParamsInitializeApp, piers *PiersInitializeApp) *App 
 		)
 	}
 
+	transportHTTP := fiber.New(
+		fiber.Config{
+			BodyLimit: 1 * 1024 * 1024, // in mb
+		},
+	)
+
+	transportHTTP.Get("/public/*", static.New(params.PathFilesPublic))
+
 	return &App{
-		transportHTTP: fiber.New(
-			fiber.Config{
-				BodyLimit: 1 * 1024 * 1024, // in mb
-			},
-		),
+		transportHTTP: transportHTTP,
 
 		transportTCP: transportTCP,
 

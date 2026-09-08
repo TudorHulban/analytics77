@@ -75,11 +75,11 @@ alignment-fix:
 # 	@whitespace ./...
 
 SUBMODULE_URL := https://github.com/TudorHulban/hxgo.git
-SUBMODULE_DIR := hxgo
+SUBMODULE_DIR := public/hxgo
 
 .PHONY: js-init js-sync js-status
 
-# Add and clone the submodule if it hasn't been added yet
+# Add and clone the submodule if it has not been added yet
 js-init:
 	@if [ ! -d "$(SUBMODULE_DIR)" ]; then \
 		echo "Adding submodule..."; \
