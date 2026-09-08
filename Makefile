@@ -73,3 +73,26 @@ alignment-fix:
 # 	@gocyclo -top 10 app
 # 	@gocyclo -avg .
 # 	@whitespace ./...
+
+SUBMODULE_URL := https://github.com/TudorHulban/hxgo.git
+SUBMODULE_DIR := hxgo
+
+.PHONY: js-init js-sync js-status
+
+# Add and clone the submodule if it hasn't been added yet
+js-init:
+	@if [ ! -d "$(SUBMODULE_DIR)" ]; then \
+		echo "Adding submodule..."; \
+		git submodule add $(SUBMODULE_URL) $(SUBMODULE_DIR); \
+	else \
+		echo "Submodule directory already exists. Initializing..."; \
+		git submodule update --init --recursive; \
+	fi
+
+# Pull the latest JS files from the upstream remote repository
+js-sync:
+	git submodule update --remote --merge $(SUBMODULE_DIR)
+
+# Check current submodule commit status
+js-status:
+	git submodule status $(SUBMODULE_DIR)
