@@ -6,13 +6,13 @@ import (
 	"github.com/tudorhulban/analytics77/templates/layouts"
 )
 
-func (a *App) HandlerPage(c fiber.Ctx) error {
+func (*App) HandlerPage(c fiber.Ctx) error {
 	c.Set("Content-Type", "text/html")
 
 	p := layouts.Page{
 		Title:       "page title",
 		Description: "page description",
-		Language:    "Eng",
+		Language:    _PageLanguageEnglish,
 	}
 
 	content := dsl.RenderFast(p.Build())

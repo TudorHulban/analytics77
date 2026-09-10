@@ -14,10 +14,10 @@ import (
 )
 
 func main() {
+	configRaw := initialization.Configuration(cmd.PathConfig)
+
 	// dir, _ := os.Getwd()
 	// fmt.Println("Current Working Directory:", dir)
-
-	configRaw := initialization.Configuration(cmd.PathConfig)
 
 	configuration, errParse := extractConfiguration(configRaw)
 	if errParse != nil {
