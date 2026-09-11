@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 
+	"github.com/TudorHulban/hxgo/helpers/ws"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/static"
 	"github.com/tudorhulban/analytics77/helpers"
@@ -123,8 +124,8 @@ func InitializeApp(params *ParamsInitializeApp, piers *PiersInitializeApp) *App 
 
 	return &App{
 		transportHTTP: transportHTTP,
-
-		transportTCP: transportTCP,
+		transportWS:   ws.NewServer(),
+		transportTCP:  transportTCP,
 
 		serviceAnalytics: serviceAnalytics,
 		serviceLogging:   serviceLogging,

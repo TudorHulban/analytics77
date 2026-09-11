@@ -6,7 +6,7 @@ import (
 	"github.com/tudorhulban/analytics77/templates/layouts"
 )
 
-func (*App) HandlerPage(c fiber.Ctx) error {
+func (*App) handlerPage(c fiber.Ctx) error {
 	c.Set("Content-Type", "text/html")
 
 	p := layouts.Page{
