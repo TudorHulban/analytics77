@@ -56,7 +56,9 @@ func TestGetPreviousHourRecordsPerSite_CrossesMonthBoundary(t *testing.T) {
 		),
 	)
 
-	registry := dc.GetRegistry(Site(site))
+	registry, exists := dc.GetRegistry(Site(site))
+	require.True(t, exists)
+
 	require.NotNil(t, registry)
 	require.EqualValues(t,
 		time.March,
@@ -70,7 +72,8 @@ func TestGetPreviousHourRecordsPerSite_CrossesMonthBoundary(t *testing.T) {
 	require.Len(t, records, 1)
 	require.EqualValues(t,
 		1,
-		records[site],
+		records[Site(site)],
+
 		"the last hour of February should be visible as 'previous hour' from March 1st 00:30",
 	)
 }

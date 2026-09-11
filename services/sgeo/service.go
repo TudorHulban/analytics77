@@ -64,18 +64,19 @@ func (s *ServiceGeo) GetIPGeo(ip netip.Addr) (*analytics.GeoIP, error) {
 
 	ipStr := ip.String()
 
-	if cacheValue, errGetCache := s.cache.Get(ipStr); errGetCache == nil {
-		return cacheValue,
+	if valueFromCache, errGetCache := s.cache.Get(ipStr); errGetCache == nil {
+		return valueFromCache,
 			nil
 	}
 
-	if kvValue, errStorage := s.serviceStorage.GetIPGeo(ipStr); errStorage == nil {
-		s.cache.Put(ipStr, *kvValue)
+	if valueFromStorage, errStorage := s.serviceStorage.GetIPGeo(ipStr); errStorage == nil {
+		s.cache.Put(ipStr, *valueFromStorage)
 
-		return kvValue, nil
+		return valueFromStorage,
+			nil
 	}
 
-	providerValue, errGetGeolocation := requestgeo.GetLocationByIP(
+	geoValue, errGetGeolocation := requestgeo.GetLocationByIP(
 		&requestgeo.ParamsGetLocationByIP{
 			Client:    s.httpClient,
 			APIKey:    s.apiKeyGeolocation,
@@ -87,8 +88,8 @@ func (s *ServiceGeo) GetIPGeo(ip netip.Addr) (*analytics.GeoIP, error) {
 			errGetGeolocation
 	}
 
-	_ = s.serviceStorage.PutGeoIP(providerValue)
-	s.cache.Put(ipStr, *providerValue)
+	_ = s.serviceStorage.PutGeoIP(geoValue)
+	s.cache.Put(ipStr, *geoValue)
 
-	return providerValue, nil
+	return geoValue, nil
 }

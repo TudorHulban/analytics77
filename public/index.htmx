@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>MetricActive Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+  <!-- ============ LOGIN SCREEN ============ -->
+  <div id="loginScreen">
+    <div class="login-card">
+      <div class="login-logo">
+        <i class="fas fa-shield-haltered"></i>
+        <h1>MetricActive</h1>
+        <p>Multi-Site Analytics Dashboard</p>
+      </div>
+      <div class="login-error" id="loginError">
+        <i class="fas fa-exclamation-circle"></i> 
+        <span>Invalid credentials. Use admin@metricactive.com / admin123</span>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="admin@metricactive.com" value="admin@metricactive.com">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="Enter password" value="admin123">
+      </div>
+      <button class="login-btn" id="loginButton">
+        <i class="fas fa-sign-in-alt"></i> Sign In
+      </button>
+      <div class="login-footer">
+        Demo credentials are pre-filled. Just click Sign In.
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ APP SCREEN ============ -->
+  <div id="appScreen">
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+      <div class="logo-mobile">
+        <i class="fas fa-shield-haltered"></i>
+        <span>MetricActive</span>
+      </div>
+      <div class="mobile-header-actions">
+        <button class="icon-btn" id="mobileThemeToggle" title="Toggle theme">
+          <i class="fas fa-moon"></i>
+        </button>
+        <button class="icon-btn" id="mobileLogoutBtn" title="Logout">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+        <button class="icon-btn" id="hamburgerBtn" title="Menu">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+    </header>
+
+    <div class="content-wrapper">
+      <!-- Sidebar -->
+      <aside class="sidebar" id="sidebar">
+        <div class="logo">
+          <i class="fas fa-shield-haltered"></i>
+          <span>MetricActive</span>
+        </div>
+        <nav class="nav-menu">
+          <a class="nav-item active" data-page="analytics">
+            <i class="fas fa-chart-line"></i> <span>Analytics</span>
+          </a>
+          <a class="nav-item" data-page="users">
+            <i class="fas fa-users"></i> <span>Users</span>
+          </a>
+        </nav>
+        <div class="sidebar-bottom">
+          <button class="theme-toggle-btn" id="desktopThemeToggle">
+            <i class="fas fa-moon"></i>
+            <span>Dark Mode</span>
+            <div class="toggle-track"><div class="toggle-thumb"></div></div>
+          </button>
+          <div class="user-info-sidebar">
+            <div class="user-avatar" id="userAvatar">JD</div>
+            <div>
+              <div style="font-weight:600;" id="userNameDisplay">John Doe</div>
+              <div style="font-size:0.75rem; color:var(--sidebar-text-muted);">Admin</div>
+            </div>
+          </div>
+          <button class="logout-btn" id="desktopLogoutBtn">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </button>
+        </div>
+      </aside>
+
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- Analytics Page -->
+        <div class="page active" id="analytics-page">
+          <div class="top-bar">
+            <div class="active-site-combo">
+              <i class="fas fa-globe"></i>
+              <select id="siteSelector">
+                <option value="site1">🌐 example.com</option>
+                <option value="site2">🛒 shop.example.com</option>
+                <option value="site3">📊 analytics.example.com</option>
+                <option value="site4">🏢 corp.example.com</option>
+                <option value="site5">🌍 global.example.com</option>
+              </select>
+              <div class="site-status">
+                <span class="status-dot"></span>
+                <span>Active</span>
+              </div>
+            </div>
+            <div class="controls-wrapper">
+              <div class="period-toggle">
+                <button class="period-btn active" data-period="hour"><i class="far fa-clock"></i> Hour</button>
+                <button class="period-btn" data-period="day"><i class="far fa-calendar-check"></i> Day</button>
+                <button class="period-btn" data-period="month"><i class="far fa-calendar-alt"></i> Month</button>
+              </div>
+              <div class="date-selectors">
+                <div class="selector-group" id="monthGroup"><select id="monthSelect"></select></div>
+                <div class="selector-group" id="dayGroup"><select id="daySelect"></select></div>
+                <div class="selector-group" id="hourGroup"><select id="hourSelect"></select></div>
+                <button class="quick-day-btn" id="quickDayBtn"><i class="fas fa-bolt"></i> Today</button>
+              </div>
+              <div class="view-toggle" id="viewToggle">
+                <button class="view-btn active" data-view="grid"><i class="fas fa-th"></i> Cards</button>
+                <button class="view-btn" data-view="horizontal"><i class="fas fa-bars"></i> Rows</button>
+              </div>
+              <div class="records-counter">
+                <i class="fas fa-database"></i> <span id="recordsValue">0</span>
+              </div>
+            </div>
+          </div>
+          <div id="metricsContainer"></div>
+          <div class="history-section">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+              <h3 style="color:var(--text-primary);"><i class="fas fa-chart-line" style="color:var(--accent-primary);"></i> Records per period</h3>
+              <span id="chartContextLabel" style="color:var(--text-tertiary); font-size:0.9rem;">Hourly data view</span>
+            </div>
+            <div class="chart-container"><canvas id="historyChart"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Users Page -->
+        <div class="page" id="users-page">
+          <div class="user-management">
+            <div class="user-header">
+              <h2 style="color:var(--text-primary);"><i class="fas fa-users" style="color:var(--accent-primary);"></i> User Management</h2>
+              <button class="add-user-btn" onclick="openUserModal()"><i class="fas fa-plus"></i> Add User</button>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="users-table">
+                <thead><tr><th>User</th><th>Email</th><th>Role</th><th>Sites</th><th>Last Active</th><th>Actions</th></tr></thead>
+                <tbody id="usersTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Mobile Bottom Nav -->
+    <nav class="mobile-bottom-nav">
+      <div class="mobile-nav-items">
+        <div class="mobile-nav-item active" data-page="analytics"><i class="fas fa-chart-line"></i><span>Analytics</span></div>
+        <div class="mobile-nav-item" data-page="users"><i class="fas fa-users"></i><span>Users</span></div>
+      </div>
+    </nav>
+  </div>
+
+  <!-- User Modal -->
+  <div class="modal" id="userModal">
+    <div class="modal-content">
+      <h3 id="modalTitle">Add User</h3>
+      <form id="userForm">
+        <input type="hidden" id="userId">
+        <div class="form-group"><label>Name</label><input type="text" id="userName" required></div>
+        <div class="form-group"><label>Email</label><input type="email" id="userEmail" required></div>
+        <div class="form-group"><label>Role</label><select id="userRole"><option value="admin">Admin</option><option value="editor">Editor</option><option value="viewer">Viewer</option></select></div>
+        <div class="form-group"><label>Assigned Sites</label><select id="userSites" multiple style="height:100px;"><option value="site1">example.com</option><option value="site2">shop.example.com</option><option value="site3">analytics.example.com</option><option value="site4">corp.example.com</option><option value="site5">global.example.com</option></select></div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" onclick="closeUserModal()">Cancel</button>
+          <button type="submit" class="btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

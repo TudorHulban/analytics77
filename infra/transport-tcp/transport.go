@@ -86,9 +86,7 @@ func (s *TransportTCP) handleConnection(conn net.Conn) {
 	)
 
 	// Process the data.
-	errsValidationEvents, errsProcessEvents := s.
-		serviceAnalytics.
-		RecordEvents(batch)
+	errsValidationEvents, errsProcessEvents := s.serviceAnalytics.RecordEvents(batch)
 	if len(errsValidationEvents) > 0 {
 		s.logContext.Print(
 			fmt.Sprintf(

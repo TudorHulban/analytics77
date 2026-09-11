@@ -16,6 +16,9 @@ import (
 func main() {
 	configRaw := initialization.Configuration(cmd.PathConfig)
 
+	// dir, _ := os.Getwd()
+	// fmt.Println("Current Working Directory:", dir)
+
 	configuration, errParse := extractConfiguration(configRaw)
 	if errParse != nil {
 		fmt.Printf(
@@ -30,8 +33,9 @@ func main() {
 
 	app := appanalytics.InitializeApp(
 		&appanalytics.ParamsInitializeApp{
-			ConfigPortRPC:  configuration.portRPC,
-			ConfigPortHTTP: configuration.portHTTP,
+			ConfigPortRPC:   configuration.portRPC,
+			ConfigPortHTTP:  configuration.portHTTP,
+			PathFilesPublic: "./public",
 
 			PathLogFile:       configuration.nameLogfile,
 			KeyGeolocationAPI: os.Getenv(cmd.OSAPIGeolocation),

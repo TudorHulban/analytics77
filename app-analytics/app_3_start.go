@@ -23,7 +23,8 @@ func (a *App) Start(ctx context.Context) error {
 
 	a.serviceLogging.Logger.Info(messageStart)
 
-	InitializeTransportRoutes(a)
+	InitializeTransportHTTPRoutes(a)
+	InitializeTransportWS(a)
 
 	chError := make(chan error, 2)
 
