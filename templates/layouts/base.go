@@ -43,6 +43,7 @@ func (p *Page) Build() dsl.Node {
 						),
 
 						_LinkCSSStyles,
+						_LinkCSSFontAwesome,
 
 						dsl.If(
 							len(p.Description) > 0,

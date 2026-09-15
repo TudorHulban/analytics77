@@ -7,6 +7,11 @@ var _LinkCSSStyles = dsl.Link(
 	dsl.Href("/public/styles.css"),
 )
 
+var _LinkCSSFontAwesome = dsl.Link(
+	dsl.Rel("stylesheet"),
+	dsl.Href("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"),
+)
+
 var _JSCore = dsl.Script(
 	dsl.Src("/public/hxgo/js/hxgo_core_ws.js"),
 )

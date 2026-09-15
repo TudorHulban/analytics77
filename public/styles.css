@@ -106,7 +106,7 @@ body {
 
 /* ============ LOGIN SCREEN ============ */
 #loginScreen {
-  display: flex;
+  /* display: flex; */
   min-height: 100vh;
   background: var(--login-bg);
   align-items: center;
@@ -217,13 +217,9 @@ body {
 
 /* ============ APP SCREEN ============ */
 #appScreen {
-  display: none;
+  display: flex;
   flex-direction: column;
   min-height: 100vh;
-}
-
-#appScreen.visible {
-  display: flex;
 }
 
 /* Mobile Header */
