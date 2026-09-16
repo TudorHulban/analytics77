@@ -12,6 +12,10 @@ var _LinkCSSFontAwesome = dsl.Link(
 	dsl.Href("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"),
 )
 
+var _JSDashboard = dsl.Script(
+	dsl.Src("/public/dashboard.js"),
+)
+
 var _JSCore = dsl.Script(
 	dsl.Src("/public/hxgo/js/hxgo_core_ws.js"),
 )
@@ -37,6 +41,8 @@ var _JSChart = dsl.Script(
 )
 
 var _JS = []dsl.Node{
+	_JSDashboard,
+
 	_JSCore,
 	_JSCache,
 	_JSListeners,

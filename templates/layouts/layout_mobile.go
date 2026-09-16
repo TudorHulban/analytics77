@@ -63,9 +63,9 @@ func LayoutMobile(content dsl.Node) dsl.Node {
 						),
 						dsl.Div(
 							dsl.Class("toggle-track"),
-						),
-						dsl.Div(
-							dsl.Class("toggle-thumb"),
+							dsl.Div(
+								dsl.Class("toggle-thumb"),
+							),
 						),
 					),
 				),
