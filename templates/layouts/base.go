@@ -11,8 +11,8 @@ type Page struct {
 	Body []dsl.Node
 }
 
-func (p *Page) Build() dsl.Node {
-	body := make([]dsl.Node, 0, len(p.Body)+len(_JS))
+func (elem *Page) Build() dsl.Node {
+	body := make([]dsl.Node, 0, len(elem.Body)+len(_JS))
 
 	body = append(body,
 		dsl.Div(
@@ -21,12 +21,12 @@ func (p *Page) Build() dsl.Node {
 		),
 	)
 
-	body = append(body, p.Body...)
+	body = append(body, elem.Body...)
 	body = append(body, _JS...)
 
 	return dsl.Doctype(
 		dsl.HTML(
-			dsl.Lang(p.Language),
+			dsl.Lang(elem.Language),
 
 			dsl.Head(
 				append(
@@ -39,21 +39,21 @@ func (p *Page) Build() dsl.Node {
 							dsl.Content("width=device-width, initial-scale=1"),
 						),
 						dsl.Title(
-							dsl.Text(p.Title),
+							dsl.Text(elem.Title),
 						),
 
 						_LinkCSSStyles,
 						_LinkCSSFontAwesome,
 
 						dsl.If(
-							len(p.Description) > 0,
+							len(elem.Description) > 0,
 							dsl.Meta(
 								dsl.Name("description"),
-								dsl.Content(p.Description),
+								dsl.Content(elem.Description),
 							),
 						),
 					},
-					p.Head...,
+					elem.Head...,
 				)...,
 			),
 
