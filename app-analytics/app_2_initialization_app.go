@@ -8,6 +8,7 @@ import (
 
 	"github.com/TudorHulban/hxgo/helpers/ws"
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/favicon"
 	"github.com/gofiber/fiber/v3/middleware/static"
 	"github.com/tudorhulban/analytics77/helpers"
 	"github.com/tudorhulban/analytics77/infra/initialization"
@@ -118,6 +119,14 @@ func InitializeApp(params *ParamsInitializeApp, piers *PiersInitializeApp) *App 
 		fiber.Config{
 			BodyLimit: 1 * 1024 * 1024, // in mb
 		},
+	)
+
+	transportHTTP.Use(
+		favicon.New(
+			favicon.Config{
+				File: "./public/favicon.ico",
+			},
+		),
 	)
 
 	transportHTTP.Get("/public/*", static.New(params.PathFilesPublic))

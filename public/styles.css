@@ -692,6 +692,10 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+
+  i {
+    margin-right: 0.5rem;
+  }
 }
 
 .item-value {

@@ -9,7 +9,7 @@ import (
 )
 
 func TestCardMetric(t *testing.T) {
-	el := CardMetric{
+	el := MetricCard{
 		Title:        "Title",
 		FAwesomeIcon: "fa-network-wired",
 

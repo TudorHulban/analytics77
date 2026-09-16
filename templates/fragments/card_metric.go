@@ -29,14 +29,14 @@ func (elem *Metric) Build() dsl.Node {
 	)
 }
 
-type CardMetric struct {
+type MetricCard struct {
 	Title        string
 	FAwesomeIcon string // ex. fa-network-wired
 
 	Metrics []Metric
 }
 
-func (elem *CardMetric) Build() dsl.Node {
+func (elem *MetricCard) Build() dsl.Node {
 	entries := make([]dsl.Node, len(elem.Metrics))
 
 	for ix, metric := range elem.Metrics {
@@ -59,5 +59,27 @@ func (elem *CardMetric) Build() dsl.Node {
 		dsl.Ul(
 			append([]dsl.Node{dsl.AttrClass("top-list")}, entries...)...,
 		),
+	)
+}
+
+type MetricsContainer struct {
+	CSSID string
+	Cards []MetricCard
+}
+
+func (elem *MetricsContainer) Build() dsl.Node {
+	cards := make([]dsl.Node, len(elem.Cards))
+
+	for ix, card := range elem.Cards {
+		cards[ix] = card.Build()
+	}
+
+	return dsl.Div(
+		append(
+			[]dsl.Node{
+				dsl.AttrID(elem.CSSID),
+				dsl.AttrClass("metrics-grid"),
+			}, cards...,
+		)...,
 	)
 }
