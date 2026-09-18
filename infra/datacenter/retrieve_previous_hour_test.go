@@ -48,7 +48,8 @@ func TestPreviousHourRecords(t *testing.T) {
 
 	require.Empty(t, dc.AddEvents(&req1))
 
-	registryBefore := dc.GetRegistry(Site(site))
+	registryBefore, exists := dc.GetRegistry(Site(site))
+	require.True(t, exists)
 	require.EqualValues(t,
 		localTime.Month(),
 		registryBefore.CalendarMonthCurrentNumber.Load(),
@@ -61,7 +62,7 @@ func TestPreviousHourRecords(t *testing.T) {
 	)
 	require.Len(t, recordsPreviousHourBefore, 1)
 	require.Zero(t,
-		recordsPreviousHourBefore[site],
+		recordsPreviousHourBefore[Site(site)],
 
 		"previous hour has no data yet",
 	)
@@ -80,7 +81,9 @@ func TestPreviousHourRecords(t *testing.T) {
 
 	require.Empty(t, dc.AddEvents(&req2))
 
-	registryAfter := dc.GetRegistry(Site(site))
+	registryAfter, exists := dc.GetRegistry(Site(site))
+	require.True(t, exists)
+
 	hours, howMany := registryAfter.CurrentDayHoursWithData(localTime.Unix(), int64(utcOffsetHours))
 	require.EqualValues(t, 2, howMany)
 	require.Empty(t,
@@ -98,7 +101,7 @@ func TestPreviousHourRecords(t *testing.T) {
 	require.Len(t, recordsPreviousHourAfter, 1)
 	require.EqualValues(t,
 		1,
-		recordsPreviousHourAfter[site],
+		recordsPreviousHourAfter[Site(site)],
 
 		"previous hour should have req2 now",
 	)

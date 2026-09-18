@@ -90,7 +90,8 @@ func TestAddEventsAcrossBoundaries(t *testing.T) {
 
 				require.Empty(t, dc.AddEvents(&req))
 
-				registry := dc.GetRegistry(Site(site))
+				registry, exists := dc.GetRegistry(Site(site))
+				require.True(t, exists)
 				require.NotNil(t, registry)
 				require.NotZero(t, registry.CalendarMonthCurrentNumber.Load())
 
