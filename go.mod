@@ -3,7 +3,7 @@ module github.com/tudorhulban/analytics77
 go 1.26.0
 
 require (
-	github.com/TudorHulban/hxgo v0.0.9-0.20260820112951-ec4b8b125294
+	github.com/TudorHulban/hxgo v0.0.10-0.20260918115626-c26d602c4165
 	github.com/gofiber/fiber/v3 v3.4.0
 	github.com/prologic/bitcask v0.3.10
 	github.com/shamaton/msgpack/v3 v3.2.0
@@ -12,7 +12,7 @@ require (
 	github.com/tudorhulban/bytearena v0.0.18-0.20260528104812-211e4a865a1e
 	github.com/tudorhulban/hx-lru v0.0.0-20260618131954-37b17a4f088d
 	github.com/tudorhulban/hxerrors v0.0.2-0.20260730145821-55e4d22a89bf
-	github.com/tudorhulban/hxhelpers v0.0.0-20260626115212-a2b526d1c0f0
+	github.com/tudorhulban/hxhelpers v0.0.2-0.20260918114531-5650ce7d056f
 )
 
 require (
