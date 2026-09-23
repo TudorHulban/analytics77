@@ -18,6 +18,8 @@ github.com/TudorHulban/hxgo v0.0.9-0.20260820112951-ec4b8b125294 h1:qfRE/YAneJxA
 github.com/TudorHulban/hxgo v0.0.9-0.20260820112951-ec4b8b125294/go.mod h1:H0c4amYJTjaxElpVEPyspfnYC0RHLoqYd//CxwwGD0o=
 github.com/TudorHulban/hxgo v0.0.10-0.20260918115626-c26d602c4165 h1:GjRtuFllxk9QaM4rtvueSskaaCGeSsFDVhVWAaqk2IQ=
 github.com/TudorHulban/hxgo v0.0.10-0.20260918115626-c26d602c4165/go.mod h1:Go4IbcHvF5YNuS3nc4lIDRK+LJpzDSFbTZ/7Nrfxq7Q=
+github.com/TudorHulban/hxgo v0.0.11-0.20260923093956-117eda8470bd h1:UcB5mbXkbOJhRwbCmRZjbxPu8SwqbMdNTuU9+yFv8uk=
+github.com/TudorHulban/hxgo v0.0.11-0.20260923093956-117eda8470bd/go.mod h1:Go4IbcHvF5YNuS3nc4lIDRK+LJpzDSFbTZ/7Nrfxq7Q=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/andybalholm/brotli v1.2.2 h1:HzTuoo2ErYQqf5qvcJInB8uvqSVxRttzkFexPWtnceM=

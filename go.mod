@@ -3,7 +3,7 @@ module github.com/tudorhulban/analytics77
 go 1.26.0
 
 require (
-	github.com/TudorHulban/hxgo v0.0.10-0.20260918115626-c26d602c4165
+	github.com/TudorHulban/hxgo v0.0.11-0.20260923093956-117eda8470bd
 	github.com/gofiber/fiber/v3 v3.4.0
 	github.com/prologic/bitcask v0.3.10
 	github.com/shamaton/msgpack/v3 v3.2.0
