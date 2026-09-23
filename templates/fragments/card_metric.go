@@ -1,6 +1,8 @@
 package fragments
 
-import "github.com/TudorHulban/hxgo/dsl"
+import (
+	"github.com/TudorHulban/hxgo/dsl"
+)
 
 type Metric struct {
 	Name  string

@@ -209,6 +209,8 @@ func (elem *TopBar) Build() dsl.Node {
 					dsl.I(
 						dsl.AttrClass("fas fa-bolt"),
 					),
+
+					dsl.Text("Today"),
 				),
 			),
 		),

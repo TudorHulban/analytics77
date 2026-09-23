@@ -9,8 +9,8 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-func TestTopBar(t *testing.T) {
-	el := TopBar{
+var testTopBar = func() TopBar {
+	return TopBar{
 		SiteCombo: ComboSite{
 			Status: "Active",
 			OptionsSite: []inputs.Option{
@@ -32,6 +32,7 @@ func TestTopBar(t *testing.T) {
 		},
 
 		SelectMonth: ComboSelectMonth{
+			SelectedValue: "2026-4",
 			OptionsMonth: []inputs.Option{
 				{
 					Value: "2026-3",
@@ -47,7 +48,71 @@ func TestTopBar(t *testing.T) {
 				},
 			},
 		},
+
+		SelectDay: ComboSelectDay{
+			SelectedValue: "17",
+			OptionsDay: []inputs.Option{
+				{
+					Value: "15",
+					Label: "15",
+				},
+				{
+					Value: "16",
+					Label: "16",
+				},
+				{
+					Value: "17",
+					Label: "17",
+				},
+				{
+					Value: "18",
+					Label: "18",
+				},
+			},
+		},
+
+		SelectHour: ComboSelectHour{
+			SelectedValue: "5",
+			OptionsHour: []inputs.Option{
+				{
+					Value: "1",
+					Label: "1",
+				},
+				{
+					Value: "2",
+					Label: "2",
+				},
+				{
+					Value: "3",
+					Label: "3",
+				},
+				{
+					Value: "4",
+					Label: "4",
+				},
+				{
+					Value: "5",
+					Label: "5",
+				},
+				{
+					Value: "6",
+					Label: "6",
+				},
+				{
+					Value: "7",
+					Label: "7",
+				},
+				{
+					Value: "8",
+					Label: "8",
+				},
+			},
+		},
 	}
+}
+
+func TestTopBar(t *testing.T) {
+	el := testTopBar()
 
 	app := fiber.New()
 
