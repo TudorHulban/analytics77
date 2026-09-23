@@ -5,12 +5,84 @@ import (
 	"github.com/TudorHulban/hxgo/dsl"
 )
 
-type SiteCombo struct {
-	Status  string
-	Options []inputs.Option
+type ComboSelectMonth struct {
+	SelectedValue string
+	OptionsMonth  []inputs.Option
 }
 
-func (elem *SiteCombo) Build() dsl.Node {
+func (elem *ComboSelectMonth) Build() dsl.Node {
+	if len(elem.OptionsMonth) == 0 {
+		return dsl.Node{}
+	}
+
+	return dsl.Div(
+		dsl.AttrClass("selector-group"),
+		dsl.AttrID("monthGroup"),
+
+		inputs.InputSelect{
+			CSSDivID: "monthSelect",
+
+			SelectedValue: elem.SelectedValue,
+			SelectOptions: elem.OptionsMonth,
+		}.
+			Raw(),
+	)
+}
+
+type ComboSelectDay struct {
+	SelectedValue string
+	OptionsDay    []inputs.Option
+}
+
+func (elem *ComboSelectDay) Build() dsl.Node {
+	if len(elem.OptionsDay) == 0 {
+		return dsl.Node{}
+	}
+
+	return dsl.Div(
+		dsl.AttrClass("selector-group"),
+		dsl.AttrID("monthGroup"),
+
+		inputs.InputSelect{
+			CSSDivID: "daySelect",
+
+			SelectedValue: elem.SelectedValue,
+			SelectOptions: elem.OptionsDay,
+		}.
+			Raw(),
+	)
+}
+
+type ComboSelectHour struct {
+	SelectedValue string
+	OptionsHour   []inputs.Option
+}
+
+func (elem *ComboSelectHour) Build() dsl.Node {
+	if len(elem.OptionsHour) == 0 {
+		return dsl.Node{}
+	}
+
+	return dsl.Div(
+		dsl.AttrClass("selector-group"),
+		dsl.AttrID("monthGroup"),
+
+		inputs.InputSelect{
+			CSSDivID: "hourSelect",
+
+			SelectedValue: elem.SelectedValue,
+			SelectOptions: elem.OptionsHour,
+		}.
+			Raw(),
+	)
+}
+
+type ComboSite struct {
+	Status      string
+	OptionsSite []inputs.Option
+}
+
+func (elem *ComboSite) Build() dsl.Node {
 	return dsl.Div(
 		dsl.AttrClass("active-site-combo"),
 		dsl.I(
@@ -20,7 +92,7 @@ func (elem *SiteCombo) Build() dsl.Node {
 		inputs.InputSelect{
 			CSSDivID: "siteSelector",
 
-			SelectOptions: elem.Options,
+			SelectOptions: elem.OptionsSite,
 		}.
 			Raw(),
 
@@ -37,9 +109,9 @@ func (elem *SiteCombo) Build() dsl.Node {
 }
 
 type PeriodToggle struct {
-	ShowMonth bool
-	ShowDay   bool
 	ShowHour  bool
+	ShowDay   bool
+	ShowMonth bool
 }
 
 func (elem *PeriodToggle) Build() dsl.Node {
@@ -83,7 +155,10 @@ func (elem *PeriodToggle) Build() dsl.Node {
 				dsl.AttrClass("period-btn"),
 				dsl.AttrWithValue(
 					"data-period",
-					"day",
+					"month",
+				),
+				dsl.I(
+					dsl.AttrClass("far fa-calendar-alt"),
 				),
 			),
 		),
@@ -91,8 +166,11 @@ func (elem *PeriodToggle) Build() dsl.Node {
 }
 
 type TopBar struct {
-	SiteCombo     SiteCombo
+	SiteCombo     ComboSite
 	PeriodToggler PeriodToggle
+	SelectMonth   ComboSelectMonth
+	SelectDay     ComboSelectDay
+	SelectHour    ComboSelectHour
 }
 
 func (elem *TopBar) Build() dsl.Node {
@@ -100,5 +178,39 @@ func (elem *TopBar) Build() dsl.Node {
 		dsl.AttrClass("top-bar"),
 
 		elem.SiteCombo.Build(),
+
+		dsl.Div(
+			dsl.AttrClass("controls-wrapper"),
+
+			elem.PeriodToggler.Build(),
+
+			dsl.Div(
+				dsl.AttrClass("date-selectors"),
+
+				dsl.If(
+					elem.PeriodToggler.ShowMonth,
+					elem.SelectMonth.Build(),
+				),
+
+				dsl.If(
+					elem.PeriodToggler.ShowDay,
+					elem.SelectDay.Build(),
+				),
+
+				dsl.If(
+					elem.PeriodToggler.ShowHour,
+					elem.SelectHour.Build(),
+				),
+
+				dsl.Button(
+					dsl.AttrClass("quick-day-btn"),
+					dsl.AttrID("quickDayBtn"),
+
+					dsl.I(
+						dsl.AttrClass("fas fa-bolt"),
+					),
+				),
+			),
+		),
 	)
 }

@@ -11,9 +11,9 @@ import (
 
 func TestTopBar(t *testing.T) {
 	el := TopBar{
-		SiteCombo: SiteCombo{
+		SiteCombo: ComboSite{
 			Status: "Active",
-			Options: []inputs.Option{
+			OptionsSite: []inputs.Option{
 				{
 					Value: "site1",
 					Label: "🌐 example.com",
@@ -21,6 +21,29 @@ func TestTopBar(t *testing.T) {
 				{
 					Value: "site2",
 					Label: "🛒 shop.example.com",
+				},
+			},
+		},
+
+		PeriodToggler: PeriodToggle{
+			ShowMonth: true,
+			ShowDay:   true,
+			ShowHour:  true,
+		},
+
+		SelectMonth: ComboSelectMonth{
+			OptionsMonth: []inputs.Option{
+				{
+					Value: "2026-3",
+					Label: "Apr 2026",
+				},
+				{
+					Value: "2026-4",
+					Label: "May 2026",
+				},
+				{
+					Value: "2026-5",
+					Label: "Jun 2026",
 				},
 			},
 		},
