@@ -166,11 +166,13 @@ func (elem *PeriodToggle) Build() dsl.Node {
 }
 
 type TopBar struct {
-	SiteCombo     ComboSite
+	SiteCombo ComboSite
+
+	SelectMonth ComboSelectMonth
+	SelectDay   ComboSelectDay
+	SelectHour  ComboSelectHour
+
 	PeriodToggler PeriodToggle
-	SelectMonth   ComboSelectMonth
-	SelectDay     ComboSelectDay
-	SelectHour    ComboSelectHour
 }
 
 func (elem *TopBar) Build() dsl.Node {

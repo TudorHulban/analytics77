@@ -585,6 +585,11 @@ body {
   outline: none;
   cursor: pointer;
   font-size: 0.85rem;
+
+  option {
+    background: var(--bg-card);
+    color: var(--text-primary);
+  }
 }
 
 .quick-day-btn {
