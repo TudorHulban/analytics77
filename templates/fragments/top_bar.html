@@ -1,0 +1,100 @@
+<div class="top-bar">
+    <div class="active-site-combo">
+        <i class="fas fa-globe"></i>
+        <select id="siteSelector">
+            <option value="site1">🌐 example.com</option>
+            <option value="site2">🛒 shop.example.com</option>
+            <option value="site3">📊 analytics.example.com</option>
+            <option value="site4">🏢 corp.example.com</option>
+            <option value="site5">🌍 global.example.com</option>
+        </select>
+        <div class="site-status">
+            <span class="status-dot"></span>
+            <span>Active</span>
+        </div>
+    </div>
+    <div class="controls-wrapper">
+        <div class="period-toggle">
+            <button class="period-btn active" data-period="hour"><i class="far fa-clock"></i> Hour</button>
+            <button class="period-btn" data-period="day"><i class="far fa-calendar-check"></i> Day</button>
+            <button class="period-btn" data-period="month"><i class="far fa-calendar-alt"></i> Month</button>
+        </div>
+        <div class="date-selectors">
+            <div class="selector-group" id="monthGroup"><select id="monthSelect">
+                    <option value="2026-3">Apr 2026</option>
+                    <option value="2026-4">May 2026</option>
+                    <option value="2026-5">Jun 2026</option>
+                    <option value="2026-6">Jul 2026</option>
+                    <option value="2026-7">Aug 2026</option>
+                    <option value="2026-8">Sep 2026</option>
+                    <option value="2026-8" selected="">Sep 2026 (active)</option>
+                </select></div>
+            <div class="selector-group" id="dayGroup"><select id="daySelect">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12">12</option>
+                    <option value="13">13</option>
+                    <option value="14">14</option>
+                    <option value="15">15</option>
+                    <option value="16">16</option>
+                    <option value="17" selected="">17</option>
+                    <option value="18">18</option>
+                    <option value="19">19</option>
+                    <option value="20">20</option>
+                    <option value="21">21</option>
+                    <option value="22">22</option>
+                    <option value="23">23</option>
+                    <option value="24">24</option>
+                    <option value="25">25</option>
+                    <option value="26">26</option>
+                    <option value="27">27</option>
+                    <option value="28">28</option>
+                    <option value="29">29</option>
+                    <option value="30">30</option>
+                </select></div>
+            <div class="selector-group" id="hourGroup"><select id="hourSelect">
+                    <option value="0">00:00</option>
+                    <option value="1">01:00</option>
+                    <option value="2">02:00</option>
+                    <option value="3">03:00</option>
+                    <option value="4">04:00</option>
+                    <option value="5">05:00</option>
+                    <option value="6">06:00</option>
+                    <option value="7">07:00</option>
+                    <option value="8">08:00</option>
+                    <option value="9">09:00</option>
+                    <option value="10">10:00</option>
+                    <option value="11" selected="">11:00</option>
+                    <option value="12">12:00</option>
+                    <option value="13">13:00</option>
+                    <option value="14">14:00</option>
+                    <option value="15">15:00</option>
+                    <option value="16">16:00</option>
+                    <option value="17">17:00</option>
+                    <option value="18">18:00</option>
+                    <option value="19">19:00</option>
+                    <option value="20">20:00</option>
+                    <option value="21">21:00</option>
+                    <option value="22">22:00</option>
+                    <option value="23">23:00</option>
+                </select></div>
+            <button class="quick-day-btn" id="quickDayBtn"><i class="fas fa-bolt"></i> Today</button>
+        </div>
+        <div class="view-toggle" id="viewToggle">
+            <button class="view-btn active" data-view="grid"><i class="fas fa-th"></i> Cards</button>
+            <button class="view-btn" data-view="horizontal"><i class="fas fa-bars"></i> Rows</button>
+        </div>
+        <div class="records-counter">
+            <i class="fas fa-database"></i> <span id="recordsValue">28,450</span>
+        </div>
+    </div>
+</div>

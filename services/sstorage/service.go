@@ -31,41 +31,6 @@ func (s *ServiceStorage) Close() error {
 	return nil
 }
 
-// func (s *ServiceStorage) GetIPGeo(ip netip.Addr) (*ResponseGetIPGeo, error) {
-// 	values := map[string]*ResponseGetIPGeo{
-// 		"127.0.0.1": {
-// 			Country: "LOC",
-// 			City:    "localhost",
-// 			ASN:     "localhost",
-// 		},
-
-// 		"82.77.237.37": {
-// 			Country: "ROU",
-// 			City:    "Iasi",
-// 			ASN:     "Digi",
-// 		},
-
-// 		"82.77.237.38": {
-// 			Country: "ROU",
-// 			City:    "Iasi",
-// 			ASN:     "Digi",
-// 		},
-
-// 		"82.77.237.39": {
-// 			Country: "ROU",
-// 			City:    "Iasi",
-// 			ASN:     "Vodafone",
-// 		},
-// 	}
-
-// 	if value, exists := values[ip.String()]; exists {
-// 		return value, nil
-// 	}
-
-// 	return nil,
-// 		ErrIPNotFound
-// }
-
 func (*ServiceStorage) PutGeoIP(value *analytics.GeoIP) error {
 	return nil
 }

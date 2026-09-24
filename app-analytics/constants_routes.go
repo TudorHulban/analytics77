@@ -1,5 +1,9 @@
 package appanalytics
 
 const (
-	RoutesAll = "/"
+	_RoutesAll = "/"
+
+	_RouteLogin         = "/login"
+	_RouteAuthorised    = "/authorised"
+	_RouteNotAuthorised = "/unauthorised"
 )

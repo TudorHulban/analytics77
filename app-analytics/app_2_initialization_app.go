@@ -6,7 +6,10 @@ import (
 	"net"
 	"os"
 
+	"github.com/TudorHulban/hxgo/helpers/ws"
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/favicon"
+	"github.com/gofiber/fiber/v3/middleware/static"
 	"github.com/tudorhulban/analytics77/helpers"
 	"github.com/tudorhulban/analytics77/infra/initialization"
 	transporttcp "github.com/tudorhulban/analytics77/infra/transport-tcp"
@@ -15,8 +18,9 @@ import (
 )
 
 type ParamsInitializeApp struct {
-	ConfigPortRPC  string
-	ConfigPortHTTP string
+	ConfigPortRPC   string
+	ConfigPortHTTP  string
+	PathFilesPublic string
 
 	KeyGeolocationAPI string
 	PathLogFile       string
@@ -111,14 +115,26 @@ func InitializeApp(params *ParamsInitializeApp, piers *PiersInitializeApp) *App 
 		)
 	}
 
-	return &App{
-		transportHTTP: fiber.New(
-			fiber.Config{
-				BodyLimit: 1 * 1024 * 1024, // in mb
+	transportHTTP := fiber.New(
+		fiber.Config{
+			BodyLimit: 1 * 1024 * 1024, // in mb
+		},
+	)
+
+	transportHTTP.Use(
+		favicon.New(
+			favicon.Config{
+				File: "./public/favicon.ico",
 			},
 		),
+	)
 
-		transportTCP: transportTCP,
+	transportHTTP.Get("/public/*", static.New(params.PathFilesPublic))
+
+	return &App{
+		transportHTTP: transportHTTP,
+		transportWS:   ws.NewServer(),
+		transportTCP:  transportTCP,
 
 		serviceAnalytics: serviceAnalytics,
 		serviceLogging:   serviceLogging,
