@@ -109,6 +109,14 @@ func (*App) handlerPage(c fiber.Ctx) error {
 				},
 			},
 		},
+
+		CounterRecords: fragments.Counter{
+			CSSDivClass: "records-counter",
+			SpanID:      "recordsValue",
+
+			FAwesomeIcon: "fa-database",
+			Label:        "1777",
+		},
 	}
 
 	h := fragments.MetricsContainer{
