@@ -95,3 +95,47 @@ setTheme(getTheme());
 // Theme toggle event listeners
 document.getElementById('desktopThemeToggle').addEventListener('click', toggleTheme);
 document.getElementById('mobileThemeToggle').addEventListener('click', toggleTheme);
+
+
+// ============ METRICS ============
+function getCurrentMetric() {
+  var siteData = dataCenter.data[currentSite];
+  return siteData ? siteData.MetricActive : null;
+}
+
+function refreshAll() {
+  var metric = getCurrentMetric();
+  document.getElementById('recordsValue').textContent = metric ? metric.RecordsPerPeriod.value.toLocaleString() : '0';
+  
+  console.log("refresh was invoked");
+}
+
+// ============ PERIOD TOGGLE ============
+document.querySelectorAll('.period-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.period-btn').forEach(function(b) {
+      b.classList.remove('active');
+    });
+    this.classList.add('active');
+    currentPeriod = this.dataset.period;
+    
+    document.getElementById('hourGroup').classList.toggle('disabled', currentPeriod !== 'hour');
+    document.getElementById('dayGroup').classList.toggle('disabled', currentPeriod === 'month');
+    
+    var labels = { hour: 'Hourly', day: 'Daily', month: 'Monthly' };
+    document.getElementById('chartContextLabel').textContent = labels[currentPeriod] + ' data view';
+    
+    refreshAll();
+  });
+});
+
+document.getElementById('quickDayBtn').addEventListener('click', function() {
+  var dayBtn = document.querySelector('.period-btn[data-period="day"]');
+  if (dayBtn) dayBtn.click();
+});
+
+// ============ SITE SELECTOR ============
+document.getElementById('siteSelector').addEventListener('change', function() {
+  currentSite = this.value;
+  refreshAll();
+});
