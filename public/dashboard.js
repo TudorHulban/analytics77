@@ -1,47 +1,8 @@
-function initApp() {
-  var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  var now = new Date();
-  var currentYear = now.getFullYear();
-  var currentMonth = now.getMonth();
-  var currentDay = now.getDate();
-  
-  // Month select
-  var monthHtml = '';
-  for (var i = 5; i >= 0; i--) {
-    var d = new Date(currentYear, currentMonth - i, 1);
-    monthHtml += '<option value="' + d.getFullYear() + '-' + d.getMonth() + '">' + months[d.getMonth()] + ' ' + d.getFullYear() + '</option>';
-  }
-  monthHtml += '<option value="' + currentYear + '-' + currentMonth + '" selected>' + months[currentMonth] + ' ' + currentYear + ' (active)</option>';
-  document.getElementById('monthSelect').innerHTML = monthHtml;
-  
-  // Day select - dynamic based on current month
-  populateDays(currentYear, currentMonth, currentDay);
-  
-  // Hour select
-  var hourHtml = '';
-  for (var h = 0; h < 24; h++) {
-    hourHtml += '<option value="' + h + '"' + (h === now.getHours() ? ' selected' : '') + '>' + String(h).padStart(2, '0') + ':00</option>';
-  }
-  document.getElementById('hourSelect').innerHTML = hourHtml;
-  
-  // Add event listener to update days when month changes
-  document.getElementById('monthSelect').addEventListener('change', function() {
-    var parts = this.value.split('-');
-    var year = parseInt(parts[0]);
-    var month = parseInt(parts[1]);
-    
-    // Get currently selected day, or default to 1
-    var currentSelectedDay = parseInt(document.getElementById('daySelect').value) || 1;
-    
-    // Cap the day to the max days in the new month
-    var maxDays = getDaysInMonth(year, month);
-    var newDay = Math.min(currentSelectedDay, maxDays);
-    
-    populateDays(year, month, newDay);
-  });
-  
+function refreshAll() {
+  var metric = getCurrentMetric();
+  document.getElementById('recordsValue').textContent = metric ? metric.RecordsPerPeriod.value.toLocaleString() : '0';
 
-// add render chart here
+  console.log("refresh was invoked");
 }
 
 // ============ THEME MANAGEMENT ============
@@ -52,18 +13,18 @@ function getTheme() {
 function setTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   localStorage.setItem('metricactive-theme', theme);
-  
+
   var isDark = theme === 'dark';
   var icons = document.querySelectorAll('#desktopThemeToggle i, #mobileThemeToggle i');
-  icons.forEach(function(icon) {
+  icons.forEach(function (icon) {
     icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
   });
-  
+
   var themeLabel = document.querySelector('#desktopThemeToggle span');
   if (themeLabel) {
     themeLabel.textContent = isDark ? 'Light Mode' : 'Dark Mode';
   }
-  
+
   if (window.chartInstance) {
     updateChartTheme();
   }
@@ -78,7 +39,7 @@ function updateChartTheme() {
   if (!window.chartInstance) return;
   var isDark = getTheme() === 'dark';
   var chart = window.chartInstance;
-  
+
   chart.options.scales.x.grid.color = isDark ? '#334155' : '#e2e8f0';
   chart.options.scales.y.grid.color = isDark ? '#334155' : '#e2e8f0';
   chart.options.scales.x.ticks.color = isDark ? '#94a3b8' : '#64748b';
@@ -103,39 +64,32 @@ function getCurrentMetric() {
   return siteData ? siteData.MetricActive : null;
 }
 
-function refreshAll() {
-  var metric = getCurrentMetric();
-  document.getElementById('recordsValue').textContent = metric ? metric.RecordsPerPeriod.value.toLocaleString() : '0';
-  
-  console.log("refresh was invoked");
-}
-
 // ============ PERIOD TOGGLE ============
-document.querySelectorAll('.period-btn').forEach(function(btn) {
-  btn.addEventListener('click', function() {
-    document.querySelectorAll('.period-btn').forEach(function(b) {
+document.querySelectorAll('.period-btn').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    document.querySelectorAll('.period-btn').forEach(function (b) {
       b.classList.remove('active');
     });
     this.classList.add('active');
     currentPeriod = this.dataset.period;
-    
+
     document.getElementById('hourGroup').classList.toggle('disabled', currentPeriod !== 'hour');
     document.getElementById('dayGroup').classList.toggle('disabled', currentPeriod === 'month');
-    
+
     var labels = { hour: 'Hourly', day: 'Daily', month: 'Monthly' };
     document.getElementById('chartContextLabel').textContent = labels[currentPeriod] + ' data view';
-    
+
     refreshAll();
   });
 });
 
-document.getElementById('quickDayBtn').addEventListener('click', function() {
+document.getElementById('quickDayBtn').addEventListener('click', function () {
   var dayBtn = document.querySelector('.period-btn[data-period="day"]');
   if (dayBtn) dayBtn.click();
 });
 
 // ============ SITE SELECTOR ============
-document.getElementById('siteSelector').addEventListener('change', function() {
+document.getElementById('siteSelector').addEventListener('change', function () {
   currentSite = this.value;
   refreshAll();
 });

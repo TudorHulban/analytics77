@@ -41,7 +41,7 @@ func (elem *ComboSelectDay) Build() dsl.Node {
 
 	return dsl.Div(
 		dsl.AttrClass("selector-group"),
-		dsl.AttrID("monthGroup"),
+		dsl.AttrID("dayGroup"),
 
 		inputs.InputSelect{
 			CSSDivID: "daySelect",
@@ -65,7 +65,7 @@ func (elem *ComboSelectHour) Build() dsl.Node {
 
 	return dsl.Div(
 		dsl.AttrClass("selector-group"),
-		dsl.AttrID("monthGroup"),
+		dsl.AttrID("hourGroup"),
 
 		inputs.InputSelect{
 			CSSDivID: "hourSelect",
