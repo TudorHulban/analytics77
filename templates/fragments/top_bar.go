@@ -65,6 +65,9 @@ func (elem *PeriodToggle) Build() dsl.Node {
 }
 
 type TopBar struct {
+	URLBtnToday string
+	URLBtnSync  string
+
 	CounterRecords Counter
 
 	SiteCombo ComboSite
@@ -107,24 +110,32 @@ func (elem *TopBar) Build() dsl.Node {
 
 				dsl.Button(
 					dsl.AttrClass("btn-quick"),
-					dsl.AttrID("btnToday"),
+					dsl.AttrID(_IDButtonToday),
 
 					dsl.I(
 						dsl.AttrClass("fas fa-bolt"),
 					),
 
 					dsl.Text("Today"),
+					dsl.If(
+						len(elem.URLBtnToday) > 0,
+						dsl.AttrHXGET(elem.URLBtnToday),
+					),
 				),
 
 				dsl.Button(
 					dsl.AttrClass("btn-quick btn-quick-dark"),
-					dsl.AttrID("btnSync"),
+					dsl.AttrID(_IDButtonSync),
 
 					dsl.I(
 						dsl.AttrClass("fas fa-sync"),
 					),
 
 					dsl.Text("Sync"),
+					dsl.If(
+						len(elem.URLBtnSync) > 0,
+						dsl.AttrHXGET(elem.URLBtnSync),
+					),
 				),
 
 				elem.CounterRecords.Build(),

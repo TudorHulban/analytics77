@@ -83,11 +83,6 @@ document.querySelectorAll('.period-btn').forEach(function (btn) {
   });
 });
 
-document.getElementById('quickDayBtn').addEventListener('click', function () {
-  var dayBtn = document.querySelector('.period-btn[data-period="day"]');
-  if (dayBtn) dayBtn.click();
-});
-
 // ============ SITE SELECTOR ============
 document.getElementById('siteSelector').addEventListener('change', function () {
   currentSite = this.value;

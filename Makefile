@@ -86,7 +86,7 @@ js-init:
 		git submodule add $(SUBMODULE_URL) $(SUBMODULE_DIR); \
 	else \
 		echo "Submodule directory already exists. Initializing..."; \
-		git submodule update --init --recursive; \
+		git submodule update --init --recursive --remote --force; \
 	fi
 
 # Pull the latest JS files from the upstream remote repository

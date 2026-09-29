@@ -12,6 +12,9 @@ func (*App) handlerPage(c fiber.Ctx) error {
 	c.Set("Content-Type", "text/html")
 
 	top := fragments.TopBar{
+		URLBtnToday: "/today",
+		URLBtnSync:  "/sync",
+
 		SiteCombo: fragments.ComboSite{
 			Status: "Active",
 			OptionsSite: []inputs.Option{
