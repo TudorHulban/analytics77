@@ -12,7 +12,7 @@ func InitializeTransportHTTPRoutes(app *App) {
 	)
 
 	app.transportHTTP.Get(
-		_RoutesAll,
+		_RoutesHTTP,
 		app.handlerPage,
 	)
 }

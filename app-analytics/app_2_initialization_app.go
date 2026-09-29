@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/TudorHulban/hxgo/helpers/ws"
+	"github.com/gofiber/contrib/v3/websocket"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/favicon"
 	"github.com/gofiber/fiber/v3/middleware/static"
@@ -96,6 +97,8 @@ func InitializeApp(params *ParamsInitializeApp, piers *PiersInitializeApp) *App 
 		)
 	}
 
+	transportWS := ws.NewServer()
+
 	transportTCP, errCrTransport := transporttcp.NewTransportTCP(
 		listener,
 		&transporttcp.PiersNewTransportTCP{
@@ -129,11 +132,24 @@ func InitializeApp(params *ParamsInitializeApp, piers *PiersInitializeApp) *App 
 		),
 	)
 
+	transportHTTP.Use(
+		_RoutesWS,
+
+		func(c fiber.Ctx) error {
+			if c.Get("Upgrade") == "websocket" {
+				return c.Next()
+			}
+
+			return fiber.ErrUpgradeRequired
+		},
+	)
+	transportHTTP.Get("/ws", websocket.New(transportWS.HandleWebSocket))
+
 	transportHTTP.Get("/public/*", static.New(params.PathFilesPublic))
 
 	return &App{
 		transportHTTP: transportHTTP,
-		transportWS:   ws.NewServer(),
+		transportWS:   transportWS,
 		transportTCP:  transportTCP,
 
 		serviceAnalytics: serviceAnalytics,
