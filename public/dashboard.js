@@ -77,7 +77,6 @@ document.querySelectorAll('.period-btn').forEach(function (btn) {
     document.getElementById('dayGroup').classList.toggle('disabled', currentPeriod === 'month');
 
     var labels = { hour: 'Hourly', day: 'Daily', month: 'Monthly' };
-    document.getElementById('chartContextLabel').textContent = labels[currentPeriod] + ' data view';
 
     refreshAll();
   });

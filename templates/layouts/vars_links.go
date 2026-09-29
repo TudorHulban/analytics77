@@ -16,8 +16,14 @@ var _JSDashboard = dsl.Script(
 	dsl.Src("/public/dashboard.js"),
 )
 
-var _JSCore = dsl.Script(
-	dsl.Src("/public/hxgo/js/hxgo_core_ws.js"),
+var (
+	_JSCoreWS = dsl.Script(
+		dsl.Src("/public/hxgo/js/hxgo_core_ws.js"),
+	)
+
+	_JSCoreHTTP = dsl.Script(
+		dsl.Src("/public/hxgo/js/hxgo_core_http.js"),
+	)
 )
 
 var _JSCache = dsl.Script(
@@ -43,7 +49,8 @@ var _JSChart = dsl.Script(
 var _JS = []dsl.Node{
 	_JSDashboard,
 
-	_JSCore,
+	_JSCoreWS,
+	// _JSCoreHTTP,
 	_JSCache,
 	_JSListeners,
 	_JSUI,

@@ -64,3 +64,7 @@ func (a *App) wslogin(c *websocket.Conn, message *ws.WSMessage) {
 		),
 	)
 }
+
+func (a *App) wsLogger(c *websocket.Conn, message *ws.WSMessage) {
+	fmt.Println("ws message: ", message.String())
+}

@@ -109,6 +109,7 @@ func (elem *TopBar) Build() dsl.Node {
 				),
 
 				dsl.Button(
+					dsl.AttrType("submit"),
 					dsl.AttrClass("btn-quick"),
 					dsl.AttrID(_IDButtonToday),
 
@@ -119,16 +120,17 @@ func (elem *TopBar) Build() dsl.Node {
 					dsl.Text("Today"),
 					dsl.If(
 						len(elem.URLBtnToday) > 0,
-						dsl.AttrHXGET(elem.URLBtnToday),
+						dsl.AttrHXPOST(elem.URLBtnToday),
 					),
 				),
 
 				dsl.Button(
+					dsl.AttrType("submit"),
 					dsl.AttrClass("btn-quick btn-quick-dark"),
 					dsl.AttrID(_IDButtonSync),
 
 					dsl.I(
-						dsl.AttrClass("fas fa-sync"),
+						dsl.AttrHXPOST("fas fa-sync"),
 					),
 
 					dsl.Text("Sync"),
