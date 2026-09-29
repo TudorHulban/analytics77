@@ -543,6 +543,7 @@ body {
   font-size: 0.8rem;
   color: var(--period-btn-text);
   cursor: pointer;
+
   display: flex;
   align-items: center;
   gap: 0.3rem;
@@ -592,7 +593,7 @@ body {
   }
 }
 
-.quick-day-btn {
+.btn-quick {
   background: var(--accent-primary);
   color: white;
   border: none;
@@ -601,6 +602,14 @@ body {
   font-weight: 600;
   font-size: 0.8rem;
   cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.btn-quick-dark {
+  background-color: color-mix(in srgb, var(--accent-primary), black 40%);
 }
 
 .records-counter {

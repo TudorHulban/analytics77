@@ -106,14 +106,25 @@ func (elem *TopBar) Build() dsl.Node {
 				),
 
 				dsl.Button(
-					dsl.AttrClass("quick-day-btn"),
-					dsl.AttrID("quickDayBtn"),
+					dsl.AttrClass("btn-quick"),
+					dsl.AttrID("btnToday"),
 
 					dsl.I(
 						dsl.AttrClass("fas fa-bolt"),
 					),
 
 					dsl.Text("Today"),
+				),
+
+				dsl.Button(
+					dsl.AttrClass("btn-quick btn-quick-dark"),
+					dsl.AttrID("btnSync"),
+
+					dsl.I(
+						dsl.AttrClass("fas fa-sync"),
+					),
+
+					dsl.Text("Sync"),
 				),
 
 				elem.CounterRecords.Build(),
