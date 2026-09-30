@@ -20,6 +20,7 @@ func InitializeTransportHTTPRoutes(app *App) {
 func InitializeTransportWS(app *App) {
 	// app.transportWS.Handlers["/login"] = app.wslogin
 	app.transportWS.Handlers["/"] = app.wsLogger
+	app.transportWS.Handlers["/today"] = app.wsLogger
 
 	app.transportHTTP.Use(
 		"/ws",
