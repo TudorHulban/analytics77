@@ -3,6 +3,7 @@ package appanalytics
 import (
 	"github.com/gofiber/contrib/v3/websocket"
 	"github.com/gofiber/fiber/v3"
+	"github.com/tudorhulban/analytics77/cmd"
 )
 
 func InitializeTransportHTTPRoutes(app *App) {
@@ -19,8 +20,8 @@ func InitializeTransportHTTPRoutes(app *App) {
 
 func InitializeTransportWS(app *App) {
 	// app.transportWS.Handlers["/login"] = app.wslogin
-	app.transportWS.Handlers["/"] = app.wsLogger
-	app.transportWS.Handlers["/today"] = app.wsLogger
+	app.transportWS.Handlers[cmd.WSRouteToday] = app.wsLogger
+	app.transportWS.Handlers[cmd.WSRouteSync] = app.wsLogger
 
 	app.transportHTTP.Use(
 		"/ws",

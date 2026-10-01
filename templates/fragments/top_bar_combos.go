@@ -20,7 +20,7 @@ func (elem *ComboSelectMonth) Build() dsl.Node {
 		dsl.AttrID(_IDComboSelectMonth),
 
 		inputs.InputSelect{
-			CSSDivID: "monthSelect",
+			CSSDivID: _IDSelectMonth,
 
 			SelectedValue: elem.SelectedValue,
 			SelectOptions: elem.OptionsMonth,
@@ -44,7 +44,7 @@ func (elem *ComboSelectDay) Build() dsl.Node {
 		dsl.AttrID(_IDComboSelectDay),
 
 		inputs.InputSelect{
-			CSSDivID: "daySelect",
+			CSSDivID: _IDSelectDay,
 
 			SelectedValue: elem.SelectedValue,
 			SelectOptions: elem.OptionsDay,
@@ -68,7 +68,7 @@ func (elem *ComboSelectHour) Build() dsl.Node {
 		dsl.AttrID(_IDComboSelectHour),
 
 		inputs.InputSelect{
-			CSSDivID: "hourSelect",
+			CSSDivID: _IDSelectHour,
 
 			SelectedValue: elem.SelectedValue,
 			SelectOptions: elem.OptionsHour,

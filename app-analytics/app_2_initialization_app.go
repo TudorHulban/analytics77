@@ -97,8 +97,6 @@ func InitializeApp(params *ParamsInitializeApp, piers *PiersInitializeApp) *App 
 		)
 	}
 
-	transportWS := ws.NewServer()
-
 	transportTCP, errCrTransport := transporttcp.NewTransportTCP(
 		listener,
 		&transporttcp.PiersNewTransportTCP{
@@ -117,6 +115,8 @@ func InitializeApp(params *ParamsInitializeApp, piers *PiersInitializeApp) *App 
 			hxerrors.OSExitForConnectivityIssues,
 		)
 	}
+
+	transportWS := ws.NewServer()
 
 	transportHTTP := fiber.New(
 		fiber.Config{

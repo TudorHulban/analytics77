@@ -138,6 +138,11 @@ func (elem *TopBar) Build() dsl.Node {
 						len(elem.URLBtnSync) > 0,
 						dsl.AttrHXGET(elem.URLBtnSync),
 					),
+					dsl.AttrHXSend(
+						_IDSelectMonth,
+						_IDSelectDay,
+						_IDSelectHour,
+					),
 				),
 
 				elem.CounterRecords.Build(),

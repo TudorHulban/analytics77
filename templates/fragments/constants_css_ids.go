@@ -5,6 +5,10 @@ const (
 	_IDComboSelectMonth = "monthGroup"
 	_IDComboSelectDay   = "dayGroup"
 	_IDComboSelectHour  = "hourGroup"
+
+	_IDSelectMonth = "monthSelect"
+	_IDSelectDay   = "daySelect"
+	_IDSelectHour  = "hourSelect"
 )
 
 // top bar sync buttons
