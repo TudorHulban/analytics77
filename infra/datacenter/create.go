@@ -96,6 +96,7 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 			registrySite = analytics.NewRegistry(
 				helpers.ExtractMonth(event.TimestampUNIX),
 			)
+
 			dc.data[site] = registrySite
 		}
 

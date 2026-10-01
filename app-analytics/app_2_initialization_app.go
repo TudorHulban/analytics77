@@ -6,7 +6,11 @@ import (
 	"net"
 	"os"
 
+	"github.com/TudorHulban/hxgo/helpers/ws"
+	"github.com/gofiber/contrib/v3/websocket"
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/favicon"
+	"github.com/gofiber/fiber/v3/middleware/static"
 	"github.com/tudorhulban/analytics77/helpers"
 	"github.com/tudorhulban/analytics77/infra/initialization"
 	transporttcp "github.com/tudorhulban/analytics77/infra/transport-tcp"
@@ -15,8 +19,9 @@ import (
 )
 
 type ParamsInitializeApp struct {
-	ConfigPortRPC  string
-	ConfigPortHTTP string
+	ConfigPortRPC   string
+	ConfigPortHTTP  string
+	PathFilesPublic string
 
 	KeyGeolocationAPI string
 	PathLogFile       string
@@ -111,14 +116,41 @@ func InitializeApp(params *ParamsInitializeApp, piers *PiersInitializeApp) *App 
 		)
 	}
 
-	return &App{
-		transportHTTP: fiber.New(
-			fiber.Config{
-				BodyLimit: 1 * 1024 * 1024, // in mb
+	transportWS := ws.NewServer()
+
+	transportHTTP := fiber.New(
+		fiber.Config{
+			BodyLimit: 1 * 1024 * 1024, // in mb
+		},
+	)
+
+	transportHTTP.Use(
+		favicon.New(
+			favicon.Config{
+				File: "./public/favicon.ico",
 			},
 		),
+	)
 
-		transportTCP: transportTCP,
+	transportHTTP.Use(
+		_RoutesWS,
+
+		func(c fiber.Ctx) error {
+			if c.Get("Upgrade") == "websocket" {
+				return c.Next()
+			}
+
+			return fiber.ErrUpgradeRequired
+		},
+	)
+	transportHTTP.Get("/ws", websocket.New(transportWS.HandleWebSocket))
+
+	transportHTTP.Get("/public/*", static.New(params.PathFilesPublic))
+
+	return &App{
+		transportHTTP: transportHTTP,
+		transportWS:   transportWS,
+		transportTCP:  transportTCP,
 
 		serviceAnalytics: serviceAnalytics,
 		serviceLogging:   serviceLogging,

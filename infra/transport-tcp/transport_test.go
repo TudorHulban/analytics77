@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/cmd"
 	"github.com/tudorhulban/analytics77/helpers"
+	"github.com/tudorhulban/analytics77/infra/datacenter"
 	"github.com/tudorhulban/analytics77/services/sanalytics"
 	"github.com/tudorhulban/analytics77/services/sgeo"
 	"github.com/tudorhulban/analytics77/services/slogging"
@@ -59,7 +60,7 @@ func TestTransport_TCP(t *testing.T) {
 		description   string
 		inputRequests shared.Requests
 
-		expectedSites          []string
+		expectedSites          []datacenter.Site
 		expectedRecordsPerSite []uint32
 		expectedCountSites     int
 	}{
@@ -78,7 +79,7 @@ func TestTransport_TCP(t *testing.T) {
 
 			expectedCountSites: 1,
 
-			expectedSites:          []string{"example.com"},
+			expectedSites:          []datacenter.Site{"example.com"},
 			expectedRecordsPerSite: []uint32{1},
 		},
 		{
@@ -101,7 +102,7 @@ func TestTransport_TCP(t *testing.T) {
 			},
 			expectedCountSites: 2,
 
-			expectedSites:          []string{"api.com", "metrics.com"},
+			expectedSites:          []datacenter.Site{"api.com", "metrics.com"},
 			expectedRecordsPerSite: []uint32{1, 1},
 		},
 	}
