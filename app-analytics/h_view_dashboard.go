@@ -1,6 +1,8 @@
 package appanalytics
 
 import (
+	"time"
+
 	"github.com/TudorHulban/hxgo/components/inputs"
 	"github.com/TudorHulban/hxgo/dsl"
 	"github.com/gofiber/fiber/v3"
@@ -10,6 +12,8 @@ import (
 )
 
 func (*App) handlerPage(c fiber.Ctx) error {
+	now := time.Now()
+
 	c.Set("Content-Type", "text/html")
 
 	top := fragments.TopBar{
@@ -36,83 +40,9 @@ func (*App) handlerPage(c fiber.Ctx) error {
 			ShowHour:  true,
 		},
 
-		SelectMonth: fragments.ComboSelectMonth{
-			SelectedValue: "2026-4",
-			OptionsMonth: []inputs.Option{
-				{
-					Value: "2026-3",
-					Label: "Apr 2026",
-				},
-				{
-					Value: "2026-4",
-					Label: "May 2026",
-				},
-				{
-					Value: "2026-5",
-					Label: "Jun 2026",
-				},
-			},
-		},
-
-		SelectDay: fragments.ComboSelectDay{
-			SelectedValue: "17",
-			OptionsDay: []inputs.Option{
-				{
-					Value: "15",
-					Label: "15",
-				},
-				{
-					Value: "16",
-					Label: "16",
-				},
-				{
-					Value: "17",
-					Label: "17",
-				},
-				{
-					Value: "18",
-					Label: "18",
-				},
-			},
-		},
-
-		SelectHour: fragments.ComboSelectHour{
-			SelectedValue: "5",
-			OptionsHour: []inputs.Option{
-				{
-					Value: "1",
-					Label: "1",
-				},
-				{
-					Value: "2",
-					Label: "2",
-				},
-				{
-					Value: "3",
-					Label: "3",
-				},
-				{
-					Value: "4",
-					Label: "4",
-				},
-				{
-					Value: "5",
-					Label: "5",
-				},
-				{
-					Value: "6",
-					Label: "6",
-				},
-				{
-					Value: "7",
-					Label: "7",
-				},
-				{
-					Value: "8",
-					Label: "8",
-				},
-			},
-		},
+		SelectMonth: fragments.NewComboSelectMonth(now, 3, 2),
+		SelectDay:   fragments.NewComboSelectDay(now, 7, 2),
+		SelectHour:  fragments.NewComboSelectHour(now, 14, 3),
 
 		CounterRecords: fragments.Counter{
 			CSSDivClass: "records-counter",
