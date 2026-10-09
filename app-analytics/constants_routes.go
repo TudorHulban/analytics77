@@ -8,3 +8,8 @@ const (
 	_RouteAuthorised    = "/authorised"
 	_RouteNotAuthorised = "/unauthorised"
 )
+
+const (
+	WSRouteToday = "/today"
+	WSRouteSync  = "/sync"
+)

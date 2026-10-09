@@ -6,7 +6,6 @@ import (
 	"github.com/TudorHulban/hxgo/components/inputs"
 	"github.com/TudorHulban/hxgo/dsl"
 	"github.com/gofiber/fiber/v3"
-	"github.com/tudorhulban/analytics77/cmd"
 	"github.com/tudorhulban/analytics77/templates/fragments"
 	"github.com/tudorhulban/analytics77/templates/layouts"
 )
@@ -17,8 +16,8 @@ func (*App) handlerPage(c fiber.Ctx) error {
 	c.Set("Content-Type", "text/html")
 
 	top := fragments.TopBar{
-		URLBtnToday: cmd.WSRouteToday,
-		URLBtnSync:  cmd.WSRouteSync,
+		URLBtnToday: WSRouteToday,
+		URLBtnSync:  WSRouteSync,
 
 		SiteCombo: fragments.ComboSite{
 			Status: "Active",
@@ -46,7 +45,7 @@ func (*App) handlerPage(c fiber.Ctx) error {
 
 		CounterRecords: fragments.Counter{
 			CSSDivClass: "records-counter",
-			SpanID:      "recordsValue",
+			SpanID:      _CSSIdCounterRecordsValue,
 
 			FAwesomeIcon: "fa-database",
 			Label:        "1777",
