@@ -2,6 +2,7 @@ package fragments
 
 import (
 	"github.com/TudorHulban/hxgo/dsl"
+	"github.com/tudorhulban/hxhelpers"
 )
 
 type Counter struct {
@@ -34,16 +35,15 @@ func (elem Counter) Build() dsl.Node {
 	)
 }
 
-// RawSelect knows for the element how to construct the update.
+// RawString knows for the element how to construct the update.
 // It returns the inner HTML for hx match.
 //
 // The element might be even zero besides the updated value.
-func (elem Counter) RawSelect() dsl.Node {
-	return dsl.Span(
-		dsl.AttrIDIf(
-			len(elem.SpanID) > 0,
-			elem.SpanID,
-		),
-		dsl.Text(elem.Label),
+func (elem Counter) RawString() string {
+	return hxhelpers.Sprintf(
+		`<span id="%s">%s</span>`,
+
+		elem.SpanID,
+		elem.Label,
 	)
 }

@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/TudorHulban/hxgo/helpers/ws"
-	"github.com/gofiber/contrib/v3/websocket"
 )
 
 func extractCredentials(v url.Values) (string, string) {
@@ -33,50 +32,41 @@ func extractCredentials(v url.Values) (string, string) {
 	return username, password
 }
 
-func (a *App) wslogin(c *websocket.Conn, message *ws.WSMessage) {
+func (a *App) wslogin(c *ws.Client, message *ws.WSMessage) {
 	user, password := extractCredentials(message.Values)
 
 	if user == "admin" && password == "password" {
-		_ = c.WriteMessage(
-			websocket.TextMessage,
-			[]byte(
-				a.transportWS.WrapResponse(
-					message.RequestID,
-					fmt.Sprintf(
-						`<div id="redirect" hx-redirect="%s"></div>`,
-						_RouteAuthorised,
-					),
+		_ = c.SendString(
+			ws.WrapResponse(
+				message.RequestID,
+				fmt.Sprintf(
+					`<div id="redirect" hx-redirect="%s"></div>`,
+					_RouteAuthorised,
 				),
 			),
 		)
 	}
 
-	_ = c.WriteMessage(
-		websocket.TextMessage,
-		[]byte(
-			a.transportWS.WrapResponse(
-				message.RequestID,
-				fmt.Sprintf(
-					`<div id="redirect" hx-redirect="%s"></div>`,
-					_RouteNotAuthorised,
-				),
+	_ = c.SendString(
+		ws.WrapResponse(
+			message.RequestID,
+			fmt.Sprintf(
+				`<div id="redirect" hx-redirect="%s"></div>`,
+				_RouteNotAuthorised,
 			),
 		),
 	)
 }
 
-func (a *App) wsLogger(c *websocket.Conn, message *ws.WSMessage) {
+func (a *App) wsLogger(c *ws.Client, message *ws.WSMessage) {
 	fmt.Println("ws message: ", message.String())
 
 	extractDateSelectors(message.Values)
 
-	_ = c.WriteMessage(
-		websocket.TextMessage,
-		[]byte(
-			a.transportWS.WrapResponse(
-				message.RequestID,
-				"",
-			),
+	_ = c.SendString(
+		ws.WrapResponse(
+			message.RequestID,
+			"",
 		),
 	)
 }
