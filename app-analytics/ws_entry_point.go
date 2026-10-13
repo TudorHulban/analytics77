@@ -2,63 +2,61 @@ package appanalytics
 
 import (
 	"fmt"
-	"net/url"
-	"strings"
 
 	"github.com/TudorHulban/hxgo/helpers/ws"
 )
 
-func extractCredentials(v url.Values) (string, string) {
-	raw := v.Encode()
+// func extractCredentials(v url.Values) (string, string) {
+// 	raw := v.Encode()
 
-	var username, password string
+// 	var username, password string
 
-	// SplitSeq yields index and substring
-	for pair := range strings.SplitSeq(raw, "&") {
-		key, val, couldCut := strings.Cut(pair, "=")
-		if !couldCut {
-			continue
-		}
+// 	// SplitSeq yields index and substring
+// 	for pair := range strings.SplitSeq(raw, "&") {
+// 		key, val, couldCut := strings.Cut(pair, "=")
+// 		if !couldCut {
+// 			continue
+// 		}
 
-		if key == "username" {
-			username = val
-		}
+// 		if key == "username" {
+// 			username = val
+// 		}
 
-		if key == "password" {
-			password = val
-		}
-	}
+// 		if key == "password" {
+// 			password = val
+// 		}
+// 	}
 
-	return username, password
-}
+// 	return username, password
+// }
 
-func (a *App) wslogin(c *ws.Client, message *ws.WSMessage) {
-	user, password := extractCredentials(message.Values)
+// func (a *App) wslogin(c *ws.Client, message *ws.WSMessage) {
+// 	user, password := extractCredentials(message.Values)
 
-	if user == "admin" && password == "password" {
-		_ = c.SendString(
-			ws.WrapResponse(
-				message.RequestID,
-				fmt.Sprintf(
-					`<div id="redirect" hx-redirect="%s"></div>`,
-					_RouteAuthorised,
-				),
-			),
-		)
-	}
+// 	if user == "admin" && password == "password" {
+// 		_ = c.SendString(
+// 			ws.WrapResponse(
+// 				message.RequestID,
+// 				fmt.Sprintf(
+// 					`<div id="redirect" hx-redirect="%s"></div>`,
+// 					_RouteAuthorised,
+// 				),
+// 			),
+// 		)
+// 	}
 
-	_ = c.SendString(
-		ws.WrapResponse(
-			message.RequestID,
-			fmt.Sprintf(
-				`<div id="redirect" hx-redirect="%s"></div>`,
-				_RouteNotAuthorised,
-			),
-		),
-	)
-}
+// 	_ = c.SendString(
+// 		ws.WrapResponse(
+// 			message.RequestID,
+// 			fmt.Sprintf(
+// 				`<div id="redirect" hx-redirect="%s"></div>`,
+// 				_RouteNotAuthorised,
+// 			),
+// 		),
+// 	)
+// }
 
-func (a *App) wsLogger(c *ws.Client, message *ws.WSMessage) {
+func (*App) wsLogger(c *ws.Client, message *ws.WSMessage) {
 	fmt.Println("ws message: ", message.String())
 
 	extractDateSelectors(message.Values)

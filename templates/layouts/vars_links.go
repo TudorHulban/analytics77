@@ -21,9 +21,9 @@ var (
 		dsl.Src("/public/hxgo/js/hxgo_core_ws.js"),
 	)
 
-	_JSCoreHTTP = dsl.Script(
-		dsl.Src("/public/hxgo/js/hxgo_core_http.js"),
-	)
+	// _JSCoreHTTP = dsl.Script(
+	// 	dsl.Src("/public/hxgo/js/hxgo_core_http.js"),
+	// )
 )
 
 var _JSCache = dsl.Script(

@@ -7,7 +7,7 @@ import (
 	"github.com/tudorhulban/analytics77/templates/fragments"
 )
 
-func (a *App) wsSearch(c *ws.Client, message *ws.WSMessage) {
+func (*App) wsSearch(c *ws.Client, message *ws.WSMessage) {
 	fmt.Println("ws message: ", message.String())
 
 	extractDateSelectors(message.Values)
@@ -24,7 +24,7 @@ func (a *App) wsSearch(c *ws.Client, message *ws.WSMessage) {
 	)
 }
 
-func (a *App) wsToday(c *ws.Client, message *ws.WSMessage) {
+func (*App) wsToday(c *ws.Client, message *ws.WSMessage) {
 	fmt.Println("ws message: ", message.String())
 
 	extractDateSelectors(message.Values)
