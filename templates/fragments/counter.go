@@ -35,11 +35,11 @@ func (elem Counter) Build() dsl.Node {
 	)
 }
 
-// RawString knows for the element how to construct the update.
+// ResponseUpdateLabel knows for the element how to construct the update.
 // It returns the inner HTML for hx match.
 //
 // The element might be even zero besides the updated value.
-func (elem Counter) RawString() string {
+func (elem Counter) ResponseUpdateLabel() string {
 	return hxhelpers.Sprintf(
 		`<span id="%s">%s</span>`,
 
