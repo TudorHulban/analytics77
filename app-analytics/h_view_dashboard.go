@@ -39,9 +39,21 @@ func (*App) handlerPage(c fiber.Ctx) error {
 			ShowHour:  true,
 		},
 
-		SelectMonth: fragments.NewComboSelectMonth(now, 3, 2),
-		SelectDay:   fragments.NewComboSelectDay(now, 7, 2),
-		SelectHour:  fragments.NewComboSelectHour(now, 14, 3),
+		SelectMonth: fragments.NewComboSelectMonth(
+			now,
+			_DefaultMonthsBehind,
+			_DefaultMonthsAhead,
+		),
+		SelectDay: fragments.NewComboSelectDay(
+			now,
+			_DefaultDaysBehind,
+			_DefaultDaysAhead,
+		),
+		SelectHour: fragments.NewComboSelectHour(
+			now,
+			_DefaultHoursBehind,
+			_DefaultHoursAhead,
+		),
 
 		CounterRecords: fragments.Counter{
 			CSSDivClass: "records-counter",

@@ -5,6 +5,17 @@ const (
 )
 
 const (
+	_DefaultMonthsBehind = 3
+	_DefaultMonthsAhead  = 2
+
+	_DefaultDaysBehind = 7
+	_DefaultDaysAhead  = 3
+
+	_DefaultHoursBehind = 14
+	_DefaultHoursAhead  = 3
+)
+
+const (
 	// Primary Language Codes (ISO 639-1)
 	_PageLanguageEnglish = "en"
 	// _PageLanguageSpanish    = "es"

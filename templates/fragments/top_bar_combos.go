@@ -40,12 +40,12 @@ func NewComboSelectMonth(t time.Time, monthsBehind, monthsAhead int) ComboSelect
 	}
 }
 
-func (elem *ComboSelectMonth) Build() dsl.Node {
+func (elem ComboSelectMonth) Build() *dsl.Node {
 	if len(elem.OptionsMonth) == 0 {
-		return dsl.Node{}
+		return nil
 	}
 
-	return dsl.Div(
+	node := dsl.Div(
 		dsl.AttrClass("selector-group"),
 		dsl.AttrID(_IDComboSelectMonth),
 
@@ -55,8 +55,10 @@ func (elem *ComboSelectMonth) Build() dsl.Node {
 			SelectedValue: elem.SelectedValue,
 			SelectOptions: elem.OptionsMonth,
 		}.
-			Raw(),
+			Build(),
 	)
+
+	return &node
 }
 
 type ComboSelectDay struct {
@@ -103,7 +105,7 @@ func (elem *ComboSelectDay) Build() dsl.Node {
 			SelectedValue: elem.SelectedValue,
 			SelectOptions: elem.OptionsDay,
 		}.
-			Raw(),
+			Build(),
 	)
 }
 
@@ -151,7 +153,7 @@ func (elem *ComboSelectHour) Build() dsl.Node {
 			SelectedValue: elem.SelectedValue,
 			SelectOptions: elem.OptionsHour,
 		}.
-			Raw(),
+			Build(),
 	)
 }
 
@@ -172,7 +174,7 @@ func (elem *ComboSite) Build() dsl.Node {
 
 			SelectOptions: elem.OptionsSite,
 		}.
-			Raw(),
+			Build(),
 
 		dsl.Div(
 			dsl.AttrClass("site-status"),

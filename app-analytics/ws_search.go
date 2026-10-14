@@ -2,6 +2,7 @@ package appanalytics
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/TudorHulban/hxgo/helpers/ws"
 	"github.com/tudorhulban/analytics77/templates/fragments"
@@ -29,14 +30,24 @@ func (*App) wsToday(c *ws.Client, message *ws.WSMessage) {
 
 	extractDateSelectors(message.Values)
 
-	_ = c.SendString(
-		ws.WrapResponses(
+	_ = c.Send(
+		ws.WrapByteResponses(
 			message.RequestID,
-			fragments.Counter{
-				SpanID: _CSSIdCounterRecordsValue,
-				Label:  "77",
-			}.
-				ResponseUpdateLabel(),
+			[]byte(
+				fragments.Counter{
+					SpanID: _CSSIdCounterRecordsValue,
+					Label:  "77",
+				}.
+					ResponseUpdateLabel(),
+			),
+
+			fragments.NewComboSelectMonth(
+				time.Now(),
+				_DefaultMonthsBehind,
+				_DefaultMonthsAhead,
+			).
+				Build().
+				CanonicalInto(nil),
 		),
 	)
 }
