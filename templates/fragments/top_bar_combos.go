@@ -40,9 +40,9 @@ func NewComboSelectMonth(t time.Time, monthsBehind, monthsAhead int) ComboSelect
 	}
 }
 
-func (elem ComboSelectMonth) Build() *dsl.Node {
+func (elem ComboSelectMonth) Build() dsl.Node {
 	if len(elem.OptionsMonth) == 0 {
-		return nil
+		return dsl.Noop
 	}
 
 	node := dsl.Div(
@@ -58,7 +58,7 @@ func (elem ComboSelectMonth) Build() *dsl.Node {
 			Build(),
 	)
 
-	return &node
+	return node
 }
 
 type ComboSelectDay struct {
@@ -90,7 +90,7 @@ func NewComboSelectDay(t time.Time, daysBehind, daysAhead int) ComboSelectDay {
 	}
 }
 
-func (elem *ComboSelectDay) Build() dsl.Node {
+func (elem ComboSelectDay) Build() dsl.Node {
 	if len(elem.OptionsDay) == 0 {
 		return dsl.Node{}
 	}
@@ -138,7 +138,7 @@ func NewComboSelectHour(t time.Time, hoursBehind, hoursAhead int) ComboSelectHou
 	}
 }
 
-func (elem *ComboSelectHour) Build() dsl.Node {
+func (elem ComboSelectHour) Build() dsl.Node {
 	if len(elem.OptionsHour) == 0 {
 		return dsl.Node{}
 	}

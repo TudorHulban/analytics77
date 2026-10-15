@@ -95,7 +95,7 @@ func (elem *TopBar) Build() dsl.Node {
 
 				dsl.If(
 					elem.PeriodToggler.ShowMonth,
-					*elem.SelectMonth.Build(),
+					elem.SelectMonth.Build(),
 				),
 
 				dsl.If(

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/TudorHulban/hxgo/dsl"
 	"github.com/TudorHulban/hxgo/helpers/ws"
 	"github.com/tudorhulban/analytics77/templates/fragments"
 )
@@ -26,9 +27,9 @@ func (*App) wsSearch(c *ws.Client, message *ws.WSMessage) {
 }
 
 func (*App) wsToday(c *ws.Client, message *ws.WSMessage) {
-	fmt.Println("ws message: ", message.String())
+	// fmt.Println("ws message: ", message.String())
 
-	extractDateSelectors(message.Values)
+	// extractDateSelectors(message.Values)
 
 	_ = c.Send(
 		ws.WrapByteResponses(
@@ -41,13 +42,28 @@ func (*App) wsToday(c *ws.Client, message *ws.WSMessage) {
 					ResponseUpdateLabel(),
 			),
 
-			fragments.NewComboSelectMonth(
-				time.Now(),
-				_DefaultMonthsBehind,
-				_DefaultMonthsAhead,
-			).
-				Build().
-				CanonicalInto(nil),
+			dsl.RenderHX(
+				fragments.NewComboSelectMonth(
+					time.Now(),
+					_DefaultMonthsBehind,
+					_DefaultMonthsAhead,
+				).
+					Build(),
+
+				fragments.NewComboSelectDay(
+					time.Now(),
+					_DefaultDaysBehind,
+					_DefaultDaysAhead,
+				).
+					Build(),
+
+				fragments.NewComboSelectHour(
+					time.Now(),
+					_DefaultDaysBehind,
+					_DefaultDaysAhead,
+				).
+					Build(),
+			),
 		),
 	)
 }
