@@ -57,7 +57,7 @@ func TestCurrentDayHoursWithData(t *testing.T) {
 
 	recordsPerSiteAfter1 := dc.GetPreviousHourRecordsPerSite(&offsetsROU)
 	require.Len(t, recordsPerSiteAfter1, 1, "should be 1 as site was added")
-	require.Zero(t, recordsPerSiteAfter1[site1])
+	require.Zero(t, recordsPerSiteAfter1[Site(site1)])
 
 	oneHourBefore := localTime.Add(-1 * time.Hour)
 
