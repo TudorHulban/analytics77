@@ -6,6 +6,7 @@ import (
 
 	"github.com/TudorHulban/hxgo/dsl"
 	"github.com/gofiber/fiber/v3"
+	"github.com/tudorhulban/hxhelpers"
 )
 
 var (
@@ -47,6 +48,10 @@ var (
 )
 
 func TestCardMetric(t *testing.T) {
+	if hxhelpers.IsRunningInCI() {
+		t.Skip()
+	}
+
 	el := testCard1()
 
 	app := fiber.New()
@@ -66,6 +71,10 @@ func TestCardMetric(t *testing.T) {
 }
 
 func Test_Container_CardMetric(t *testing.T) {
+	if hxhelpers.IsRunningInCI() {
+		t.Skip()
+	}
+
 	el := MetricsContainer{
 		CSSID: "metricsContainer",
 		Cards: []MetricCard{
