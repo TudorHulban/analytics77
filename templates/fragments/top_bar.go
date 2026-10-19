@@ -120,7 +120,7 @@ func (elem *TopBar) Build() dsl.Node {
 					dsl.Text("Today"),
 					dsl.If(
 						len(elem.URLBtnToday) > 0,
-						dsl.AttrHXPOST(elem.URLBtnToday),
+						dsl.AttrHXGET(elem.URLBtnToday),
 					),
 				),
 

@@ -21,16 +21,15 @@ func (*App) wsSearch(c *ws.Client, message *ws.WSMessage) {
 				SpanID: _CSSIdCounterRecordsValue,
 				Label:  "77",
 			}.
-				ResponseUpdateLabel(),
+				WSUpdateLabel(),
 		),
 	)
 }
 
+// fmt.Println("ws message: ", message.String())
+// extractDateSelectors(message.Values)
+
 func (*App) wsToday(c *ws.Client, message *ws.WSMessage) {
-	// fmt.Println("ws message: ", message.String())
-
-	// extractDateSelectors(message.Values)
-
 	_ = c.Send(
 		ws.WrapByteResponses(
 			message.RequestID,
@@ -39,7 +38,7 @@ func (*App) wsToday(c *ws.Client, message *ws.WSMessage) {
 					SpanID: _CSSIdCounterRecordsValue,
 					Label:  "77",
 				}.
-					ResponseUpdateLabel(),
+					WSUpdateLabel(),
 			),
 
 			dsl.RenderHX(

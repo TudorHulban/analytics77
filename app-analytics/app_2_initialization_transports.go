@@ -15,6 +15,11 @@ func InitializeTransportHTTPRoutes(app *App) {
 		_RoutesHTTP,
 		app.handlerPage,
 	)
+
+	// app.transportHTTP.Get(
+	// 	WSRouteToday,
+	// 	app.handlerSearch,
+	// )
 }
 
 func InitializeTransportWS(app *App) {

@@ -18,11 +18,13 @@ var _JSDashboard = dsl.Script(
 
 var (
 	_JSCoreWS = dsl.Script(
-		dsl.Src("/public/hxgo/js/hxgo_core_ws.js"),
+		// dsl.Src("/public/hxgo/js/hxgo_core_ws.js"),
+		dsl.Src("/public/hxgo/js/hxgo_core_ws_debug_performance.js"),
 	)
 
 	// _JSCoreHTTP = dsl.Script(
-	// 	dsl.Src("/public/hxgo/js/hxgo_core_http.js"),
+	// 	// dsl.Src("/public/hxgo/js/hxgo_core_http.js"),
+	// 	dsl.Src("/public/hxgo/js/hxgo_core_http_debug_performance.js"),
 	// )
 )
 

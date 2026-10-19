@@ -35,11 +35,25 @@ func (elem Counter) Build() dsl.Node {
 	)
 }
 
-// ResponseUpdateLabel knows for the element how to construct the update.
+// HTTPUpdateLabel knows for the element how to construct
+// the update for HTTP transport.
+//
+// It returns the inner HTML for hx match.
+func (elem Counter) HTTPUpdateLabel() dsl.Node {
+	return dsl.Span(
+		dsl.AttrID(elem.SpanID),
+
+		dsl.Text(elem.Label),
+	)
+}
+
+// WSUpdateLabel knows for the element how to construct the update
+// for websockets transport.
+//
 // It returns the inner HTML for hx match.
 //
 // The element might be even zero besides the updated value.
-func (elem Counter) ResponseUpdateLabel() string {
+func (elem Counter) WSUpdateLabel() string {
 	return hxhelpers.Sprintf(
 		`<span id="%s">%s</span>`,
 
