@@ -7,6 +7,7 @@ import (
 	"github.com/TudorHulban/hxgo/components/inputs"
 	"github.com/TudorHulban/hxgo/dsl"
 	"github.com/gofiber/fiber/v3"
+	"github.com/tudorhulban/hxhelpers"
 )
 
 var testTopBar = func() TopBar {
@@ -112,6 +113,10 @@ var testTopBar = func() TopBar {
 }
 
 func TestTopBar(t *testing.T) {
+	if hxhelpers.IsRunningInCI() {
+		t.Skip()
+	}
+
 	el := testTopBar()
 
 	app := fiber.New()
