@@ -26,5 +26,3 @@
 ### Prerequisites
 
 - Go 1.26 or higher
-
-

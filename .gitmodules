@@ -1,0 +1,3 @@
+[submodule "public/hxgo"]
+	path = public/hxgo
+	url = https://github.com/TudorHulban/hxgo.git
