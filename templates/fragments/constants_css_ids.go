@@ -16,3 +16,8 @@ const (
 	_IDButtonToday = "btnToday"
 	_IDButtonSync  = "btnSync"
 )
+
+// card metric
+const (
+	_CSSClassCardMetric = "top-list"
+)

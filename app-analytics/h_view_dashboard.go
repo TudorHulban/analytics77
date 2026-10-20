@@ -70,6 +70,7 @@ func (*App) handlerPage(c fiber.Ctx) error {
 			{
 				Title:        "Card 1",
 				FAwesomeIcon: "fa-globe",
+				CSSID:        _CSSIDCard01,
 
 				Metrics: []fragments.Metric{
 					{
@@ -85,6 +86,7 @@ func (*App) handlerPage(c fiber.Ctx) error {
 			{
 				Title:        "Card 2",
 				FAwesomeIcon: "fa-city",
+				CSSID:        _CSSIDCard02,
 
 				Metrics: []fragments.Metric{
 					{

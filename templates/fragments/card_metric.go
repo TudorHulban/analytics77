@@ -1,7 +1,10 @@
 package fragments
 
 import (
+	"strings"
+
 	"github.com/TudorHulban/hxgo/dsl"
+	"github.com/tudorhulban/hxhelpers"
 )
 
 type Metric struct {
@@ -9,7 +12,7 @@ type Metric struct {
 	Value string
 }
 
-func (elem *Metric) Build() dsl.Node {
+func (elem Metric) Build() dsl.Node {
 	return dsl.Li(
 		dsl.AttrClass("top-item"),
 
@@ -34,11 +37,12 @@ func (elem *Metric) Build() dsl.Node {
 type MetricCard struct {
 	Title        string
 	FAwesomeIcon string // ex. fa-network-wired
+	CSSID        string
 
 	Metrics []Metric
 }
 
-func (elem *MetricCard) Build() dsl.Node {
+func (elem MetricCard) Build() dsl.Node {
 	entries := make([]dsl.Node, len(elem.Metrics))
 
 	for ix, metric := range elem.Metrics {
@@ -58,10 +62,51 @@ func (elem *MetricCard) Build() dsl.Node {
 			),
 		),
 
-		dsl.Ul(
-			append([]dsl.Node{dsl.AttrClass("top-list")}, entries...)...,
+		dsl.Div(
+			dsl.AttrID(elem.CSSID),
+			dsl.Ul(
+				append([]dsl.Node{dsl.AttrClass(_CSSClassCardMetric)}, entries...)...,
+			),
 		),
 	)
+}
+
+func (elem MetricCard) WSUpdateEntries() string {
+	var sb strings.Builder
+
+	sb.WriteString(
+		hxhelpers.Sprintf(
+			`<div id="%s">`,
+			elem.CSSID),
+	)
+
+	sb.WriteString(
+		hxhelpers.Sprintf(
+			`<ul class="%s">`,
+			_CSSClassCardMetric),
+	)
+
+	for _, metric := range elem.Metrics {
+		sb.WriteString(
+			hxhelpers.Sprintf(
+				`<li class="top-item">`+
+					`<span class="item-name">`+
+					`<i class="fas fa-circle" style="font-size:0.5rem;color:var(--accent-primary);"></i>`+
+					`%s`+
+					`</span>`+
+					`<span class="item-value">%s</span>`+
+					`</li>`,
+
+				metric.Name,
+				metric.Value,
+			),
+		)
+	}
+
+	sb.WriteString(`</ul>`)
+	sb.WriteString(`</div>`)
+
+	return sb.String()
 }
 
 type MetricsContainer struct {
@@ -69,7 +114,7 @@ type MetricsContainer struct {
 	Cards []MetricCard
 }
 
-func (elem *MetricsContainer) Build() dsl.Node {
+func (elem MetricsContainer) Build() dsl.Node {
 	cards := make([]dsl.Node, len(elem.Cards))
 
 	for ix, card := range elem.Cards {
