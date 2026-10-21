@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/domain/analytics"
-	"github.com/tudorhulban/analytics77/helpers"
+	"github.com/tudorhulban/analytics77/infra/site"
 	"github.com/tudorhulban/analytics77/shared"
 	"github.com/tudorhulban/hxhelpers"
 )
@@ -15,14 +15,14 @@ func TestPreviousHourRecords(t *testing.T) {
 	dc := NewDataCenter()
 	require.NotNil(t, dc)
 
-	site := "localhost"
+	siteName := "localhost"
 
 	localTime := time.Now()
 	_, offsetSeconds := localTime.Zone()
 
 	utcOffsetHours := offsetSeconds / 3600
 
-	hourLocalAsUTC := helpers.GetHourInOffsetAsUTC(
+	hourLocalAsUTC := site.GetHourInOffsetAsUTC(
 		localTime,
 		localTime.Hour(),
 		utcOffsetHours,
@@ -34,7 +34,7 @@ func TestPreviousHourRecords(t *testing.T) {
 	)
 
 	req1 := shared.ParamsAddEvent{
-		SiteKey: site,
+		SiteKey: siteName,
 
 		IP:              "127.0.0.1",
 		Browser:         analytics.Brave,
@@ -48,7 +48,7 @@ func TestPreviousHourRecords(t *testing.T) {
 
 	require.Empty(t, dc.AddEvents(&req1))
 
-	registryBefore, exists := dc.GetRegistry(Site(site))
+	registryBefore, exists := dc.GetRegistry(Site(siteName))
 	require.True(t, exists)
 	require.EqualValues(t,
 		localTime.Month(),
@@ -56,19 +56,19 @@ func TestPreviousHourRecords(t *testing.T) {
 	)
 
 	recordsPreviousHourBefore := dc.GetPreviousHourRecordsPerSite(
-		&helpers.TimestampOffsets{
+		&site.TimestampOffsets{
 			OffsetUTCHours: int64(utcOffsetHours),
 		},
 	)
 	require.Len(t, recordsPreviousHourBefore, 1)
 	require.Zero(t,
-		recordsPreviousHourBefore[Site(site)],
+		recordsPreviousHourBefore[Site(siteName)],
 
 		"previous hour has no data yet",
 	)
 
 	req2 := shared.ParamsAddEvent{
-		SiteKey:         site,
+		SiteKey:         siteName,
 		IP:              "127.0.0.1",
 		Browser:         analytics.Brave,
 		OperatingSystem: analytics.Linux,
@@ -81,7 +81,7 @@ func TestPreviousHourRecords(t *testing.T) {
 
 	require.Empty(t, dc.AddEvents(&req2))
 
-	registryAfter, exists := dc.GetRegistry(Site(site))
+	registryAfter, exists := dc.GetRegistry(Site(siteName))
 	require.True(t, exists)
 
 	hours, howMany := registryAfter.CurrentDayHoursWithData(localTime.Unix(), int64(utcOffsetHours))
@@ -94,14 +94,14 @@ func TestPreviousHourRecords(t *testing.T) {
 	)
 
 	recordsPreviousHourAfter := dc.GetPreviousHourRecordsPerSite(
-		&helpers.TimestampOffsets{
+		&site.TimestampOffsets{
 			OffsetUTCHours: int64(utcOffsetHours),
 		},
 	)
 	require.Len(t, recordsPreviousHourAfter, 1)
 	require.EqualValues(t,
 		1,
-		recordsPreviousHourAfter[Site(site)],
+		recordsPreviousHourAfter[Site(siteName)],
 
 		"previous hour should have req2 now",
 	)

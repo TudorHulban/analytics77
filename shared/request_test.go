@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/cmd"
 	"github.com/tudorhulban/analytics77/domain/analytics"
-	"github.com/tudorhulban/analytics77/helpers"
+	"github.com/tudorhulban/analytics77/infra/site"
 	"github.com/tudorhulban/analytics77/services/sgeo"
 	"github.com/tudorhulban/analytics77/services/sstorage"
 )
@@ -50,7 +50,7 @@ func TestRequest_AsParamsAddEvent(t *testing.T) {
 	require.NoError(t, errCrServiceGeo)
 	require.NotNil(t, serviceGeo)
 
-	offsetsROU := helpers.TimestampOffsets{
+	offsetsROU := site.TimestampOffsets{
 		OffsetUTCHours: -3,
 	}
 

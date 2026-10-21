@@ -3,7 +3,7 @@ package datacenter
 import (
 	"github.com/tudorhulban/analytics77/domain/analytics"
 	"github.com/tudorhulban/analytics77/domain/dhelpers"
-	"github.com/tudorhulban/analytics77/helpers"
+	"github.com/tudorhulban/analytics77/infra/site"
 	"github.com/tudorhulban/analytics77/shared"
 )
 
@@ -89,20 +89,20 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 	dc.mu.Lock()
 	for outIx, eventIndex := range indexesNoError {
 		event := events[eventIndex]
-		site := Site(event.SiteKey)
+		forSite := Site(event.SiteKey)
 
-		registrySite, exists := dc.data[site]
+		registrySite, exists := dc.data[forSite]
 		if !exists {
 			registrySite = analytics.NewRegistry(
-				helpers.ExtractMonth(event.TimestampUNIX),
+				site.ExtractMonth(event.TimestampUNIX),
 			)
 
-			dc.data[site] = registrySite
+			dc.data[forSite] = registrySite
 		}
 
-		evCalendarMonth, evCalendarDay, evHour := helpers.ExtractMonthDayHour(
+		evCalendarMonth, evCalendarDay, evHour := site.ExtractMonthDayHour(
 			event.TimestampUNIX,
-			&helpers.TimestampOffsets{
+			&site.TimestampOffsets{
 				OffsetUTCHours: event.OffsetUTCHours,
 
 				TimestampDSTSpring: registrySite.TimestampDSTSpring,

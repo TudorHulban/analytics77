@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tudorhulban/analytics77/helpers"
+	"github.com/tudorhulban/analytics77/infra/site"
 	"github.com/tudorhulban/analytics77/shared"
 )
 
@@ -13,8 +13,8 @@ func TestGetPreviousHourRecordsPerSite_CrossesMonthBoundary(t *testing.T) {
 	dc := NewDataCenter()
 	require.NotNil(t, dc)
 
-	site := "localhost"
-	offsets := helpers.TimestampOffsets{
+	siteName := "localhost"
+	offsets := site.TimestampOffsets{
 		OffsetUTCHours: 0,
 	}
 
@@ -27,7 +27,7 @@ func TestGetPreviousHourRecordsPerSite_CrossesMonthBoundary(t *testing.T) {
 	require.Empty(t,
 		dc.AddEvents(
 			&shared.ParamsAddEvent{
-				SiteKey: site,
+				SiteKey: siteName,
 				IP:      "127.0.0.1",
 
 				TimestampUNIX:  lastHourFeb.Unix(),
@@ -45,7 +45,7 @@ func TestGetPreviousHourRecordsPerSite_CrossesMonthBoundary(t *testing.T) {
 	require.Empty(t,
 		dc.AddEvents(
 			&shared.ParamsAddEvent{
-				SiteKey: site,
+				SiteKey: siteName,
 				IP:      "127.0.0.1",
 
 				TimestampUNIX:  nowMarch.Unix(),
@@ -56,7 +56,7 @@ func TestGetPreviousHourRecordsPerSite_CrossesMonthBoundary(t *testing.T) {
 		),
 	)
 
-	registry, exists := dc.GetRegistry(Site(site))
+	registry, exists := dc.GetRegistry(Site(siteName))
 	require.True(t, exists)
 
 	require.NotNil(t, registry)
@@ -72,7 +72,7 @@ func TestGetPreviousHourRecordsPerSite_CrossesMonthBoundary(t *testing.T) {
 	require.Len(t, records, 1)
 	require.EqualValues(t,
 		1,
-		records[Site(site)],
+		records[Site(siteName)],
 
 		"the last hour of February should be visible as 'previous hour' from March 1st 00:30",
 	)

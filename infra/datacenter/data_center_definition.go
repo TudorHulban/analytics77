@@ -7,10 +7,10 @@ import (
 	"sync"
 
 	"github.com/tudorhulban/analytics77/domain/analytics"
+	"github.com/tudorhulban/hxerrors"
 )
 
 // Site is localhost if there is collection from several sites.
-// TODO: take site from configuration
 type Site string
 
 // Stores in UTC times.
@@ -20,10 +20,28 @@ type DataCenter struct {
 	mu   sync.RWMutex
 }
 
-func NewDataCenter() *DataCenter {
-	return &DataCenter{
+func NewDataCenter(sites ...string) *DataCenter {
+	result := DataCenter{
 		data: map[Site]*analytics.Registry{},
 	}
+
+	for _, site := range sites {
+		result.AddSite(site)
+	}
+
+	return &result
+}
+
+func (dc *DataCenter) AddSite(siteName string) error {
+	if len(siteName) == 0 {
+		return hxerrors.ErrNilInput{}
+	}
+
+	if _, exists := dc.data[Site(siteName)]; !exists {
+		dc.data[Site(siteName)] = &analytics.Registry{}
+	}
+
+	return nil
 }
 
 // Advance is not safe for concurrent callers.

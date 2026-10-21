@@ -3,36 +3,46 @@ package sanalytics
 import (
 	"fmt"
 
-	"github.com/tudorhulban/analytics77/helpers"
 	"github.com/tudorhulban/analytics77/infra/datacenter"
+	"github.com/tudorhulban/analytics77/infra/site"
 	"github.com/tudorhulban/analytics77/services/sgeo"
 	"github.com/tudorhulban/analytics77/shared"
 	"github.com/tudorhulban/hxhelpers/piers"
 )
 
-// TODO: add methods to update the DST moments
+// ServiceAnalytics produces analytics for the datacenter.
+//
+// ServiceAnalytics can work with multiple sites.
 type ServiceAnalytics struct {
 	DC      *datacenter.DataCenter
-	offsets *helpers.TimestampOffsets
+	offsets *site.TimestampOffsets
 
 	serviceGeo *sgeo.ServiceGeo
 }
 
 type PiersNewServiceAnalytics struct {
 	ServiceGeo *sgeo.ServiceGeo
+	Datacenter *datacenter.DataCenter
+	Offsets    *site.TimestampOffsets
 }
 
-func NewServiceAnalytics(dependencies *PiersNewServiceAnalytics, offsets *helpers.TimestampOffsets) (*ServiceAnalytics, error) {
+// ServiceAnalytics has a 1 to many relation with the datacenter due to the 1:1 relation with the geo service.
+func NewServiceAnalytics(dependencies *PiersNewServiceAnalytics, siteName string) (*ServiceAnalytics, error) {
 	if errValidate := piers.ValidateDependencies(dependencies); errValidate != nil {
 		return nil,
 			errValidate
 	}
 
+	if errDataCenter := dependencies.Datacenter.AddSite(siteName); errDataCenter != nil {
+		return nil,
+			errDataCenter
+	}
+
 	return &ServiceAnalytics{
-			DC:         datacenter.NewDataCenter(),
+			DC:         dependencies.Datacenter,
 			serviceGeo: dependencies.ServiceGeo,
 
-			offsets: offsets,
+			offsets: dependencies.Offsets,
 		},
 		nil
 }

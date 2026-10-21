@@ -10,7 +10,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/cmd"
-	"github.com/tudorhulban/analytics77/helpers"
+
+	"github.com/tudorhulban/analytics77/infra/site"
 	transporttcp "github.com/tudorhulban/analytics77/infra/transport-tcp"
 	"github.com/tudorhulban/analytics77/services/sanalytics"
 	"github.com/tudorhulban/analytics77/services/sgeo"
@@ -25,7 +26,7 @@ func TestAnalytics_E2E(t *testing.T) {
 
 	utcOffsetHours := int64(offsetSeconds / 3600)
 
-	utcOffset := helpers.TimestampOffsets{
+	utcOffset := site.TimestampOffsets{
 		OffsetUTCHours: utcOffsetHours,
 	}
 
@@ -118,8 +119,9 @@ func TestAnalytics_E2E(t *testing.T) {
 				serviceAnalytics, errCrServiceAnalytics := sanalytics.NewServiceAnalytics(
 					&sanalytics.PiersNewServiceAnalytics{
 						ServiceGeo: serviceGeo,
+						Offsets:    &utcOffset,
 					},
-					&utcOffset,
+					"site-name", //TODO: change.
 				)
 				require.NoError(t, errCrServiceAnalytics)
 				require.NotNil(t, serviceAnalytics)

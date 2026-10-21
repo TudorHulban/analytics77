@@ -2,7 +2,7 @@ package analytics
 
 import (
 	"github.com/tudorhulban/analytics77/domain/dhelpers"
-	"github.com/tudorhulban/analytics77/helpers"
+	"github.com/tudorhulban/analytics77/infra/site"
 )
 
 // PreviousMonthDaysWithData returns a stack‑allocated array of up to 31 days.
@@ -119,9 +119,9 @@ func (r *Registry) CurrentMonthHoursWithData(forCalendarDay int8) ([24]int8, int
 //
 // Registry stores storage hours as UTC time.
 func (r *Registry) CurrentDayHoursWithData(timestampUTC, offsetUTCHours int64) ([24]int8, int8) {
-	_, currentDay, _ := helpers.ExtractMonthDayHour(
+	_, currentDay, _ := site.ExtractMonthDayHour(
 		timestampUTC,
-		&helpers.TimestampOffsets{
+		&site.TimestampOffsets{
 			OffsetUTCHours: offsetUTCHours,
 
 			TimestampDSTSpring: r.TimestampDSTSpring,

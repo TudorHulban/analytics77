@@ -12,8 +12,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/cmd"
-	"github.com/tudorhulban/analytics77/helpers"
 	"github.com/tudorhulban/analytics77/infra/datacenter"
+	"github.com/tudorhulban/analytics77/infra/site"
 	"github.com/tudorhulban/analytics77/services/sanalytics"
 	"github.com/tudorhulban/analytics77/services/sgeo"
 	"github.com/tudorhulban/analytics77/services/slogging"
@@ -26,7 +26,7 @@ func TestTransport_TCP(t *testing.T) {
 
 	dummyURL, _ := url.Parse("https://example.com/analytics")
 
-	offsetsROU := helpers.TimestampOffsets{
+	offsetsROU := site.TimestampOffsets{
 		OffsetUTCHours: -3,
 	}
 
@@ -119,8 +119,10 @@ func TestTransport_TCP(t *testing.T) {
 				serviceAnalytics, errCrAnalytics := sanalytics.NewServiceAnalytics(
 					&sanalytics.PiersNewServiceAnalytics{
 						ServiceGeo: serviceGeo,
+						Offsets:    &offsetsROU,
 					},
-					&offsetsROU,
+
+					"some-site",
 				)
 				require.NoError(t, errCrAnalytics)
 

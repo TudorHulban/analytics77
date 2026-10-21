@@ -8,7 +8,7 @@ import (
 
 	"github.com/tudorhulban/analytics77/domain/analytics"
 	"github.com/tudorhulban/analytics77/domain/dhelpers"
-	"github.com/tudorhulban/analytics77/helpers"
+	"github.com/tudorhulban/analytics77/infra/site"
 )
 
 type ResponseRecordsPerSite map[Site]uint32
@@ -76,7 +76,7 @@ func (r ResponseRecordsPerSite) String() string {
 // Each site carries its own DST window, so the extraction uses the caller's
 // UTC offset combined with that registry's DST fields — the same convention
 // AddEvents uses.
-func (dc *DataCenter) previousHourRecordsPerSiteAt(nowUTC int64, offsets *helpers.TimestampOffsets) ResponseRecordsPerSite {
+func (dc *DataCenter) previousHourRecordsPerSiteAt(nowUTC int64, offsets *site.TimestampOffsets) ResponseRecordsPerSite {
 	previousHourUTC := nowUTC - 3600
 
 	dc.mu.RLock()
@@ -84,9 +84,9 @@ func (dc *DataCenter) previousHourRecordsPerSiteAt(nowUTC int64, offsets *helper
 	result := make(map[Site]uint32, len(dc.data))
 
 	for siteKey, registry := range dc.data {
-		prevMonth, prevDay, prevHour := helpers.ExtractMonthDayHour(
+		prevMonth, prevDay, prevHour := site.ExtractMonthDayHour(
 			previousHourUTC,
-			&helpers.TimestampOffsets{
+			&site.TimestampOffsets{
 				OffsetUTCHours: offsets.OffsetUTCHours,
 
 				TimestampDSTSpring: registry.TimestampDSTSpring,
@@ -115,12 +115,12 @@ func (dc *DataCenter) previousHourRecordsPerSiteAt(nowUTC int64, offsets *helper
 
 // GetPreviousHourRecordsPerSite returns, per site, the record count for the
 // hour immediately preceding the current one.
-func (dc *DataCenter) GetPreviousHourRecordsPerSite(offsets *helpers.TimestampOffsets) ResponseRecordsPerSite {
+func (dc *DataCenter) GetPreviousHourRecordsPerSite(offsets *site.TimestampOffsets) ResponseRecordsPerSite {
 	return dc.previousHourRecordsPerSiteAt(time.Now().Unix(), offsets)
 }
 
-func (dc *DataCenter) GetCurrentHourRecordsPerSite(offsets *helpers.TimestampOffsets) ResponseRecordsPerSite {
-	_, ixDay, ixHour := helpers.ExtractMonthDayHour(
+func (dc *DataCenter) GetCurrentHourRecordsPerSite(offsets *site.TimestampOffsets) ResponseRecordsPerSite {
+	_, ixDay, ixHour := site.ExtractMonthDayHour(
 		time.Now().Unix(),
 		offsets,
 	)
@@ -139,7 +139,7 @@ func (dc *DataCenter) GetCurrentHourRecordsPerSite(offsets *helpers.TimestampOff
 }
 
 // CurrentDayHoursWithData returns UTC hours.
-func (dc *DataCenter) CurrentDayHoursWithData(offsets *helpers.TimestampOffsets) ([24]int8, int8) {
+func (dc *DataCenter) CurrentDayHoursWithData(offsets *site.TimestampOffsets) ([24]int8, int8) {
 	hoursMap := make(map[int8]struct{})
 
 	sites := dc.GetSiteNames()

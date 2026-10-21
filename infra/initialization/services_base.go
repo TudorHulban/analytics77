@@ -3,7 +3,7 @@ package initialization
 import (
 	"os"
 
-	"github.com/tudorhulban/analytics77/helpers"
+	"github.com/tudorhulban/analytics77/infra/site"
 	"github.com/tudorhulban/analytics77/services/sanalytics"
 	"github.com/tudorhulban/analytics77/services/sgeo"
 	"github.com/tudorhulban/analytics77/services/slogging"
@@ -14,7 +14,7 @@ type ParamsServices struct {
 	ServiceLogging *slogging.ServiceLogging
 
 	APIKeyGeolocation string
-	Offsets           helpers.TimestampOffsets
+	Offsets           site.TimestampOffsets
 }
 
 func Services(params *ParamsServices) (*sanalytics.ServiceAnalytics, error) {
@@ -54,8 +54,9 @@ func Services(params *ParamsServices) (*sanalytics.ServiceAnalytics, error) {
 	result, errCrServiceAnalytics := sanalytics.NewServiceAnalytics(
 		&sanalytics.PiersNewServiceAnalytics{
 			ServiceGeo: serviceGeo,
+			Offsets:    &params.Offsets,
 		},
-		&params.Offsets,
+		"some-ste", // TODO: change
 	)
 	if errCrServiceAnalytics != nil {
 		params.
