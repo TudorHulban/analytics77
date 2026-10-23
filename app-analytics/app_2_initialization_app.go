@@ -11,8 +11,8 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/favicon"
 	"github.com/gofiber/fiber/v3/middleware/static"
+	"github.com/tudorhulban/analytics77/domain/offsets"
 	"github.com/tudorhulban/analytics77/infra/initialization"
-	"github.com/tudorhulban/analytics77/infra/site"
 	transporttcp "github.com/tudorhulban/analytics77/infra/transport-tcp"
 	"github.com/tudorhulban/analytics77/services/slogging"
 	"github.com/tudorhulban/hxerrors"
@@ -77,7 +77,7 @@ func InitializeApp(params *ParamsInitializeApp, piers *PiersInitializeApp) *App 
 
 	serviceAnalytics, errInitialization := initialization.Services(
 		&initialization.ParamsServices{
-			Offsets: site.TimestampOffsets{
+			Offsets: offsets.TimestampOffsets{
 				OffsetUTCHours: params.OffsetUTCHours,
 			},
 			APIKeyGeolocation: params.KeyGeolocationAPI,

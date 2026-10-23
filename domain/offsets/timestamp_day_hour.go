@@ -1,4 +1,4 @@
-package site
+package offsets
 
 type TimestampOffsets struct {
 	OffsetUTCHours int64
@@ -79,7 +79,7 @@ func ExtractMonthDayHour(timestampUTC int64, offsets *TimestampOffsets) (int8, i
 		mp = mp - 9
 	}
 
-	return int8(mp), int8(day), int8(hour)
+	return int8(mp), int8(day), int8(hour) //nolint:gosec
 }
 
 func ExtractMonth(timestampUTC int64) int8 {
@@ -108,8 +108,8 @@ func ExtractMonth(timestampUTC int64) int8 {
 
 	// Convert shifted calendar month to standard 1..12 month
 	if mp < 10 {
-		return int8(mp + 3)
+		return int8(mp + 3) //nolint:gosec
 	}
 
-	return int8(mp - 9)
+	return int8(mp - 9) //nolint:gosec
 }

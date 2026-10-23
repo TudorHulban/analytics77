@@ -1,4 +1,4 @@
-package site
+package offsets
 
 import (
 	"math"

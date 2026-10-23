@@ -6,13 +6,14 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/domain/analytics"
-	"github.com/tudorhulban/analytics77/infra/site"
+	"github.com/tudorhulban/analytics77/domain/offsets"
+
 	"github.com/tudorhulban/analytics77/shared"
 	"github.com/tudorhulban/hxhelpers"
 )
 
 func TestCurrentDayHoursWithData(t *testing.T) {
-	offsetsROU := site.TimestampOffsets{
+	offsetsROU := offsets.TimestampOffsets{
 		OffsetUTCHours: +3,
 	}
 
@@ -36,7 +37,7 @@ func TestCurrentDayHoursWithData(t *testing.T) {
 		Browser:         analytics.Brave,
 		OperatingSystem: analytics.Linux,
 
-		TimestampUNIX: site.GetHourInOffsetAsUTC(
+		TimestampUNIX: offsets.GetHourInOffsetAsUTC(
 			localTime,
 			localTime.Hour(),
 			int(offsetsROU.OffsetUTCHours),
@@ -68,7 +69,7 @@ func TestCurrentDayHoursWithData(t *testing.T) {
 		Browser:         analytics.Brave,
 		OperatingSystem: analytics.Linux,
 
-		TimestampUNIX: site.GetHourInOffsetAsUTC(oneHourBefore, oneHourBefore.Hour(), int(offsetsROU.OffsetUTCHours)),
+		TimestampUNIX: offsets.GetHourInOffsetAsUTC(oneHourBefore, oneHourBefore.Hour(), int(offsetsROU.OffsetUTCHours)),
 
 		IsPrivateIP: true,
 	}

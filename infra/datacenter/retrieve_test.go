@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tudorhulban/analytics77/infra/site"
+	"github.com/tudorhulban/analytics77/domain/offsets"
 	"github.com/tudorhulban/analytics77/shared"
 )
 
@@ -14,7 +14,7 @@ func TestGetPreviousHourRecordsPerSite_CrossesMonthBoundary(t *testing.T) {
 	require.NotNil(t, dc)
 
 	siteName := "localhost"
-	offsets := site.TimestampOffsets{
+	offset := offsets.TimestampOffsets{
 		OffsetUTCHours: 0,
 	}
 
@@ -31,7 +31,7 @@ func TestGetPreviousHourRecordsPerSite_CrossesMonthBoundary(t *testing.T) {
 				IP:      "127.0.0.1",
 
 				TimestampUNIX:  lastHourFeb.Unix(),
-				OffsetUTCHours: offsets.OffsetUTCHours,
+				OffsetUTCHours: offset.OffsetUTCHours,
 
 				IsPrivateIP: true,
 			},
@@ -49,7 +49,7 @@ func TestGetPreviousHourRecordsPerSite_CrossesMonthBoundary(t *testing.T) {
 				IP:      "127.0.0.1",
 
 				TimestampUNIX:  nowMarch.Unix(),
-				OffsetUTCHours: offsets.OffsetUTCHours,
+				OffsetUTCHours: offset.OffsetUTCHours,
 
 				IsPrivateIP: true,
 			},
@@ -67,7 +67,7 @@ func TestGetPreviousHourRecordsPerSite_CrossesMonthBoundary(t *testing.T) {
 
 	// At March 1st 00:30, "the previous hour" is Feb 29 23:xx -> the data
 	// that belongs to it lives in GetPreviousMonth(), not GetCurrentMonth().
-	records := dc.previousHourRecordsPerSiteAt(nowMarch.Unix(), &offsets)
+	records := dc.previousHourRecordsPerSiteAt(nowMarch.Unix(), &offset)
 
 	require.Len(t, records, 1)
 	require.EqualValues(t,

@@ -12,8 +12,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/cmd"
+	"github.com/tudorhulban/analytics77/domain/offsets"
 	"github.com/tudorhulban/analytics77/infra/datacenter"
-	"github.com/tudorhulban/analytics77/infra/site"
 	"github.com/tudorhulban/analytics77/services/sanalytics"
 	"github.com/tudorhulban/analytics77/services/sgeo"
 	"github.com/tudorhulban/analytics77/services/slogging"
@@ -26,7 +26,7 @@ func TestTransport_TCP(t *testing.T) {
 
 	dummyURL, _ := url.Parse("https://example.com/analytics")
 
-	offsetsROU := site.TimestampOffsets{
+	offsetsROU := offsets.TimestampOffsets{
 		OffsetUTCHours: -3,
 	}
 

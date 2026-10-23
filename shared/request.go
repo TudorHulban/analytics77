@@ -9,9 +9,8 @@ import (
 	"strings"
 
 	"github.com/tudorhulban/analytics77/domain/analytics"
-	"github.com/tudorhulban/analytics77/infra/site"
+	"github.com/tudorhulban/analytics77/domain/offsets"
 	"github.com/tudorhulban/analytics77/services/sgeo"
-
 	"github.com/tudorhulban/hxhelpers"
 )
 
@@ -28,7 +27,7 @@ type Request struct {
 }
 
 type PiersAsParamsAddEvent struct {
-	Offsets    *site.TimestampOffsets
+	Offsets    *offsets.TimestampOffsets
 	ServiceGeo *sgeo.ServiceGeo
 }
 

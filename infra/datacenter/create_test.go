@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/domain/analytics"
-	"github.com/tudorhulban/analytics77/domain/dhelpers"
+	"github.com/tudorhulban/analytics77/domain/calendar"
 	"github.com/tudorhulban/analytics77/shared"
 )
 
@@ -122,11 +122,11 @@ func TestAddEventsAcrossBoundaries(t *testing.T) {
 
 				require.EqualValues(t,
 					tc.utcExpectedDay,
-					dhelpers.IndexToCalendarDay(days[0]),
+					calendar.IndexToCalendarDay(days[0]),
 
 					"day not matching, expected:%d got:%d",
 					tc.utcExpectedDay,
-					dhelpers.IndexToCalendarDay(days[0]),
+					calendar.IndexToCalendarDay(days[0]),
 				)
 
 				var (

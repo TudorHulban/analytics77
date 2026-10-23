@@ -1,8 +1,8 @@
 package analytics
 
 import (
-	"github.com/tudorhulban/analytics77/domain/dhelpers"
-	"github.com/tudorhulban/analytics77/infra/site"
+	"github.com/tudorhulban/analytics77/domain/calendar"
+	"github.com/tudorhulban/analytics77/domain/offsets"
 )
 
 // PreviousMonthDaysWithData returns a stack‑allocated array of up to 31 days.
@@ -69,7 +69,7 @@ func (r *Registry) PreviousMonthHoursWithData(forCalendarDay int8) ([24]int8, in
 		return hoursWithData, 0
 	}
 
-	dayIndex := dhelpers.CalendarDayToIndex(forCalendarDay)
+	dayIndex := calendar.CalendarDayToIndex(forCalendarDay)
 	prev := r.GetPreviousSlot()
 
 	for hour := range int8(24) {
@@ -99,7 +99,7 @@ func (r *Registry) CurrentMonthHoursWithData(forCalendarDay int8) ([24]int8, int
 		return hoursWithData, 0
 	}
 
-	dayIndex := dhelpers.CalendarDayToIndex(forCalendarDay)
+	dayIndex := calendar.CalendarDayToIndex(forCalendarDay)
 	curr := r.GetActiveSlot()
 
 	for hour := range int8(24) {
@@ -119,9 +119,9 @@ func (r *Registry) CurrentMonthHoursWithData(forCalendarDay int8) ([24]int8, int
 //
 // Registry stores storage hours as UTC time.
 func (r *Registry) CurrentDayHoursWithData(timestampUTC, offsetUTCHours int64) ([24]int8, int8) {
-	_, currentDay, _ := site.ExtractMonthDayHour(
+	_, currentDay, _ := offsets.ExtractMonthDayHour(
 		timestampUTC,
-		&site.TimestampOffsets{
+		&offsets.TimestampOffsets{
 			OffsetUTCHours: offsetUTCHours,
 
 			TimestampDSTSpring: r.TimestampDSTSpring,

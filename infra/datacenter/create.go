@@ -2,8 +2,9 @@ package datacenter
 
 import (
 	"github.com/tudorhulban/analytics77/domain/analytics"
-	"github.com/tudorhulban/analytics77/domain/dhelpers"
-	"github.com/tudorhulban/analytics77/infra/site"
+	"github.com/tudorhulban/analytics77/domain/calendar"
+	"github.com/tudorhulban/analytics77/domain/offsets"
+
 	"github.com/tudorhulban/analytics77/shared"
 )
 
@@ -94,15 +95,15 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 		registrySite, exists := dc.data[forSite]
 		if !exists {
 			registrySite = analytics.NewRegistry(
-				site.ExtractMonth(event.TimestampUNIX),
+				offsets.ExtractMonth(event.TimestampUNIX),
 			)
 
 			dc.data[forSite] = registrySite
 		}
 
-		evCalendarMonth, evCalendarDay, evHour := site.ExtractMonthDayHour(
+		evCalendarMonth, evCalendarDay, evHour := offsets.ExtractMonthDayHour(
 			event.TimestampUNIX,
-			&site.TimestampOffsets{
+			&offsets.TimestampOffsets{
 				OffsetUTCHours: event.OffsetUTCHours,
 
 				TimestampDSTSpring: registrySite.TimestampDSTSpring,
@@ -118,12 +119,12 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 		case evCalendarMonth == monthNumber:
 			// Same calendar month → current month buffer.
 			resolved[outIx] = &registrySite.
-				GetActiveSlot()[dhelpers.CalendarDayToIndex(evCalendarDay)][evHour]
+				GetActiveSlot()[calendar.CalendarDayToIndex(evCalendarDay)][evHour]
 
 		case evCalendarMonth+1 == monthNumber || (evCalendarMonth == 12 && monthNumber == 1):
 			// Event belongs to previous calendar month.
 			resolved[outIx] = &registrySite.
-				GetPreviousSlot()[dhelpers.CalendarDayToIndex(evCalendarDay)][evHour]
+				GetPreviousSlot()[calendar.CalendarDayToIndex(evCalendarDay)][evHour]
 
 		case evCalendarMonth-1 == monthNumber:
 			// Event belongs to next calendar month → rollover required.
@@ -131,7 +132,7 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 
 			// After rollover, the new month becomes current.
 			resolved[outIx] = &registrySite.
-				GetActiveSlot()[dhelpers.CalendarDayToIndex(evCalendarDay)][evHour]
+				GetActiveSlot()[calendar.CalendarDayToIndex(evCalendarDay)][evHour]
 
 		default:
 			// Older than previous month → either archive or ignore.

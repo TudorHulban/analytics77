@@ -10,8 +10,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/cmd"
+	"github.com/tudorhulban/analytics77/domain/offsets"
 
-	"github.com/tudorhulban/analytics77/infra/site"
 	transporttcp "github.com/tudorhulban/analytics77/infra/transport-tcp"
 	"github.com/tudorhulban/analytics77/services/sanalytics"
 	"github.com/tudorhulban/analytics77/services/sgeo"
@@ -26,7 +26,7 @@ func TestAnalytics_E2E(t *testing.T) {
 
 	utcOffsetHours := int64(offsetSeconds / 3600)
 
-	utcOffset := site.TimestampOffsets{
+	utcOffset := offsets.TimestampOffsets{
 		OffsetUTCHours: utcOffsetHours,
 	}
 

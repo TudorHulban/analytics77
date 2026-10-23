@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/domain/analytics"
-	"github.com/tudorhulban/analytics77/infra/site"
+	"github.com/tudorhulban/analytics77/domain/offsets"
 	"github.com/tudorhulban/analytics77/shared"
 	"github.com/tudorhulban/hxhelpers"
 )
@@ -22,7 +22,7 @@ func TestPreviousHourRecords(t *testing.T) {
 
 	utcOffsetHours := offsetSeconds / 3600
 
-	hourLocalAsUTC := site.GetHourInOffsetAsUTC(
+	hourLocalAsUTC := offsets.GetHourInOffsetAsUTC(
 		localTime,
 		localTime.Hour(),
 		utcOffsetHours,
@@ -56,7 +56,7 @@ func TestPreviousHourRecords(t *testing.T) {
 	)
 
 	recordsPreviousHourBefore := dc.GetPreviousHourRecordsPerSite(
-		&site.TimestampOffsets{
+		&offsets.TimestampOffsets{
 			OffsetUTCHours: int64(utcOffsetHours),
 		},
 	)
@@ -94,7 +94,7 @@ func TestPreviousHourRecords(t *testing.T) {
 	)
 
 	recordsPreviousHourAfter := dc.GetPreviousHourRecordsPerSite(
-		&site.TimestampOffsets{
+		&offsets.TimestampOffsets{
 			OffsetUTCHours: int64(utcOffsetHours),
 		},
 	)

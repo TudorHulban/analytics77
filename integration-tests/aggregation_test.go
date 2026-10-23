@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/domain/analytics"
-	"github.com/tudorhulban/analytics77/domain/dhelpers"
+	"github.com/tudorhulban/analytics77/domain/calendar"
 	"github.com/tudorhulban/analytics77/infra/datacenter"
 	"github.com/tudorhulban/analytics77/shared"
 )
@@ -72,7 +72,7 @@ func TestPreviousHourAcrossAprilToMay(t *testing.T) {
 	// Query April 30 aggregated data.
 	aggApril30, errHistory := registry.HistoryAggregateTopNForDay(
 		analytics.FromTwoMonthsAgo,
-		dhelpers.CalendarDayToIndex(int8(april30.Day())),
+		calendar.CalendarDayToIndex(int8(april30.Day())),
 	)
 	require.NoError(t, errHistory)
 

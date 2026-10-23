@@ -3,8 +3,8 @@ package sanalytics
 import (
 	"fmt"
 
+	"github.com/tudorhulban/analytics77/domain/offsets"
 	"github.com/tudorhulban/analytics77/infra/datacenter"
-	"github.com/tudorhulban/analytics77/infra/site"
 	"github.com/tudorhulban/analytics77/services/sgeo"
 	"github.com/tudorhulban/analytics77/shared"
 	"github.com/tudorhulban/hxhelpers/piers"
@@ -15,7 +15,7 @@ import (
 // ServiceAnalytics can work with multiple sites.
 type ServiceAnalytics struct {
 	DC      *datacenter.DataCenter
-	offsets *site.TimestampOffsets
+	offsets *offsets.TimestampOffsets
 
 	serviceGeo *sgeo.ServiceGeo
 }
@@ -23,7 +23,7 @@ type ServiceAnalytics struct {
 type PiersNewServiceAnalytics struct {
 	ServiceGeo *sgeo.ServiceGeo
 	Datacenter *datacenter.DataCenter
-	Offsets    *site.TimestampOffsets
+	Offsets    *offsets.TimestampOffsets
 }
 
 // ServiceAnalytics has a 1 to many relation with the datacenter due to the 1:1 relation with the geo service.

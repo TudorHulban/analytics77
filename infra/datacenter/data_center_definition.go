@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/tudorhulban/analytics77/domain/analytics"
+	"github.com/tudorhulban/analytics77/domain/site"
 	"github.com/tudorhulban/hxerrors"
 )
 
@@ -20,13 +21,19 @@ type DataCenter struct {
 	mu   sync.RWMutex
 }
 
+type DataCenter2 struct {
+	sites map[site.SiteName]*Site
+
+	mu sync.RWMutex
+}
+
 func NewDataCenter(sites ...string) *DataCenter {
 	result := DataCenter{
 		data: map[Site]*analytics.Registry{},
 	}
 
-	for _, site := range sites {
-		result.AddSite(site)
+	for _, item := range sites {
+		result.AddSite(item)
 	}
 
 	return &result
@@ -46,8 +53,8 @@ func (dc *DataCenter) AddSite(siteName string) error {
 
 // Advance is not safe for concurrent callers.
 func (dc *DataCenter) Advance(sites ...Site) {
-	for site, registry := range dc.data {
-		if slices.Contains(sites, site) {
+	for siteName, registry := range dc.data {
+		if slices.Contains(sites, siteName) {
 			registry.Advance()
 		}
 	}

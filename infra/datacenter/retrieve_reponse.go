@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/tudorhulban/analytics77/domain/analytics"
-	"github.com/tudorhulban/analytics77/domain/dhelpers"
-	"github.com/tudorhulban/analytics77/infra/site"
+	"github.com/tudorhulban/analytics77/domain/calendar"
+	"github.com/tudorhulban/analytics77/domain/offsets"
 )
 
 type ResponseRecordsPerSite map[Site]uint32
@@ -76,7 +76,7 @@ func (r ResponseRecordsPerSite) String() string {
 // Each site carries its own DST window, so the extraction uses the caller's
 // UTC offset combined with that registry's DST fields — the same convention
 // AddEvents uses.
-func (dc *DataCenter) previousHourRecordsPerSiteAt(nowUTC int64, offsets *site.TimestampOffsets) ResponseRecordsPerSite {
+func (dc *DataCenter) previousHourRecordsPerSiteAt(nowUTC int64, offset *offsets.TimestampOffsets) ResponseRecordsPerSite {
 	previousHourUTC := nowUTC - 3600
 
 	dc.mu.RLock()
@@ -84,10 +84,10 @@ func (dc *DataCenter) previousHourRecordsPerSiteAt(nowUTC int64, offsets *site.T
 	result := make(map[Site]uint32, len(dc.data))
 
 	for siteKey, registry := range dc.data {
-		prevMonth, prevDay, prevHour := site.ExtractMonthDayHour(
+		prevMonth, prevDay, prevHour := offsets.ExtractMonthDayHour(
 			previousHourUTC,
-			&site.TimestampOffsets{
-				OffsetUTCHours: offsets.OffsetUTCHours,
+			&offsets.TimestampOffsets{
+				OffsetUTCHours: offset.OffsetUTCHours,
 
 				TimestampDSTSpring: registry.TimestampDSTSpring,
 				TimestampDSTWinter: registry.TimestampDSTWinter,
@@ -105,7 +105,7 @@ func (dc *DataCenter) previousHourRecordsPerSiteAt(nowUTC int64, offsets *site.T
 			month = registry.GetPreviousSlot()
 		}
 
-		result[siteKey] = month[dhelpers.CalendarDayToIndex(prevDay)][prevHour].RecordsPerPeriod.Load()
+		result[siteKey] = month[calendar.CalendarDayToIndex(prevDay)][prevHour].RecordsPerPeriod.Load()
 	}
 
 	dc.mu.RUnlock()
@@ -115,14 +115,18 @@ func (dc *DataCenter) previousHourRecordsPerSiteAt(nowUTC int64, offsets *site.T
 
 // GetPreviousHourRecordsPerSite returns, per site, the record count for the
 // hour immediately preceding the current one.
-func (dc *DataCenter) GetPreviousHourRecordsPerSite(offsets *site.TimestampOffsets) ResponseRecordsPerSite {
-	return dc.previousHourRecordsPerSiteAt(time.Now().Unix(), offsets)
+func (dc *DataCenter) GetPreviousHourRecordsPerSite(offset *offsets.TimestampOffsets) ResponseRecordsPerSite {
+	return dc.
+		previousHourRecordsPerSiteAt(
+			time.Now().Unix(),
+			offset,
+		)
 }
 
-func (dc *DataCenter) GetCurrentHourRecordsPerSite(offsets *site.TimestampOffsets) ResponseRecordsPerSite {
-	_, ixDay, ixHour := site.ExtractMonthDayHour(
+func (dc *DataCenter) GetCurrentHourRecordsPerSite(offset *offsets.TimestampOffsets) ResponseRecordsPerSite {
+	_, ixDay, ixHour := offsets.ExtractMonthDayHour(
 		time.Now().Unix(),
-		offsets,
+		offset,
 	)
 
 	dc.mu.RLock()
@@ -130,7 +134,8 @@ func (dc *DataCenter) GetCurrentHourRecordsPerSite(offsets *site.TimestampOffset
 	result := make(map[Site]uint32, len(dc.data))
 
 	for siteKey, registry := range dc.data {
-		result[siteKey] = registry.GetActiveSlot()[dhelpers.CalendarDayToIndex(ixDay)][ixHour].RecordsPerPeriod.Load()
+		result[siteKey] = registry.
+			GetActiveSlot()[calendar.CalendarDayToIndex(ixDay)][ixHour].RecordsPerPeriod.Load()
 	}
 
 	dc.mu.RUnlock()
@@ -139,7 +144,7 @@ func (dc *DataCenter) GetCurrentHourRecordsPerSite(offsets *site.TimestampOffset
 }
 
 // CurrentDayHoursWithData returns UTC hours.
-func (dc *DataCenter) CurrentDayHoursWithData(offsets *site.TimestampOffsets) ([24]int8, int8) {
+func (dc *DataCenter) CurrentDayHoursWithData(offset *offsets.TimestampOffsets) ([24]int8, int8) {
 	hoursMap := make(map[int8]struct{})
 
 	sites := dc.GetSiteNames()
@@ -151,7 +156,11 @@ func (dc *DataCenter) CurrentDayHoursWithData(offsets *site.TimestampOffsets) ([
 		registry, _ := dc.GetRegistry(site)
 
 		// Pass the offsets pointer down into the registry method
-		hoursWithData, howMany := registry.CurrentDayHoursWithData(now, offsets.OffsetUTCHours)
+		hoursWithData, howMany := registry.
+			CurrentDayHoursWithData(
+				now,
+				offset.OffsetUTCHours,
+			)
 
 		for _, hour := range hoursWithData[:howMany] {
 			if _, exists := hoursMap[hour]; !exists {

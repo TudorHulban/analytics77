@@ -1,4 +1,4 @@
-package dhelpers
+package calendar
 
 // CalendarDayToIndex converts 1–31 → 0–30
 func CalendarDayToIndex(dayCalendar int8) int8 {
