@@ -1,10 +1,10 @@
 package offsets
 
 type TimestampOffsets struct {
-	OffsetUTCHours int64
+	OffsetUTCHours int64 `json:"offsetUTCHours"`
 
-	TimestampDSTWinter int64 // Epoch when DST ends (falls back to winter/standard time)
-	TimestampDSTSpring int64 // Epoch when DST starts (springs forward to summer time)
+	TimestampDSTWinter int64 `json:"timestampDSTWinter"` // Epoch when DST ends (falls back to winter/standard time)
+	TimestampDSTSpring int64 `json:"timestampDSTSpring"` // Epoch when DST starts (springs forward to summer time)
 }
 
 // ExtractMonthDayHour converts a UTC Unix timestamp into the *real* calendar day (1–31)

@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/tudorhulban/analytics77/cmd"
+	"github.com/tudorhulban/analytics77/domain/site"
 )
 
 type configuration struct {
@@ -60,6 +61,26 @@ func extractConfiguration(raw map[string]any) (*configuration, error) {
 			errors.New(
 				"invalid or missing initialization section",
 			)
+	}
+
+	rawSites, exists := initialization["sites"].([]any)
+	if !exists {
+		return nil, errors.New("invalid or missing sites configuration")
+	}
+
+	var sites []*site.Site
+
+	for _, rawSite := range rawSites {
+		siteMap, ok := rawSite.(map[string]any)
+		if !ok {
+			return nil, errors.New("invalid site entry format")
+		}
+
+		item, errCr := site.NewSite(siteMap)
+		if errCr != nil {
+			return nil, errCr
+		}
+		sites = append(sites, item)
 	}
 
 	offset, couldCastOffset := initialization["utcOffsetHours"].(float64)

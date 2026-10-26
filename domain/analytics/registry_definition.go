@@ -35,6 +35,8 @@ type Registry struct {
 // Slots[5] = 5 months back
 //
 // Slots[6] = 6 months back
+//
+// dsts are spring first, then winter.
 func NewRegistry(inMonth int8, dstTimestamps ...int64) *Registry {
 	var month int32
 
