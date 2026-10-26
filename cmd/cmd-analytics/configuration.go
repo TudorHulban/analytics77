@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/tudorhulban/analytics77/cmd"
 	"github.com/tudorhulban/analytics77/domain/site"
@@ -13,8 +14,46 @@ type configuration struct {
 	portRPC  string
 	portHTTP string
 
-	nameLogfile    string
-	utcOffsetHours int64
+	nameLogfile string
+
+	sites []*site.Site
+}
+
+// String implements the fmt.Stringer interface for configuration.
+func (c *configuration) String() string {
+	if c == nil {
+		return "<nil configuration>"
+	}
+
+	var sb strings.Builder
+
+	sb.WriteString("Configuration {\n")
+	fmt.Fprintf(&sb, "  portRPC: %s\n", c.portRPC)
+	fmt.Fprintf(&sb, "  portHTTP: %s\n", c.portHTTP)
+	fmt.Fprintf(&sb, "  nameLogfile: %s\n", c.nameLogfile)
+
+	sb.WriteString("  sites: [\n")
+
+	for ix, sit := range c.sites {
+		if sit == nil {
+			sb.WriteString("    <nil site>,\n")
+
+			continue
+		}
+
+		fmt.Fprintf(&sb, "    [%d] Site {\n", ix)
+		fmt.Fprintf(&sb, "      Name: %v\n", sit.Name)
+		fmt.Fprintf(&sb, "      OffsetUTCHours: %d\n", sit.OffsetUTCHours)
+		fmt.Fprintf(&sb, "      TimestampDSTWinter: %d\n", sit.TimestampDSTWinter)
+		fmt.Fprintf(&sb, "      TimestampDSTSpring: %d\n", sit.TimestampDSTSpring)
+
+		sb.WriteString("    },\n")
+	}
+
+	sb.WriteString("  ]\n")
+	sb.WriteString("}")
+
+	return sb.String()
 }
 
 func extractConfiguration(raw map[string]any) (*configuration, error) {
@@ -80,16 +119,8 @@ func extractConfiguration(raw map[string]any) (*configuration, error) {
 		if errCr != nil {
 			return nil, errCr
 		}
-		sites = append(sites, item)
-	}
 
-	offset, couldCastOffset := initialization["utcOffsetHours"].(float64)
-	if !couldCastOffset {
-		return nil,
-			fmt.Errorf(
-				"invalid initialization value as %v",
-				initialization["utcOffsetHours"],
-			)
+		sites = append(sites, item)
 	}
 
 	return &configuration{
@@ -97,7 +128,7 @@ func extractConfiguration(raw map[string]any) (*configuration, error) {
 			portHTTP:    strconv.Itoa(int(portHTTP)),
 			nameLogfile: nameLogfile,
 
-			utcOffsetHours: int64(offset),
+			sites: sites,
 		},
 		nil
 }

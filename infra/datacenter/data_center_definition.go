@@ -27,16 +27,20 @@ type DataCenter2 struct {
 	mu sync.RWMutex
 }
 
-func NewDataCenter(sites ...string) *DataCenter {
+func NewDataCenter(sites ...string) (*DataCenter, error) {
 	result := DataCenter{
 		data: map[Site]*analytics.Registry{},
 	}
 
 	for _, item := range sites {
-		result.AddSite(item)
+		if errAdd := result.AddSite(item); errAdd != nil {
+			return nil,
+				errAdd
+		}
 	}
 
-	return &result
+	return &result,
+		nil
 }
 
 func (dc *DataCenter) AddSite(siteName string) error {

@@ -13,10 +13,10 @@ type SiteName string
 
 // TODO: add methods to update the DST moments
 type Site struct {
-	Registry *analytics.Registry
-	Name     SiteName `json:"name"`
+	Registry *analytics.Registry `json:"-"`
+	Name     SiteName            `json:"name"`
 
-	offsets.TimestampOffsets
+	offsets.TimestampOffsets `json:"-"`
 }
 
 func NewSite(rawSite map[string]any) (*Site, error) {
@@ -25,11 +25,13 @@ func NewSite(rawSite map[string]any) (*Site, error) {
 		return nil,
 			errors.New("missing referenceMonth")
 	}
+
 	floatReferenceMonth, couldCast := valueReferenceMonth.(float64)
 	if !couldCast {
 		return nil,
 			errors.New("invalid referenceMonth type")
 	}
+
 	referenceMonth := int8(floatReferenceMonth)
 
 	valueReferenceYear, exists := rawSite["referenceYear"]
@@ -37,10 +39,12 @@ func NewSite(rawSite map[string]any) (*Site, error) {
 		return nil,
 			errors.New("missing referenceYear")
 	}
+
 	floatReferenceYear, couldCast := valueReferenceYear.(float64)
 	if !couldCast {
 		return nil, errors.New("invalid referenceYear type")
 	}
+
 	referenceYear := int16(floatReferenceYear)
 
 	data, errMarshal := json.Marshal(rawSite) // Marshal the individual site map back to JSON bytes

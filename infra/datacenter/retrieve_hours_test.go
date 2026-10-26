@@ -17,7 +17,8 @@ func TestCurrentDayHoursWithData(t *testing.T) {
 		OffsetUTCHours: +3,
 	}
 
-	dc := NewDataCenter()
+	dc, errCr := NewDataCenter()
+	require.NoError(t, errCr)
 	require.NotNil(t, dc)
 
 	hoursWithDataBefore, howManyBefore := dc.CurrentDayHoursWithData(&offsetsROU)

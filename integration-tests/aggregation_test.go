@@ -13,7 +13,8 @@ import (
 )
 
 func TestPreviousHourAcrossAprilToMay(t *testing.T) {
-	dc := datacenter.NewDataCenter()
+	dc, errCr := datacenter.NewDataCenter()
+	require.NoError(t, errCr)
 	require.NotNil(t, dc)
 
 	site := "localhost"

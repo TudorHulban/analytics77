@@ -31,6 +31,8 @@ func main() {
 		)
 	}
 
+	fmt.Println(configuration)
+
 	app := appanalytics.InitializeApp(
 		&appanalytics.ParamsInitializeApp{
 			ConfigPortRPC:   configuration.portRPC,

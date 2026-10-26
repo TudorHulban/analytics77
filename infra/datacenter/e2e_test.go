@@ -10,7 +10,8 @@ import (
 )
 
 func TestDataCenter(t *testing.T) {
-	dc := NewDataCenter()
+	dc, errCr := NewDataCenter()
+	require.NoError(t, errCr)
 	require.NotNil(t, dc)
 
 	require.Empty(t, dc.AddEvents())

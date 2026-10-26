@@ -12,7 +12,8 @@ import (
 )
 
 func TestPreviousHourRecords(t *testing.T) {
-	dc := NewDataCenter()
+	dc, errCr := NewDataCenter()
+	require.NoError(t, errCr)
 	require.NotNil(t, dc)
 
 	siteName := "localhost"

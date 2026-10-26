@@ -12,7 +12,8 @@ import (
 )
 
 func TestAddEvents_OlderThanPreviousMonth_DoesNotPanic(t *testing.T) {
-	dc := NewDataCenter()
+	dc, errCr := NewDataCenter()
+	require.NoError(t, errCr)
 
 	req := shared.ParamsAddEvent{
 		SiteKey:       "localhost",
@@ -73,7 +74,8 @@ func TestAddEventsAcrossBoundaries(t *testing.T) {
 		t.Run(
 			tc.description,
 			func(t *testing.T) {
-				dc := NewDataCenter()
+				dc, errCr := NewDataCenter()
+				require.NoError(t, errCr)
 				require.NotNil(t, dc)
 
 				req := shared.ParamsAddEvent{
