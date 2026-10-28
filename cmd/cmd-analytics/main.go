@@ -14,12 +14,12 @@ import (
 )
 
 func main() {
-	configRaw := initialization.Configuration(cmd.PathConfig)
+	configRaw := initialization.GetConfigurationRaw(cmd.PathConfig)
 
 	// dir, _ := os.Getwd()
 	// fmt.Println("Current Working Directory:", dir)
 
-	configuration, errParse := extractConfiguration(configRaw)
+	configuration, errParse := initialization.NewConfiguration(configRaw)
 	if errParse != nil {
 		fmt.Printf(
 			"error extract configuration: %s\n",
@@ -35,11 +35,11 @@ func main() {
 
 	app := appanalytics.InitializeApp(
 		&appanalytics.ParamsInitializeApp{
-			ConfigPortRPC:   configuration.portRPC,
-			ConfigPortHTTP:  configuration.portHTTP,
+			ConfigPortRPC:   configuration.PortRPC,
+			ConfigPortHTTP:  configuration.PortHTTP,
 			PathFilesPublic: "./public",
 
-			PathLogFile:       configuration.nameLogfile,
+			PathLogFile:       configuration.NameLogfile,
 			KeyGeolocationAPI: os.Getenv(cmd.OSAPIGeolocation),
 		},
 

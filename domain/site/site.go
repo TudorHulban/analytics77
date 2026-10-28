@@ -1,7 +1,6 @@
 package site
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -26,8 +25,8 @@ func NewSite(rawSite map[string]any) (*Site, error) {
 			errors.New("missing referenceMonth")
 	}
 
-	floatReferenceMonth, couldCast := valueReferenceMonth.(float64)
-	if !couldCast {
+	floatReferenceMonth, couldCastReferenceMonth := valueReferenceMonth.(float64)
+	if !couldCastReferenceMonth {
 		return nil,
 			errors.New("invalid referenceMonth type")
 	}
@@ -40,33 +39,86 @@ func NewSite(rawSite map[string]any) (*Site, error) {
 			errors.New("missing referenceYear")
 	}
 
-	floatReferenceYear, couldCast := valueReferenceYear.(float64)
-	if !couldCast {
-		return nil, errors.New("invalid referenceYear type")
-	}
-
-	referenceYear := int16(floatReferenceYear)
-
-	data, errMarshal := json.Marshal(rawSite) // Marshal the individual site map back to JSON bytes
-	if errMarshal != nil {
+	floatReferenceYear, couldCastReferenceYear := valueReferenceYear.(float64)
+	if !couldCastReferenceYear {
 		return nil,
 			fmt.Errorf(
-				"failed to marshal site raw data: %w",
-				errMarshal,
+				"invalid referenceYear type %f",
+				floatReferenceYear,
 			)
 	}
 
-	var result Site
+	_ = int16(floatReferenceYear) // referenceYear
 
-	if errUnMarshal := json.Unmarshal(data, &result); errUnMarshal != nil {
+	valueSiteName, exists := rawSite["name"]
+	if !exists {
+		return nil,
+			errors.New("missing site name")
+	}
+
+	siteName, couldSiteName := valueSiteName.(string)
+	if !couldSiteName {
 		return nil,
 			fmt.Errorf(
-				"failed to decode site configuration: %w",
-				errUnMarshal,
+				"invalid site name %v",
+				valueSiteName,
 			)
 	}
 
-	fmt.Println(referenceYear)
+	valueOffsetUTCHours, exists := rawSite["offsetUTCHours"]
+	if !exists {
+		return nil,
+			errors.New("missing offsetUTCHours")
+	}
+
+	offsetUTCHours, couldCastUTCHours := valueOffsetUTCHours.(float64)
+	if !couldCastUTCHours {
+		return nil,
+			fmt.Errorf(
+				"invalid offsetUTCHours %v",
+				valueOffsetUTCHours,
+			)
+	}
+
+	valueDSTSpring, exists := rawSite["timestampDSTSpring"]
+	if !exists {
+		return nil,
+			errors.New("missing timestampDSTSpring")
+	}
+
+	timestampDSTSpring, couldCastDSTSpring := valueDSTSpring.(float64)
+	if !couldCastDSTSpring {
+		return nil,
+			fmt.Errorf(
+				"invalid timestampDSTSpring %v",
+				valueDSTSpring,
+			)
+	}
+
+	valueDSTWinter, exists := rawSite["timestampDSTWinter"]
+	if !exists {
+		return nil,
+			errors.New("missing timestampDSTWinter")
+	}
+
+	timestampDSTWinter, couldCastDSTWinter := valueDSTWinter.(float64)
+	if !couldCastDSTWinter {
+		return nil,
+			fmt.Errorf(
+				"invalid timestampDSTSpring %v",
+				valueDSTSpring,
+			)
+	}
+
+	result := Site{
+		Name: SiteName(siteName),
+
+		TimestampOffsets: offsets.TimestampOffsets{
+			OffsetUTCHours:     int64(offsetUTCHours),
+			TimestampDSTSpring: int64(timestampDSTSpring),
+			TimestampDSTWinter: int64(timestampDSTWinter),
+		},
+	}
 
 	result.Registry = analytics.NewRegistry(
 		referenceMonth,

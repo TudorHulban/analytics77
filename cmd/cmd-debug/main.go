@@ -40,7 +40,7 @@ func main() {
 		)
 	}
 
-	configRaw := initialization.Configuration(cmd.PathConfig)
+	configRaw := initialization.GetConfigurationRaw(cmd.PathConfig)
 
 	configSiteName, errParseSite := extractSiteName(configRaw)
 	if errParseSite != nil {
