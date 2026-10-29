@@ -11,10 +11,9 @@ import (
 type SiteName string
 
 // TODO: add methods to update the DST moments
+// Site is based on primitives so no need to pass by reference externally.
 type Site struct {
-	Registry *analytics.Registry `json:"-"`
-	Name     SiteName            `json:"name"`
-
+	Name                     SiteName `json:"name"`
 	offsets.TimestampOffsets `json:"-"`
 }
 

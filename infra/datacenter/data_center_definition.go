@@ -11,25 +11,16 @@ import (
 	"github.com/tudorhulban/hxerrors"
 )
 
-// Site is localhost if there is collection from several sites.
-type Site string
-
 // Stores in UTC times.
 // Converts only at the boundaries.
 type DataCenter struct {
-	data map[Site]*analytics.Registry
+	data map[site.Site]*analytics.Registry
 	mu   sync.RWMutex
 }
 
-type DataCenter2 struct {
-	sites map[site.SiteName]*Site
-
-	mu sync.RWMutex
-}
-
-func NewDataCenter(sites ...string) (*DataCenter, error) {
+func NewDataCenter(sites ...site.Site) (*DataCenter, error) {
 	result := DataCenter{
-		data: map[Site]*analytics.Registry{},
+		data: map[site.Site]*analytics.Registry{},
 	}
 
 	for _, item := range sites {
@@ -43,20 +34,25 @@ func NewDataCenter(sites ...string) (*DataCenter, error) {
 		nil
 }
 
-func (dc *DataCenter) AddSite(siteName string) error {
-	if len(siteName) == 0 {
-		return hxerrors.ErrNilInput{}
+func (dc *DataCenter) AddSite(item site.Site) error {
+	if len(item.Name) == 0 {
+		return hxerrors.ErrInvalidInput{
+			Issue:      hxerrors.ErrNilInput{},
+			InputValue: item,
+			InputName:  "site",
+			Caller:     "AddSite",
+		}
 	}
 
-	if _, exists := dc.data[Site(siteName)]; !exists {
-		dc.data[Site(siteName)] = &analytics.Registry{}
+	if _, exists := dc.data[item]; !exists {
+		dc.data[item] = &analytics.Registry{}
 	}
 
 	return nil
 }
 
 // Advance is not safe for concurrent callers.
-func (dc *DataCenter) Advance(sites ...Site) {
+func (dc *DataCenter) Advance(sites ...site.Site) {
 	for siteName, registry := range dc.data {
 		if slices.Contains(sites, siteName) {
 			registry.Advance()
@@ -84,18 +80,19 @@ func (dc *DataCenter) String() string {
 		}(),
 	)
 
-	keys := make([]Site, 0, len(dc.data))
+	keys := make([]site.SiteName, 0, len(dc.data))
 
-	for key := range dc.data {
-		keys = append(keys, key)
+	for item := range dc.data {
+		keys = append(keys, item.Name)
 	}
 
 	slices.Sort(keys)
 
-	for _, k := range keys {
-		fmt.Fprintf(&b, "\n[%s]\n", k)
+	for _, siteName := range keys {
+		fmt.Fprintf(&b, "\n[%s]\n", siteName)
 
-		dc.data[k].WriteTo(&b)
+		// TODO: needs review
+		dc.data[siteName].WriteTo(&b)
 	}
 
 	return b.String()

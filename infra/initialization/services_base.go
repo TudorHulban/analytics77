@@ -1,37 +1,32 @@
 package initialization
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/tudorhulban/analytics77/domain/offsets"
 	"github.com/tudorhulban/analytics77/services/sanalytics"
 	"github.com/tudorhulban/analytics77/services/sgeo"
-	"github.com/tudorhulban/analytics77/services/slogging"
 	"github.com/tudorhulban/analytics77/services/sstorage"
+	"github.com/tudorhulban/hxerrors"
 )
 
 type ParamsServices struct {
-	ServiceLogging *slogging.ServiceLogging
-
 	APIKeyGeolocation string
 	Offsets           offsets.TimestampOffsets
 }
 
-func Services(params *ParamsServices) (*sanalytics.ServiceAnalytics, error) {
-	params.
-		ServiceLogging.
-		Logger.Print("Initializing Analytics Application...")
+func NewApplicationServices(params *ParamsServices) (*sanalytics.ServiceAnalytics, error) {
+	fmt.Println("Initializing Analytics Application...")
 
 	serviceStorage, errCrServiceStorage := sstorage.NewServiceStorage(".")
 	if errCrServiceStorage != nil {
-		params.
-			ServiceLogging.
-			Logger.Printf(
-			"service geo creation: %s\n",
+		fmt.Printf(
+			"creation service storage: %s\n",
 			errCrServiceStorage.Error(),
 		)
 
-		os.Exit(10)
+		os.Exit(hxerrors.OSExitForStorageIssues)
 	}
 
 	serviceGeo, errCrServiceGeo := sgeo.NewServiceGeo(
@@ -41,14 +36,12 @@ func Services(params *ParamsServices) (*sanalytics.ServiceAnalytics, error) {
 		serviceStorage,
 	)
 	if errCrServiceGeo != nil {
-		params.
-			ServiceLogging.
-			Logger.Printf(
-			"service geo creation: %s",
+		fmt.Printf(
+			"creation service geo: %s\n",
 			errCrServiceGeo.Error(),
 		)
 
-		os.Exit(11)
+		os.Exit(hxerrors.OSExitForServiceIssues)
 	}
 
 	result, errCrServiceAnalytics := sanalytics.NewServiceAnalytics(
@@ -56,17 +49,15 @@ func Services(params *ParamsServices) (*sanalytics.ServiceAnalytics, error) {
 			ServiceGeo: serviceGeo,
 			Offsets:    &params.Offsets,
 		},
-		"some-ste", // TODO: change
+		"some-site", // TODO: change
 	)
 	if errCrServiceAnalytics != nil {
-		params.
-			ServiceLogging.
-			Logger.Printf(
-			"service analytics creation: %s",
+		fmt.Printf(
+			"creation service analytics: %s\n",
 			errCrServiceAnalytics.Error(),
 		)
 
-		os.Exit(11)
+		os.Exit(hxerrors.OSExitForServiceIssues)
 	}
 
 	return result,

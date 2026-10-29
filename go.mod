@@ -12,7 +12,7 @@ require (
 	github.com/tudorhulban/arenalog v0.0.6-0.20260601121910-51e15bf7c47f
 	github.com/tudorhulban/bytearena v0.0.18-0.20260528104812-211e4a865a1e
 	github.com/tudorhulban/hx-lru v0.0.0-20260618131954-37b17a4f088d
-	github.com/tudorhulban/hxerrors v0.0.2-0.20260730145821-55e4d22a89bf
+	github.com/tudorhulban/hxerrors v0.0.2-0.20261029120901-8e878d3c566f
 )
 
 require (

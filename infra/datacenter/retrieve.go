@@ -3,9 +3,9 @@ package datacenter
 import (
 	"fmt"
 	"io"
-	"slices"
 
 	"github.com/tudorhulban/analytics77/domain/analytics"
+	"github.com/tudorhulban/analytics77/domain/site"
 )
 
 // GetRegistry returns the Registry for the given site.
@@ -14,10 +14,10 @@ import (
 // This method uses a read lock because it does not mutate the DataCenter.
 // The caller must treat the returned pointer as read‑only unless they
 // explicitly coordinate ingestion through AddEvents.
-func (dc *DataCenter) GetRegistry(site Site) (*analytics.Registry, bool) {
+func (dc *DataCenter) GetRegistry(item site.Site) (*analytics.Registry, bool) {
 	dc.mu.RLock()
 
-	result, exists := dc.data[site]
+	result, exists := dc.data[item]
 
 	dc.mu.RUnlock()
 
@@ -27,13 +27,13 @@ func (dc *DataCenter) GetRegistry(site Site) (*analytics.Registry, bool) {
 // ListSites returns a snapshot of all sites currently present in the DataCenter.
 // The returned slice is a copy of the map keys and is safe for the caller to use.
 // This method acquires a read lock and does not mutate the DataCenter.
-func (dc *DataCenter) GetSiteNames() []Site {
+func (dc *DataCenter) GetSiteNames() []site.SiteName {
 	dc.mu.RLock()
 
-	result := make([]Site, 0, len(dc.data))
+	result := make([]site.SiteName, 0, len(dc.data))
 
-	for site := range dc.data {
-		result = append(result, site)
+	for dcSite := range dc.data {
+		result = append(result, dcSite.Name)
 	}
 
 	dc.mu.RUnlock()
@@ -48,20 +48,20 @@ func (dc *DataCenter) Snapshot(w io.Writer) error {
 	defer dc.mu.RUnlock()
 
 	// Stable ordering of sites
-	keys := make([]string, 0, len(dc.data))
+	keys := make([]site.Site, 0, len(dc.data))
 
 	for dcSite := range dc.data {
-		keys = append(keys, string(dcSite))
+		keys = append(keys, dcSite)
 	}
 
-	slices.Sort(keys)
+	// slices.Sort(keys)
 
-	for _, site := range keys {
-		if _, errPrintSite := fmt.Fprintf(w, "[%s]\n", site); errPrintSite != nil {
+	for _, dcSite := range keys {
+		if _, errPrintSite := fmt.Fprintf(w, "[%s]\n", dcSite); errPrintSite != nil {
 			return errPrintSite
 		}
 
-		if errPrintSnapshot := dc.data[Site(site)].Snapshot(w); errPrintSnapshot != nil {
+		if errPrintSnapshot := dc.data[dcSite].Snapshot(w); errPrintSnapshot != nil {
 			return errPrintSnapshot
 		}
 

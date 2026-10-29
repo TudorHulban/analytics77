@@ -10,9 +10,7 @@ import (
 	"github.com/tudorhulban/hxhelpers/piers"
 )
 
-// ServiceAnalytics produces analytics for the datacenter.
-//
-// ServiceAnalytics can work with multiple sites.
+// ServiceAnalytics produces analytics and pushes them to the datacenter.
 type ServiceAnalytics struct {
 	DC      *datacenter.DataCenter
 	offsets *offsets.TimestampOffsets

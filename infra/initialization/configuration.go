@@ -82,7 +82,7 @@ func NewConfiguration(rawConfig map[string]any) (*Configuration, error) {
 			return nil, errors.New("invalid site entry format")
 		}
 
-		fmt.Println(siteMap)
+		// fmt.Println(siteMap)
 
 		item, errCr := site.NewSite(siteMap)
 		if errCr != nil {

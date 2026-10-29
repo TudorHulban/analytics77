@@ -22,6 +22,7 @@ import (
 // 7. Store in LRU
 // 8. Return
 
+// ServiceGeo provides geo information for any IPv4.
 type ServiceGeo struct {
 	cache          *lru.CacheOneLRU[string, analytics.GeoIP]
 	serviceStorage *sstorage.ServiceStorage

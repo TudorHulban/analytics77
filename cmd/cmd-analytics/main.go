@@ -33,22 +33,6 @@ func main() {
 
 	fmt.Println(configuration)
 
-	app := appanalytics.InitializeApp(
-		&appanalytics.ParamsInitializeApp{
-			ConfigPortRPC:   configuration.PortRPC,
-			ConfigPortHTTP:  configuration.PortHTTP,
-			PathFilesPublic: "./public",
-
-			PathLogFile:       configuration.NameLogfile,
-			KeyGeolocationAPI: os.Getenv(cmd.OSAPIGeolocation),
-		},
-
-		&appanalytics.PiersInitializeApp{
-			Writer:   os.Stderr,
-			FuncExit: os.Exit,
-		},
-	)
-
 	// Context that cancels on SIGINT or SIGTERM
 	ctx, stop := signal.NotifyContext(
 		context.Background(),
@@ -73,6 +57,22 @@ func main() {
 
 		os.Exit(1)
 	}()
+
+	app := appanalytics.InitializeApp(
+		&appanalytics.ParamsInitializeApp{
+			ConfigPortRPC:   configuration.PortRPC,
+			ConfigPortHTTP:  configuration.PortHTTP,
+			PathFilesPublic: cmd.PublicFolder,
+
+			PathLogFile:       configuration.NameLogfile,
+			KeyGeolocationAPI: os.Getenv(cmd.OSAPIGeolocation),
+		},
+
+		&appanalytics.PiersInitializeApp{
+			Writer:   os.Stderr,
+			FuncExit: os.Exit,
+		},
+	)
 
 	// context.Canceled is not an error — it is the shutdown request itself
 	if errStart := app.Start(ctx); errStart != nil {

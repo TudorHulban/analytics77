@@ -75,25 +75,23 @@ func InitializeApp(params *ParamsInitializeApp, piers *PiersInitializeApp) *App 
 		)
 	}
 
-	serviceAnalytics, errInitialization := initialization.Services(
+	serviceAnalytics, errInitialization := initialization.NewApplicationServices(
 		&initialization.ParamsServices{
 			Offsets: offsets.TimestampOffsets{
 				OffsetUTCHours: params.OffsetUTCHours,
 			},
 			APIKeyGeolocation: params.KeyGeolocationAPI,
-
-			ServiceLogging: serviceLogging,
 		},
 	)
 	if errInitialization != nil {
 		fmt.Fprintf(
 			piers.Writer,
-			"error create listener: %s\n",
+			"error services initialization: %s\n",
 			errInitialization.Error(),
 		)
 
 		piers.FuncExit(
-			hxerrors.OSExitForConnectivityIssues,
+			hxerrors.OSExitForApplicationIssues,
 		)
 	}
 
