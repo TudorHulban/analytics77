@@ -4,6 +4,7 @@ import (
 	"github.com/tudorhulban/analytics77/domain/analytics"
 	"github.com/tudorhulban/analytics77/domain/calendar"
 	"github.com/tudorhulban/analytics77/domain/offsets"
+	"github.com/tudorhulban/analytics77/domain/site"
 
 	"github.com/tudorhulban/analytics77/shared"
 )
@@ -90,48 +91,60 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 	dc.mu.Lock()
 	for outIx, eventIndex := range indexesNoError {
 		event := events[eventIndex]
-		forSite := Site(event.SiteKey)
+		forSiteName := site.SiteName(event.SiteKey)
 
-		registrySite, exists := dc.data[forSite]
+		dcSite, exists := dc.data[forSiteName]
 		if !exists {
-			registrySite = analytics.NewRegistry(
-				offsets.ExtractMonth(event.TimestampUNIX),
-			)
+			dcSite = &DCSite{
+				Site: site.Site{
+					Name: forSiteName,
+				},
+				Data: analytics.NewRegistry(
+					offsets.ExtractMonth(event.TimestampUNIX),
+				),
+			}
 
-			dc.data[forSite] = registrySite
+			dc.data[forSiteName] = dcSite
 		}
 
+		// TODO: test case for new site.
 		evCalendarMonth, evCalendarDay, evHour := offsets.ExtractMonthDayHour(
 			event.TimestampUNIX,
 			&offsets.TimestampOffsets{
 				OffsetUTCHours: event.OffsetUTCHours,
 
-				TimestampDSTSpring: registrySite.TimestampDSTSpring,
-				TimestampDSTWinter: registrySite.TimestampDSTWinter,
+				TimestampDSTSpring: dcSite.Site.TimestampDSTSpring,
+				TimestampDSTWinter: dcSite.Site.TimestampDSTWinter,
 			},
 		)
 
-		registrySite.CalendarMonthCurrentNumber.CompareAndSwap(0, int32(evCalendarMonth))
+		dcSite.
+			Data.
+			CalendarMonthCurrentNumber.
+			CompareAndSwap(0, int32(evCalendarMonth))
 
-		monthNumber := int8(registrySite.CalendarMonthCurrentNumber.Load()) //nolint:gosec
+		monthNumber := int8(dcSite.Data.CalendarMonthCurrentNumber.Load()) //nolint:gosec
 
 		switch {
 		case evCalendarMonth == monthNumber:
 			// Same calendar month → current month buffer.
-			resolved[outIx] = &registrySite.
+			resolved[outIx] = &dcSite.
+				Data.
 				GetActiveSlot()[calendar.CalendarDayToIndex(evCalendarDay)][evHour]
 
 		case evCalendarMonth+1 == monthNumber || (evCalendarMonth == 12 && monthNumber == 1):
 			// Event belongs to previous calendar month.
-			resolved[outIx] = &registrySite.
+			resolved[outIx] = &dcSite.
+				Data.
 				GetPreviousSlot()[calendar.CalendarDayToIndex(evCalendarDay)][evHour]
 
 		case evCalendarMonth-1 == monthNumber:
 			// Event belongs to next calendar month → rollover required.
-			registrySite.Advance()
+			dcSite.Data.Advance()
 
 			// After rollover, the new month becomes current.
-			resolved[outIx] = &registrySite.
+			resolved[outIx] = &dcSite.
+				Data.
 				GetActiveSlot()[calendar.CalendarDayToIndex(evCalendarDay)][evHour]
 
 		default:

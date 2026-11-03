@@ -5,22 +5,28 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/tudorhulban/analytics77/domain/analytics"
 	"github.com/tudorhulban/analytics77/domain/site"
 	"github.com/tudorhulban/hxerrors"
 )
 
+type DCSite struct {
+	Site site.Site
+	Data *analytics.Registry
+}
+
 // Stores in UTC times.
 // Converts only at the boundaries.
 type DataCenter struct {
-	data map[site.Site]*analytics.Registry
+	data map[site.SiteName]*DCSite
 	mu   sync.RWMutex
 }
 
 func NewDataCenter(sites ...site.Site) (*DataCenter, error) {
 	result := DataCenter{
-		data: map[site.Site]*analytics.Registry{},
+		data: map[site.SiteName]*DCSite{},
 	}
 
 	for _, item := range sites {
@@ -44,8 +50,16 @@ func (dc *DataCenter) AddSite(item site.Site) error {
 		}
 	}
 
-	if _, exists := dc.data[item]; !exists {
-		dc.data[item] = &analytics.Registry{}
+	if _, exists := dc.data[item.Name]; !exists {
+		dc.data[item.Name] = &DCSite{
+			Site: item,
+			Data: analytics.NewRegistry(
+				int8(time.Now().Month()),
+
+				item.TimestampDSTSpring,
+				item.TimestampDSTWinter,
+			),
+		}
 	}
 
 	return nil
@@ -53,9 +67,9 @@ func (dc *DataCenter) AddSite(item site.Site) error {
 
 // Advance is not safe for concurrent callers.
 func (dc *DataCenter) Advance(sites ...site.Site) {
-	for siteName, registry := range dc.data {
-		if slices.Contains(sites, siteName) {
-			registry.Advance()
+	for _, item := range sites {
+		if dcSite, exists := dc.data[item.Name]; exists {
+			dcSite.Data.Advance()
 		}
 	}
 }
@@ -82,8 +96,8 @@ func (dc *DataCenter) String() string {
 
 	keys := make([]site.SiteName, 0, len(dc.data))
 
-	for item := range dc.data {
-		keys = append(keys, item.Name)
+	for dcSiteName := range dc.data {
+		keys = append(keys, dcSiteName)
 	}
 
 	slices.Sort(keys)
@@ -91,8 +105,11 @@ func (dc *DataCenter) String() string {
 	for _, siteName := range keys {
 		fmt.Fprintf(&b, "\n[%s]\n", siteName)
 
-		// TODO: needs review
-		dc.data[siteName].WriteTo(&b)
+		fmt.Fprintf(
+			&b,
+			"\n[%s]\n",
+			dc.data[siteName].Site.String(),
+		)
 	}
 
 	return b.String()

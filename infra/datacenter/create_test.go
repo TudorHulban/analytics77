@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/domain/analytics"
 	"github.com/tudorhulban/analytics77/domain/calendar"
+	"github.com/tudorhulban/analytics77/domain/site"
 	"github.com/tudorhulban/analytics77/shared"
 )
 
@@ -30,7 +31,9 @@ func TestAddEvents_OlderThanPreviousMonth_DoesNotPanic(t *testing.T) {
 }
 
 func TestAddEventsAcrossBoundaries(t *testing.T) {
-	site := "localhost"
+	siteTest := site.Site{
+		Name: site.SiteName(t.Name()),
+	}
 
 	now := time.Now()
 
@@ -79,7 +82,7 @@ func TestAddEventsAcrossBoundaries(t *testing.T) {
 				require.NotNil(t, dc)
 
 				req := shared.ParamsAddEvent{
-					SiteKey:         site,
+					SiteKey:         string(siteTest.Name),
 					IP:              "127.0.0.1",
 					Browser:         analytics.Brave,
 					OperatingSystem: analytics.Linux,
@@ -92,7 +95,7 @@ func TestAddEventsAcrossBoundaries(t *testing.T) {
 
 				require.Empty(t, dc.AddEvents(&req))
 
-				registry, exists := dc.GetRegistry(Site(site))
+				registry, exists := dc.GetRegistry(siteTest.Name)
 				require.True(t, exists)
 				require.NotNil(t, registry)
 				require.NotZero(t, registry.CalendarMonthCurrentNumber.Load())

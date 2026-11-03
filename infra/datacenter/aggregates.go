@@ -7,7 +7,7 @@ import (
 	"github.com/tudorhulban/analytics77/domain/site"
 )
 
-func (dc *DataCenter) CurrentMonthAggregateTopNForHour(day, hour int8, sites ...site.Site) ([]*analytics.AggregatedTopN, error) {
+func (dc *DataCenter) CurrentMonthAggregateTopNForHour(day, hour int8, sites ...site.SiteName) ([]*analytics.AggregatedTopN, error) {
 	if len(sites) == 0 {
 		return nil, analytics.ErrInvalidInput
 	}
@@ -33,7 +33,7 @@ func (dc *DataCenter) CurrentMonthAggregateTopNForHour(day, hour int8, sites ...
 	return result, nil
 }
 
-func (dc *DataCenter) CurrentMonthAggregateTopN(sites ...site.Site) ([]*analytics.AggregatedTopN, error) {
+func (dc *DataCenter) CurrentMonthAggregateTopN(sites ...site.SiteName) ([]*analytics.AggregatedTopN, error) {
 	if len(sites) == 0 {
 		return nil, analytics.ErrInvalidInput
 	}

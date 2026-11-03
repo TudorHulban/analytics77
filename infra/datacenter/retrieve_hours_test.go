@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/domain/analytics"
 	"github.com/tudorhulban/analytics77/domain/offsets"
+	"github.com/tudorhulban/analytics77/domain/site"
 
 	"github.com/tudorhulban/analytics77/shared"
 	"github.com/tudorhulban/hxhelpers"
@@ -25,14 +26,16 @@ func TestCurrentDayHoursWithData(t *testing.T) {
 	require.Zero(t, howManyBefore)
 	require.Zero(t, hoursWithDataBefore)
 
-	site1 := "localhost"
+	site1Test := site.Site{
+		Name: "xxxx - " + site.SiteName(t.Name()),
+	}
 	localTime := time.Now()
 
 	recordsPerSiteBefore := dc.GetPreviousHourRecordsPerSite(&offsetsROU)
 	require.Empty(t, recordsPerSiteBefore)
 
 	request1 := shared.ParamsAddEvent{
-		SiteKey: site1,
+		SiteKey: string(site1Test.Name),
 
 		IP:              "127.0.0.1",
 		Browser:         analytics.Brave,
@@ -50,21 +53,34 @@ func TestCurrentDayHoursWithData(t *testing.T) {
 	require.Empty(t, dc.AddEvents(&request1))
 
 	hoursWithDataAfter1, howManyAfter1 := dc.CurrentDayHoursWithData(&offsetsROU)
-	require.EqualValues(t, 1, howManyAfter1, "howManyAfter should be 1")
-	require.NotZero(t, hoursWithDataAfter1, "hoursWithDataAfter should be not zero in most cases")
+	require.EqualValues(t,
+		1,
+		howManyAfter1,
+		"howManyAfter should be 1",
+	)
+	require.NotZero(t,
+		hoursWithDataAfter1,
+		"hoursWithDataAfter should be not zero in most cases",
+	)
 	require.EqualValues(t,
 		localTime.Hour()-int(offsetsROU.OffsetUTCHours),
 		hoursWithDataAfter1[0],
 	)
 
 	recordsPerSiteAfter1 := dc.GetPreviousHourRecordsPerSite(&offsetsROU)
-	require.Len(t, recordsPerSiteAfter1, 1, "should be 1 as site was added")
-	require.Zero(t, recordsPerSiteAfter1[Site(site1)])
+	require.Len(t,
+		recordsPerSiteAfter1,
+		1,
+		"should be 1 as site was added",
+	)
+	require.Zero(t,
+		recordsPerSiteAfter1[site1Test.Name],
+	)
 
 	oneHourBefore := localTime.Add(-1 * time.Hour)
 
 	request2 := shared.ParamsAddEvent{
-		SiteKey: site1,
+		SiteKey: string(site1Test.Name),
 
 		IP:              "127.0.0.1",
 		Browser:         analytics.Brave,

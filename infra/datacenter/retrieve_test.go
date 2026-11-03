@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/domain/offsets"
+	"github.com/tudorhulban/analytics77/domain/site"
 	"github.com/tudorhulban/analytics77/shared"
 )
 
@@ -57,7 +58,7 @@ func TestGetPreviousHourRecordsPerSite_CrossesMonthBoundary(t *testing.T) {
 		),
 	)
 
-	registry, exists := dc.GetRegistry(Site(siteName))
+	registry, exists := dc.GetRegistry(site.SiteName(siteName))
 	require.True(t, exists)
 
 	require.NotNil(t, registry)
@@ -73,7 +74,7 @@ func TestGetPreviousHourRecordsPerSite_CrossesMonthBoundary(t *testing.T) {
 	require.Len(t, records, 1)
 	require.EqualValues(t,
 		1,
-		records[Site(siteName)],
+		records[site.SiteName(siteName)],
 
 		"the last hour of February should be visible as 'previous hour' from March 1st 00:30",
 	)

@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/domain/analytics"
+	"github.com/tudorhulban/analytics77/domain/site"
 	"github.com/tudorhulban/analytics77/shared"
 )
 
@@ -17,7 +18,9 @@ func TestDataCenter(t *testing.T) {
 	require.Empty(t, dc.AddEvents())
 	require.Empty(t, dc.AddEvents(nil))
 
-	site1 := "localhost"
+	site1Test := site.Site{
+		Name: "xxxx - " + site.SiteName(t.Name()),
+	}
 
 	localTime := time.Now()
 	_, offsetSeconds := localTime.Zone()
@@ -25,7 +28,7 @@ func TestDataCenter(t *testing.T) {
 	utcOffsetHours := offsetSeconds / 3600
 
 	req1 := shared.ParamsAddEvent{
-		SiteKey: site1,
+		SiteKey: string(site1Test.Name),
 
 		IP:              "127.0.0.1",
 		Browser:         analytics.Brave,
@@ -41,23 +44,36 @@ func TestDataCenter(t *testing.T) {
 
 	require.Len(t, dc.data, 1, "site1 should have been added")
 
-	registry1, exists1 := dc.data[Site(site1)]
+	dsSite1, exists1 := dc.data[site1Test.Name]
 	require.True(t, exists1)
-	require.NotNil(t, registry1)
+	require.NotNil(t, dsSite1)
 
 	siteNames := dc.GetSiteNames()
 	require.Len(t, siteNames, 1)
 	require.EqualValues(t, req1.SiteKey, siteNames[0])
 
 	require.False(t,
-		registry1.GetActiveSlot().IsZero(),
+		dsSite1.
+			Data.
+			GetActiveSlot().
+			IsZero(),
 	)
 	require.True(t,
-		registry1.GetPreviousSlot().IsZero(),
+		dsSite1.
+			Data.
+			GetPreviousSlot().
+			IsZero(),
 	)
-	require.True(t, registry1.HistoryAggregateTopN().IsZero())
+	require.True(t,
+		dsSite1.
+			Data.
+			HistoryAggregateTopN().
+			IsZero(),
+	)
 
-	hoursWithData, howMany := registry1.CurrentMonthHoursWithData(int8(localTime.Day()))
+	hoursWithData, howMany := dsSite1.
+		Data.
+		CurrentMonthHoursWithData(int8(localTime.Day()))
 	require.EqualValues(t, 1, howMany)
 	require.EqualValues(t,
 		localTime.Hour(),
@@ -66,15 +82,19 @@ func TestDataCenter(t *testing.T) {
 
 	require.EqualValues(t,
 		0,
-		registry1.PreviousMonthTotalRecords(),
+		dsSite1.
+			Data.
+			PreviousMonthTotalRecords(),
 	)
 
 	require.EqualValues(t,
 		1,
-		registry1.CurrentMonthTotalRecords(),
+		dsSite1.
+			Data.
+			CurrentMonthTotalRecords(),
 	)
 
-	aggregates1 := registry1.CurrentMonthAggregateTopN()
+	aggregates1 := dsSite1.Data.CurrentMonthAggregateTopN()
 	require.EqualValues(t,
 		analytics.Brave,
 		*aggregates1.Browsers.Names[0].Load(),
@@ -84,29 +104,37 @@ func TestDataCenter(t *testing.T) {
 		aggregates1.Browsers.Names[0].Load(),
 	)
 
-	dc.Advance(Site(site1))
+	dc.Advance(site1Test)
 
 	require.EqualValues(t,
 		0,
-		registry1.CurrentMonthTotalRecords(),
+		dsSite1.
+			Data.
+			CurrentMonthTotalRecords(),
 	)
 
 	require.EqualValues(t,
 		1,
-		registry1.PreviousMonthTotalRecords(),
+		dsSite1.
+			Data.
+			PreviousMonthTotalRecords(),
 	)
 
-	dc.Advance(Site(site1))
+	dc.Advance(site1Test)
 
 	require.EqualValues(t,
 		1,
-		registry1.HistoryTotalRecords(),
+		dsSite1.
+			Data.
+			HistoryTotalRecords(),
 	)
 
-	site2 := "Cloudflare"
+	site2Test := site.Site{
+		Name: "yyyy - " + site.SiteName(t.Name()),
+	}
 
 	req2 := shared.ParamsAddEvent{
-		SiteKey: site2,
+		SiteKey: string(site2Test.Name),
 
 		IP:              "1.1.1.1",
 		Browser:         analytics.Brave,
@@ -119,7 +147,7 @@ func TestDataCenter(t *testing.T) {
 	}
 
 	req3 := shared.ParamsAddEvent{
-		SiteKey: site2,
+		SiteKey: string(site2Test.Name),
 
 		IP:              "1.1.1.1",
 		Browser:         analytics.Chrome,
@@ -133,17 +161,21 @@ func TestDataCenter(t *testing.T) {
 
 	require.Empty(t, dc.AddEvents(&req2, &req3))
 
-	registry2, exists2 := dc.data[Site(site2)]
+	dcSite2, exists2 := dc.data[site2Test.Name]
 	require.True(t, exists2)
-	require.NotNil(t, registry2)
+	require.NotNil(t, dcSite2)
 
 	require.EqualValues(t,
 		0,
-		registry2.PreviousMonthTotalRecords(),
+		dcSite2.
+			Data.
+			PreviousMonthTotalRecords(),
 	)
 
 	require.EqualValues(t,
 		2,
-		registry2.CurrentMonthTotalRecords(),
+		dcSite2.
+			Data.
+			CurrentMonthTotalRecords(),
 	)
 }

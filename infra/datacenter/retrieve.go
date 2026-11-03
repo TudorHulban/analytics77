@@ -14,14 +14,14 @@ import (
 // This method uses a read lock because it does not mutate the DataCenter.
 // The caller must treat the returned pointer as read‑only unless they
 // explicitly coordinate ingestion through AddEvents.
-func (dc *DataCenter) GetRegistry(item site.Site) (*analytics.Registry, bool) {
+func (dc *DataCenter) GetRegistry(siteName site.SiteName) (*analytics.Registry, bool) {
 	dc.mu.RLock()
 
-	result, exists := dc.data[item]
+	dcSite, exists := dc.data[siteName]
 
 	dc.mu.RUnlock()
 
-	return result, exists
+	return dcSite.Data, exists
 }
 
 // ListSites returns a snapshot of all sites currently present in the DataCenter.
@@ -32,8 +32,8 @@ func (dc *DataCenter) GetSiteNames() []site.SiteName {
 
 	result := make([]site.SiteName, 0, len(dc.data))
 
-	for dcSite := range dc.data {
-		result = append(result, dcSite.Name)
+	for siteName := range dc.data {
+		result = append(result, siteName)
 	}
 
 	dc.mu.RUnlock()
@@ -48,20 +48,20 @@ func (dc *DataCenter) Snapshot(w io.Writer) error {
 	defer dc.mu.RUnlock()
 
 	// Stable ordering of sites
-	keys := make([]site.Site, 0, len(dc.data))
+	sites := make([]site.Site, 0, len(dc.data))
 
-	for dcSite := range dc.data {
-		keys = append(keys, dcSite)
+	for _, dcSite := range dc.data {
+		sites = append(sites, dcSite.Site)
 	}
 
 	// slices.Sort(keys)
 
-	for _, dcSite := range keys {
-		if _, errPrintSite := fmt.Fprintf(w, "[%s]\n", dcSite); errPrintSite != nil {
+	for _, item := range sites {
+		if _, errPrintSite := fmt.Fprintf(w, "[%s]\n", item); errPrintSite != nil {
 			return errPrintSite
 		}
 
-		if errPrintSnapshot := dc.data[dcSite].Snapshot(w); errPrintSnapshot != nil {
+		if _, errPrintSnapshot := fmt.Fprintf(w, "[%s]\n", dc.data[item.Name].Site); errPrintSnapshot != nil {
 			return errPrintSnapshot
 		}
 

@@ -9,11 +9,12 @@ import (
 	"github.com/tudorhulban/analytics77/domain/analytics"
 	"github.com/tudorhulban/analytics77/domain/calendar"
 	"github.com/tudorhulban/analytics77/domain/offsets"
+	"github.com/tudorhulban/analytics77/domain/site"
 )
 
-type ResponseRecordsPerSite map[Site]uint32
+type ResponseRecordsPerSite map[site.SiteName]uint32
 
-func (r ResponseRecordsPerSite) Verify(keys []Site, values []uint32) bool {
+func (r ResponseRecordsPerSite) Verify(keys []site.SiteName, values []uint32) bool {
 	if len(keys) != len(values) {
 		return false
 	}
@@ -34,7 +35,7 @@ func (r ResponseRecordsPerSite) String() string {
 		return "{}"
 	}
 
-	keys := make([]Site, 0, len(r))
+	keys := make([]site.SiteName, 0, len(r))
 
 	for k := range r {
 		keys = append(keys, k)
@@ -81,31 +82,31 @@ func (dc *DataCenter) previousHourRecordsPerSiteAt(nowUTC int64, offset *offsets
 
 	dc.mu.RLock()
 
-	result := make(map[Site]uint32, len(dc.data))
+	result := make(map[site.SiteName]uint32, len(dc.data))
 
-	for siteKey, registry := range dc.data {
+	for siteName, dcSite := range dc.data {
 		prevMonth, prevDay, prevHour := offsets.ExtractMonthDayHour(
 			previousHourUTC,
 			&offsets.TimestampOffsets{
 				OffsetUTCHours: offset.OffsetUTCHours,
 
-				TimestampDSTSpring: registry.TimestampDSTSpring,
-				TimestampDSTWinter: registry.TimestampDSTWinter,
+				TimestampDSTSpring: dcSite.Site.TimestampDSTSpring,
+				TimestampDSTWinter: dcSite.Site.TimestampDSTWinter,
 			},
 		)
 
 		var month *analytics.MonthActive
 
 		switch prevMonth {
-		case int8(registry.CalendarMonthCurrentNumber.Load()): //nolint:gosec
-			month = registry.GetActiveSlot()
+		case int8(dcSite.Data.CalendarMonthCurrentNumber.Load()): //nolint:gosec
+			month = dcSite.Data.GetActiveSlot()
 
 		default:
 			// The hour we're after fell into the previous calendar month.
-			month = registry.GetPreviousSlot()
+			month = dcSite.Data.GetPreviousSlot()
 		}
 
-		result[siteKey] = month[calendar.CalendarDayToIndex(prevDay)][prevHour].RecordsPerPeriod.Load()
+		result[siteName] = month[calendar.CalendarDayToIndex(prevDay)][prevHour].RecordsPerPeriod.Load()
 	}
 
 	dc.mu.RUnlock()
@@ -131,11 +132,13 @@ func (dc *DataCenter) GetCurrentHourRecordsPerSite(offset *offsets.TimestampOffs
 
 	dc.mu.RLock()
 
-	result := make(map[Site]uint32, len(dc.data))
+	result := make(map[site.SiteName]uint32, len(dc.data))
 
-	for siteKey, registry := range dc.data {
-		result[siteKey] = registry.
-			GetActiveSlot()[calendar.CalendarDayToIndex(ixDay)][ixHour].RecordsPerPeriod.Load()
+	for siteName, dcSite := range dc.data {
+		result[siteName] = dcSite.
+			Data.
+			GetActiveSlot()[calendar.CalendarDayToIndex(ixDay)][ixHour].
+			RecordsPerPeriod.Load()
 	}
 
 	dc.mu.RUnlock()
@@ -152,8 +155,8 @@ func (dc *DataCenter) CurrentDayHoursWithData(offset *offsets.TimestampOffsets) 
 	// Grab the local/machine Unix timestamp instead of forcing UTC
 	now := time.Now().Unix()
 
-	for _, site := range sites {
-		registry, _ := dc.GetRegistry(site)
+	for _, siteName := range sites {
+		registry, _ := dc.GetRegistry(siteName)
 
 		// Pass the offsets pointer down into the registry method
 		hoursWithData, howMany := registry.

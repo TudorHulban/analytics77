@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/tudorhulban/analytics77/domain/analytics"
 	"github.com/tudorhulban/analytics77/domain/offsets"
 )
 
@@ -17,16 +16,18 @@ type Site struct {
 	offsets.TimestampOffsets `json:"-"`
 }
 
-func NewSite(rawSite map[string]any) (*Site, error) {
+func NewSite(rawSite map[string]any) (*Site, int8, error) {
 	valueReferenceMonth, exists := rawSite["referenceMonth"]
 	if !exists {
 		return nil,
+			0,
 			errors.New("missing referenceMonth")
 	}
 
 	floatReferenceMonth, couldCastReferenceMonth := valueReferenceMonth.(float64)
 	if !couldCastReferenceMonth {
 		return nil,
+			0,
 			errors.New("invalid referenceMonth type")
 	}
 
@@ -35,12 +36,14 @@ func NewSite(rawSite map[string]any) (*Site, error) {
 	valueReferenceYear, exists := rawSite["referenceYear"]
 	if !exists {
 		return nil,
+			0,
 			errors.New("missing referenceYear")
 	}
 
 	floatReferenceYear, couldCastReferenceYear := valueReferenceYear.(float64)
 	if !couldCastReferenceYear {
 		return nil,
+			0,
 			fmt.Errorf(
 				"invalid referenceYear type %f",
 				floatReferenceYear,
@@ -52,12 +55,14 @@ func NewSite(rawSite map[string]any) (*Site, error) {
 	valueSiteName, exists := rawSite["name"]
 	if !exists {
 		return nil,
+			0,
 			errors.New("missing site name")
 	}
 
 	siteName, couldSiteName := valueSiteName.(string)
 	if !couldSiteName {
 		return nil,
+			0,
 			fmt.Errorf(
 				"invalid site name %v",
 				valueSiteName,
@@ -67,12 +72,14 @@ func NewSite(rawSite map[string]any) (*Site, error) {
 	valueOffsetUTCHours, exists := rawSite["offsetUTCHours"]
 	if !exists {
 		return nil,
+			0,
 			errors.New("missing offsetUTCHours")
 	}
 
 	offsetUTCHours, couldCastUTCHours := valueOffsetUTCHours.(float64)
 	if !couldCastUTCHours {
 		return nil,
+			0,
 			fmt.Errorf(
 				"invalid offsetUTCHours %v",
 				valueOffsetUTCHours,
@@ -82,12 +89,14 @@ func NewSite(rawSite map[string]any) (*Site, error) {
 	valueDSTSpring, exists := rawSite["timestampDSTSpring"]
 	if !exists {
 		return nil,
+			0,
 			errors.New("missing timestampDSTSpring")
 	}
 
 	timestampDSTSpring, couldCastDSTSpring := valueDSTSpring.(float64)
 	if !couldCastDSTSpring {
 		return nil,
+			0,
 			fmt.Errorf(
 				"invalid timestampDSTSpring %v",
 				valueDSTSpring,
@@ -97,12 +106,14 @@ func NewSite(rawSite map[string]any) (*Site, error) {
 	valueDSTWinter, exists := rawSite["timestampDSTWinter"]
 	if !exists {
 		return nil,
+			0,
 			errors.New("missing timestampDSTWinter")
 	}
 
 	timestampDSTWinter, couldCastDSTWinter := valueDSTWinter.(float64)
 	if !couldCastDSTWinter {
 		return nil,
+			0,
 			fmt.Errorf(
 				"invalid timestampDSTSpring %v",
 				valueDSTSpring,
@@ -119,12 +130,7 @@ func NewSite(rawSite map[string]any) (*Site, error) {
 		},
 	}
 
-	result.Registry = analytics.NewRegistry(
-		referenceMonth,
-		result.TimestampDSTSpring,
-		result.TimestampDSTWinter,
-	)
-
 	return &result,
+		referenceMonth,
 		nil
 }
