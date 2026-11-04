@@ -42,10 +42,8 @@ func TestPreviousHourRecords(t *testing.T) {
 		Browser:         analytics.Brave,
 		OperatingSystem: analytics.Linux,
 
-		TimestampUNIX:  hourLocalAsUTC,
-		OffsetUTCHours: int64(utcOffsetHours),
-
-		IsPrivateIP: true,
+		TimestampUNIX: hourLocalAsUTC,
+		IsPrivateIP:   true,
 	}
 
 	require.Empty(t, dc.AddEvents(&req1))
@@ -75,10 +73,8 @@ func TestPreviousHourRecords(t *testing.T) {
 		Browser:         analytics.Brave,
 		OperatingSystem: analytics.Linux,
 
-		TimestampUNIX:  hourLocalAsUTC - 1*3600,
-		OffsetUTCHours: int64(utcOffsetHours),
-
-		IsPrivateIP: true,
+		TimestampUNIX: hourLocalAsUTC - 1*3600,
+		IsPrivateIP:   true,
 	}
 
 	require.Empty(t, dc.AddEvents(&req2))

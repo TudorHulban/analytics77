@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/cmd"
 	"github.com/tudorhulban/analytics77/domain/offsets"
-	"github.com/tudorhulban/analytics77/infra/datacenter"
+	"github.com/tudorhulban/analytics77/domain/site"
 	"github.com/tudorhulban/analytics77/services/sanalytics"
 	"github.com/tudorhulban/analytics77/services/sgeo"
 	"github.com/tudorhulban/analytics77/services/slogging"
@@ -60,7 +60,7 @@ func TestTransport_TCP(t *testing.T) {
 		description   string
 		inputRequests shared.Requests
 
-		expectedSites          []datacenter.Site
+		expectedSites          []site.SiteName
 		expectedRecordsPerSite []uint32
 		expectedCountSites     int
 	}{
@@ -79,7 +79,7 @@ func TestTransport_TCP(t *testing.T) {
 
 			expectedCountSites: 1,
 
-			expectedSites:          []datacenter.Site{"example.com"},
+			expectedSites:          []site.SiteName{"example.com"},
 			expectedRecordsPerSite: []uint32{1},
 		},
 		{
@@ -102,7 +102,7 @@ func TestTransport_TCP(t *testing.T) {
 			},
 			expectedCountSites: 2,
 
-			expectedSites:          []datacenter.Site{"api.com", "metrics.com"},
+			expectedSites:          []site.SiteName{"api.com", "metrics.com"},
 			expectedRecordsPerSite: []uint32{1, 1},
 		},
 	}
@@ -129,8 +129,7 @@ func TestTransport_TCP(t *testing.T) {
 				transportTCP, errCrTransport := NewTransportTCP(
 					listener,
 					&PiersNewTransportTCP{
-						ServiceLogging:   serviceLogging,
-						ServiceAnalytics: serviceAnalytics,
+						ServiceLogging: serviceLogging,
 					},
 				)
 				require.NoError(t, errCrTransport)

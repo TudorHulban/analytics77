@@ -32,10 +32,8 @@ func TestGetPreviousHourRecordsPerSite_CrossesMonthBoundary(t *testing.T) {
 				SiteKey: siteName,
 				IP:      "127.0.0.1",
 
-				TimestampUNIX:  lastHourFeb.Unix(),
-				OffsetUTCHours: offset.OffsetUTCHours,
-
-				IsPrivateIP: true,
+				TimestampUNIX: lastHourFeb.Unix(),
+				IsPrivateIP:   true,
 			},
 		),
 	)
@@ -50,10 +48,8 @@ func TestGetPreviousHourRecordsPerSite_CrossesMonthBoundary(t *testing.T) {
 				SiteKey: siteName,
 				IP:      "127.0.0.1",
 
-				TimestampUNIX:  nowMarch.Unix(),
-				OffsetUTCHours: offset.OffsetUTCHours,
-
-				IsPrivateIP: true,
+				TimestampUNIX: nowMarch.Unix(),
+				IsPrivateIP:   true,
 			},
 		),
 	)

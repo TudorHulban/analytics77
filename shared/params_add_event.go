@@ -19,14 +19,13 @@ func (h HourDay) IsValid() bool {
 }
 
 type ParamsAddEvent struct {
-	SiteKey         string
+	SiteKey         string // TODO: is this sitename?
 	Country         string
 	City            string
 	IP              string
 	ASNOrganization string
 
-	TimestampUNIX  int64
-	OffsetUTCHours int64
+	TimestampUNIX int64
 
 	Browser         analytics.Browser
 	OperatingSystem analytics.OS

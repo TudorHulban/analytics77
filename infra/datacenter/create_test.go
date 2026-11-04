@@ -87,10 +87,8 @@ func TestAddEventsAcrossBoundaries(t *testing.T) {
 					Browser:         analytics.Brave,
 					OperatingSystem: analytics.Linux,
 
-					TimestampUNIX:  tc.producedAtUTC.Unix(),
-					OffsetUTCHours: int64(tc.localOffsetHours),
-
-					IsPrivateIP: true,
+					TimestampUNIX: tc.producedAtUTC.Unix(),
+					IsPrivateIP:   true,
 				}
 
 				require.Empty(t, dc.AddEvents(&req))

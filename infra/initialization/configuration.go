@@ -84,7 +84,7 @@ func NewConfiguration(rawConfig map[string]any) (*Configuration, error) {
 
 		// fmt.Println(siteMap)
 
-		item, errCr := site.NewSite(siteMap)
+		item, _, errCr := site.NewSite(siteMap)
 		if errCr != nil {
 			return nil, errCr
 		}

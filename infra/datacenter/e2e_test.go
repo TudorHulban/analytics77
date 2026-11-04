@@ -23,9 +23,6 @@ func TestDataCenter(t *testing.T) {
 	}
 
 	localTime := time.Now()
-	_, offsetSeconds := localTime.Zone()
-
-	utcOffsetHours := offsetSeconds / 3600
 
 	req1 := shared.ParamsAddEvent{
 		SiteKey: string(site1Test.Name),
@@ -34,10 +31,8 @@ func TestDataCenter(t *testing.T) {
 		Browser:         analytics.Brave,
 		OperatingSystem: analytics.Linux,
 
-		TimestampUNIX:  localTime.Unix(),
-		OffsetUTCHours: int64(utcOffsetHours),
-
-		IsPrivateIP: true,
+		TimestampUNIX: localTime.Unix(),
+		IsPrivateIP:   true,
 	}
 
 	require.Empty(t, dc.AddEvents(&req1))
@@ -140,10 +135,8 @@ func TestDataCenter(t *testing.T) {
 		Browser:         analytics.Brave,
 		OperatingSystem: analytics.Android,
 
-		TimestampUNIX:  localTime.Unix(),
-		OffsetUTCHours: int64(utcOffsetHours),
-
-		IsPrivateIP: true,
+		TimestampUNIX: localTime.Unix(),
+		IsPrivateIP:   true,
 	}
 
 	req3 := shared.ParamsAddEvent{
@@ -153,10 +146,8 @@ func TestDataCenter(t *testing.T) {
 		Browser:         analytics.Chrome,
 		OperatingSystem: analytics.Android,
 
-		TimestampUNIX:  localTime.Unix(),
-		OffsetUTCHours: int64(utcOffsetHours),
-
-		IsPrivateIP: true,
+		TimestampUNIX: localTime.Unix(),
+		IsPrivateIP:   true,
 	}
 
 	require.Empty(t, dc.AddEvents(&req2, &req3))

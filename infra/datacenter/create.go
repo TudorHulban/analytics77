@@ -1,10 +1,14 @@
 package datacenter
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/tudorhulban/analytics77/domain/analytics"
 	"github.com/tudorhulban/analytics77/domain/calendar"
 	"github.com/tudorhulban/analytics77/domain/offsets"
 	"github.com/tudorhulban/analytics77/domain/site"
+	"github.com/tudorhulban/analytics77/services/sgeo"
 
 	"github.com/tudorhulban/analytics77/shared"
 )
@@ -111,7 +115,7 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 		evCalendarMonth, evCalendarDay, evHour := offsets.ExtractMonthDayHour(
 			event.TimestampUNIX,
 			&offsets.TimestampOffsets{
-				OffsetUTCHours: event.OffsetUTCHours,
+				OffsetUTCHours: dcSite.Site.OffsetUTCHours,
 
 				TimestampDSTSpring: dcSite.Site.TimestampDSTSpring,
 				TimestampDSTWinter: dcSite.Site.TimestampDSTWinter,
@@ -184,4 +188,45 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 	}
 
 	return nil
+}
+
+func (dc *DataCenter) RecordEvents(events shared.Requests, geo *sgeo.ServiceGeo) ([]error, []error) {
+	if geo == nil {
+		return nil,
+			[]error{
+				errors.New(
+					"AsParamsAddEvent - passed ServiceGeo is nil",
+				),
+			}
+	}
+
+	errorsTransformation := make([]error, 0, len(events))
+	validEvents := make([]*shared.ParamsAddEvent, 0, len(events))
+
+	for ix, event := range events {
+		param, errTransformation := event.AsParamsAddEvent(geo)
+		if errTransformation != nil {
+			errorsTransformation = append(
+				errorsTransformation,
+				fmt.Errorf(
+					"transformation error for event %d:%w",
+					ix,
+					errTransformation,
+				),
+			)
+
+			continue
+		}
+
+		validEvents = append(validEvents, param)
+	}
+
+	if len(validEvents) == 0 {
+		return errorsTransformation,
+			nil
+	}
+
+	errorsProcess := dc.AddEvents(validEvents...)
+
+	return errorsTransformation, errorsProcess
 }
