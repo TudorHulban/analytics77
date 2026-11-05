@@ -13,7 +13,7 @@ import (
 	"github.com/tudorhulban/analytics77/domain/offsets"
 
 	transporttcp "github.com/tudorhulban/analytics77/infra/transport-tcp"
-	"github.com/tudorhulban/analytics77/services/sanalytics"
+
 	"github.com/tudorhulban/analytics77/services/sgeo"
 	"github.com/tudorhulban/analytics77/services/slogging"
 	"github.com/tudorhulban/analytics77/services/sstorage"
@@ -75,8 +75,7 @@ func TestAnalytics_E2E(t *testing.T) {
 					URL:        dummyURL,
 					Header:     map[string][]string{"Content-Type": {"application/json"}},
 
-					TimestampUNIX:  localTime.Unix(),
-					OffsetUTCHours: utcOffsetHours,
+					TimestampUNIX: localTime.Unix(),
 				},
 			},
 			expectedRecordCount: 1,
@@ -91,8 +90,7 @@ func TestAnalytics_E2E(t *testing.T) {
 					Method:     "GET",
 					URL:        dummyURL,
 
-					TimestampUNIX:  localTime.Unix(),
-					OffsetUTCHours: utcOffsetHours,
+					TimestampUNIX: localTime.Unix(),
 				},
 				{
 					RemoteAddr: "82.77.237.39",
@@ -100,8 +98,7 @@ func TestAnalytics_E2E(t *testing.T) {
 					Method:     "PUT",
 					URL:        dummyURL,
 
-					TimestampUNIX:  localTime.Unix(),
-					OffsetUTCHours: utcOffsetHours,
+					TimestampUNIX: localTime.Unix(),
 				},
 			},
 			expectedRecordCount: 2,
@@ -116,21 +113,10 @@ func TestAnalytics_E2E(t *testing.T) {
 				listener, errListener := net.Listen("tcp", "127.0.0.1:0") //nolint:noctx
 				require.NoError(t, errListener)
 
-				serviceAnalytics, errCrServiceAnalytics := sanalytics.NewServiceAnalytics(
-					&sanalytics.PiersNewServiceAnalytics{
-						ServiceGeo: serviceGeo,
-						Offsets:    &utcOffset,
-					},
-					"site-name", //TODO: change.
-				)
-				require.NoError(t, errCrServiceAnalytics)
-				require.NotNil(t, serviceAnalytics)
-
 				transportTCP, errCrTransport := transporttcp.NewTransportTCP(
 					listener,
 					&transporttcp.PiersNewTransportTCP{
-						ServiceLogging:   serviceLogging,
-						ServiceAnalytics: serviceAnalytics,
+						ServiceLogging: serviceLogging,
 					},
 				)
 				require.NoError(t, errCrTransport)
@@ -169,12 +155,15 @@ func TestAnalytics_E2E(t *testing.T) {
 				// compare site names
 				require.EqualValues(t,
 					tc.expectedSitesCount,
-					len(serviceAnalytics.DC.GetSiteNames()),
+					len(transportTCP.Datacenter.GetSiteNames()),
 
 					"comparing number of site names",
 				)
 
-				hoursWithData, noHours := serviceAnalytics.DC.CurrentDayHoursWithData(&utcOffset)
+				hoursWithData, noHours := transportTCP.
+					Datacenter.
+					CurrentDayHoursWithData(&utcOffset)
+
 				require.NotZero(t, noHours)
 				require.LessOrEqual(t, noHours, int8(2))
 				require.NotZero(t, hoursWithData)

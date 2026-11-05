@@ -10,7 +10,7 @@ import (
 func (a *App) HandlerViewRegistry(c fiber.Ctx) error {
 	c.Set("Content-Type", "text/html")
 
-	aggs, errAgg := a.serviceAnalytics.DC.CurrentMonthAggregateTopN("s2")
+	aggs, errAgg := a.datacenter.CurrentMonthAggregateTopN("s2")
 	if errAgg != nil {
 		c.Status(http.StatusInternalServerError)
 
@@ -18,7 +18,7 @@ func (a *App) HandlerViewRegistry(c fiber.Ctx) error {
 	}
 
 	data := []string{
-		a.serviceAnalytics.DC.String(),
+		a.datacenter.String(),
 	}
 
 	for _, agg := range aggs {

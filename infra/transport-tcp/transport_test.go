@@ -14,7 +14,6 @@ import (
 	"github.com/tudorhulban/analytics77/cmd"
 	"github.com/tudorhulban/analytics77/domain/offsets"
 	"github.com/tudorhulban/analytics77/domain/site"
-	"github.com/tudorhulban/analytics77/services/sanalytics"
 	"github.com/tudorhulban/analytics77/services/sgeo"
 	"github.com/tudorhulban/analytics77/services/slogging"
 	"github.com/tudorhulban/analytics77/services/sstorage"
@@ -32,8 +31,8 @@ func TestTransport_TCP(t *testing.T) {
 
 	apiKey := os.Getenv(cmd.OSAPIGeolocation)
 
-	serviceLogging, fnCloseLogging, erCrServiceLogging := slogging.NewServiceLogging("", os.Stdout)
-	require.NoError(t, erCrServiceLogging)
+	serviceLogging, fnCloseLogging, errCrServiceLogging := slogging.NewServiceLogging("", os.Stdout)
+	require.NoError(t, errCrServiceLogging)
 
 	defer fnCloseLogging()
 
@@ -116,20 +115,11 @@ func TestTransport_TCP(t *testing.T) {
 				listener, errListener := net.Listen("tcp", "127.0.0.1:0") //nolint:noctx
 				require.NoError(t, errListener)
 
-				serviceAnalytics, errCrAnalytics := sanalytics.NewServiceAnalytics(
-					&sanalytics.PiersNewServiceAnalytics{
-						ServiceGeo: serviceGeo,
-						Offsets:    &offsetsROU,
-					},
-
-					"some-site",
-				)
-				require.NoError(t, errCrAnalytics)
-
 				transportTCP, errCrTransport := NewTransportTCP(
 					listener,
 					&PiersNewTransportTCP{
 						ServiceLogging: serviceLogging,
+						ServiceGeo:     serviceGeo,
 					},
 				)
 				require.NoError(t, errCrTransport)
@@ -165,17 +155,17 @@ func TestTransport_TCP(t *testing.T) {
 
 				require.EqualValues(t,
 					tc.expectedCountSites,
-					len(serviceAnalytics.DC.GetSiteNames()),
+					len(transportTCP.Datacenter.GetSiteNames()),
 				)
 
-				hoursWithData, howMany := serviceAnalytics.DC.CurrentDayHoursWithData(&offsetsROU)
+				hoursWithData, howMany := transportTCP.Datacenter.CurrentDayHoursWithData(&offsetsROU)
 				require.EqualValues(t, 1, howMany)
 
 				fmt.Println(hoursWithData)
 
-				recordsPerSite := serviceAnalytics.DC.GetCurrentHourRecordsPerSite(&offsetsROU)
+				recordsPerSite := transportTCP.Datacenter.GetCurrentHourRecordsPerSite(&offsetsROU)
 
-				serviceAnalytics.DC.Snapshot(os.Stdout)
+				transportTCP.Datacenter.Snapshot(os.Stdout)
 
 				fmt.Println(recordsPerSite)
 
@@ -188,7 +178,7 @@ func TestTransport_TCP(t *testing.T) {
 
 				require.EqualValues(t,
 					tc.expectedCountSites,
-					len(serviceAnalytics.DC.GetCurrentHourRecordsPerSite(&offsetsROU)),
+					len(transportTCP.Datacenter.GetCurrentHourRecordsPerSite(&offsetsROU)),
 				)
 			},
 		)

@@ -9,9 +9,6 @@ import (
 )
 
 func NewRequest(withHost, withIP string) shared.Request {
-	now := time.Now()
-	_, offsetSecs := now.Zone()
-
 	return shared.Request{
 		// Fallback address (with dummy port so net.SplitHostPort does not fail)
 		RemoteAddr: withIP + ":12345",
@@ -29,8 +26,7 @@ func NewRequest(withHost, withIP string) shared.Request {
 			"X-Real-IP":       {withIP},
 		},
 
-		TimestampUNIX:  now.Unix(),
-		OffsetUTCHours: int64(offsetSecs / 3600),
+		TimestampUNIX: time.Now().Unix(),
 	}
 }
 

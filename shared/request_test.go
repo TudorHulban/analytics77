@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/cmd"
 	"github.com/tudorhulban/analytics77/domain/analytics"
-	"github.com/tudorhulban/analytics77/domain/offsets"
 	"github.com/tudorhulban/analytics77/services/sgeo"
 	"github.com/tudorhulban/analytics77/services/sstorage"
 )
@@ -50,12 +49,7 @@ func TestRequest_AsParamsAddEvent(t *testing.T) {
 	require.NoError(t, errCrServiceGeo)
 	require.NotNil(t, serviceGeo)
 
-	offsetsROU := offsets.TimestampOffsets{
-		OffsetUTCHours: -3,
-	}
-
 	tests := []struct {
-		piers    *PiersAsParamsAddEvent
 		validate func(t *testing.T, res *ParamsAddEvent)
 
 		name        string
@@ -65,48 +59,36 @@ func TestRequest_AsParamsAddEvent(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "1. Error - Offsets is nil",
-			req:  Request{RemoteAddr: "127.0.0.1:8080"},
-			piers: &PiersAsParamsAddEvent{
-				Offsets:    nil,
-				ServiceGeo: serviceGeo,
-			},
-			wantErr:     true,
+			name:        "1. Error - Offsets is nil",
 			errContains: "AsParamsAddEvent - passed offsets is nil",
+			req:         Request{RemoteAddr: "127.0.0.1:8080"},
+
+			wantErr: true,
 		},
 		{
-			name: "2. Error - ServiceGeo is nil",
-			req:  Request{RemoteAddr: "127.0.0.1:8080"},
-			piers: &PiersAsParamsAddEvent{
-				Offsets:    &offsetsROU,
-				ServiceGeo: nil,
-			},
-			wantErr:     true,
+			name:        "2. Error - ServiceGeo is nil",
 			errContains: "AsParamsAddEvent - passed ServiceGeo is nil",
+			req:         Request{RemoteAddr: "127.0.0.1:8080"},
+
+			wantErr: true,
 		},
 		{
 			name: "3. Error - Invalid IP Address",
 			req:  Request{RemoteAddr: "not-an-ip-address"},
-			piers: &PiersAsParamsAddEvent{
-				Offsets:    &offsetsROU,
-				ServiceGeo: serviceGeo,
-			},
+
 			wantErr: true, // Should fail at netip.ParseAddr
 		},
 		{
 			name: "4. Happy Path - Chrome User Agent and Valid Parse",
 			req: Request{
-				RemoteAddr:     "82.77.237.37:53",
-				Host:           "some-site.eu",
-				Header:         map[string][]string{"User-Agent": {"Mozilla/5.0 Chrome/120.0.0.0"}},
-				TimestampUNIX:  1717500000,
-				OffsetUTCHours: 2,
+				RemoteAddr:    "82.77.237.37:53",
+				Host:          "some-site.eu",
+				Header:        map[string][]string{"User-Agent": {"Mozilla/5.0 Chrome/120.0.0.0"}},
+				TimestampUNIX: 1717500000,
 			},
-			piers: &PiersAsParamsAddEvent{
-				Offsets:    &offsetsROU,
-				ServiceGeo: serviceGeo,
-			},
+
 			wantErr: false,
+
 			validate: func(t *testing.T, res *ParamsAddEvent) {
 				t.Helper()
 
@@ -129,11 +111,6 @@ func TestRequest_AsParamsAddEvent(t *testing.T) {
 					res.TimestampUNIX,
 					"timestamp mismtch",
 				)
-				require.EqualValues(t,
-					2,
-					res.OffsetUTCHours,
-					"offset mismatch",
-				)
 			},
 		},
 		{
@@ -142,11 +119,9 @@ func TestRequest_AsParamsAddEvent(t *testing.T) {
 				RemoteAddr: "82.77.237.38",
 				Header:     map[string][]string{"User-Agent": {"Mozilla/5.0 Safari/605.1.15"}},
 			},
-			piers: &PiersAsParamsAddEvent{
-				Offsets:    &offsetsROU,
-				ServiceGeo: serviceGeo,
-			},
+
 			wantErr: false,
+
 			validate: func(t *testing.T, res *ParamsAddEvent) {
 				t.Helper()
 
@@ -164,11 +139,9 @@ func TestRequest_AsParamsAddEvent(t *testing.T) {
 				RemoteAddr: "127.0.0.1",
 				Header:     map[string][]string{"User-Agent": {"Curl/7.81.0"}},
 			},
-			piers: &PiersAsParamsAddEvent{
-				Offsets:    &offsetsROU,
-				ServiceGeo: serviceGeo,
-			},
+
 			wantErr: false,
+
 			validate: func(t *testing.T, res *ParamsAddEvent) {
 				t.Helper()
 
@@ -181,7 +154,7 @@ func TestRequest_AsParamsAddEvent(t *testing.T) {
 		t.Run(
 			tc.name,
 			func(t *testing.T) {
-				result, errTransformation := tc.req.AsParamsAddEvent(tc.piers)
+				result, errTransformation := tc.req.AsParamsAddEvent(serviceGeo)
 
 				if tc.wantErr {
 					require.Error(t, errTransformation)

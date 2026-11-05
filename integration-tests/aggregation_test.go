@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/domain/analytics"
 	"github.com/tudorhulban/analytics77/domain/calendar"
+	"github.com/tudorhulban/analytics77/domain/site"
 	"github.com/tudorhulban/analytics77/infra/datacenter"
 	"github.com/tudorhulban/analytics77/shared"
 )
@@ -17,7 +18,9 @@ func TestPreviousHourAcrossAprilToMay(t *testing.T) {
 	require.NoError(t, errCr)
 	require.NotNil(t, dc)
 
-	site := "localhost"
+	siteTest := site.Site{
+		Name: site.SiteName(t.Name()),
+	}
 
 	// Simulate 2026 May 1, 00:30 UTC.
 	may1 := time.Date(2026, time.May, 1, 0, 30, 0, 0, time.UTC)
@@ -27,7 +30,7 @@ func TestPreviousHourAcrossAprilToMay(t *testing.T) {
 
 	// Insert May 1 event.
 	reqMay1 := shared.ParamsAddEvent{
-		SiteKey: site,
+		SiteKey: string(siteTest.Name),
 		IP:      "127.0.0.1",
 
 		Browser:         analytics.Brave,
@@ -41,7 +44,7 @@ func TestPreviousHourAcrossAprilToMay(t *testing.T) {
 
 	// Insert April 30 event.
 	reqApril30 := shared.ParamsAddEvent{
-		SiteKey:         site,
+		SiteKey:         string(siteTest.Name),
 		IP:              "127.0.0.1",
 		Browser:         analytics.Brave,
 		OperatingSystem: analytics.Linux,
@@ -52,7 +55,7 @@ func TestPreviousHourAcrossAprilToMay(t *testing.T) {
 	}
 	require.Empty(t, dc.AddEvents(&reqApril30))
 
-	registry, exists := dc.GetRegistry(datacenter.Site(site))
+	registry, exists := dc.GetRegistry(siteTest.Name)
 	require.True(t, exists)
 
 	require.False(t, registry.GetActiveSlot().IsZero())

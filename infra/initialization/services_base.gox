@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/TudorHulban/analytics77/services/sanalytics"
 	"github.com/tudorhulban/analytics77/domain/offsets"
-	"github.com/tudorhulban/analytics77/services/sanalytics"
 	"github.com/tudorhulban/analytics77/services/sgeo"
 	"github.com/tudorhulban/analytics77/services/sstorage"
 	"github.com/tudorhulban/hxerrors"
