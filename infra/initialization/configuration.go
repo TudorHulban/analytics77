@@ -121,6 +121,7 @@ func (c *Configuration) String() string {
 	for ix, sit := range c.Sites {
 		if sit == nil {
 			sb.WriteString("    <nil site>,\n")
+
 			continue
 		}
 

@@ -14,14 +14,14 @@ func (dc *DataCenter) CurrentMonthAggregateTopNForHour(day, hour int8, sites ...
 
 	result := make([]*analytics.AggregatedTopN, 0)
 
-	for _, site := range sites {
-		if registry, exists := dc.GetRegistry(site); exists {
+	for _, item := range sites {
+		if registry, exists := dc.GetRegistry(item); exists {
 			aggregate, errAgg := registry.CurrentMonthAggregateTopNForHour(day, hour)
 			if errAgg != nil {
 				return nil,
 					fmt.Errorf(
 						"error for site: %q : %w",
-						site,
+						item,
 						errAgg,
 					)
 			}
@@ -40,8 +40,8 @@ func (dc *DataCenter) CurrentMonthAggregateTopN(sites ...site.SiteName) ([]*anal
 
 	result := make([]*analytics.AggregatedTopN, 0)
 
-	for _, site := range sites {
-		if registry, exists := dc.GetRegistry(site); exists {
+	for _, item := range sites {
+		if registry, exists := dc.GetRegistry(item); exists {
 			aggregate := registry.CurrentMonthAggregateTopN()
 
 			if aggregate != nil {

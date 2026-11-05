@@ -12,6 +12,7 @@ import (
 	"github.com/tudorhulban/analytics77/cmd"
 	"github.com/tudorhulban/analytics77/domain/offsets"
 
+	"github.com/tudorhulban/analytics77/infra/datacenter"
 	transporttcp "github.com/tudorhulban/analytics77/infra/transport-tcp"
 
 	"github.com/tudorhulban/analytics77/services/sgeo"
@@ -24,10 +25,8 @@ func TestAnalytics_E2E(t *testing.T) {
 	localTime := time.Now()
 	_, offsetSeconds := localTime.Zone()
 
-	utcOffsetHours := int64(offsetSeconds / 3600)
-
 	utcOffset := offsets.TimestampOffsets{
-		OffsetUTCHours: utcOffsetHours,
+		OffsetUTCHours: int64(offsetSeconds / 3600),
 	}
 
 	apiKey := os.Getenv(cmd.OSAPIGeolocation)
@@ -113,10 +112,16 @@ func TestAnalytics_E2E(t *testing.T) {
 				listener, errListener := net.Listen("tcp", "127.0.0.1:0") //nolint:noctx
 				require.NoError(t, errListener)
 
+				datacenter, errCrDatacenter := datacenter.NewDataCenter()
+				require.NoError(t, errCrDatacenter)
+				require.NotNil(t, datacenter)
+
 				transportTCP, errCrTransport := transporttcp.NewTransportTCP(
 					listener,
 					&transporttcp.PiersNewTransportTCP{
 						ServiceLogging: serviceLogging,
+						ServiceGeo:     serviceGeo,
+						Datacenter:     datacenter,
 					},
 				)
 				require.NoError(t, errCrTransport)

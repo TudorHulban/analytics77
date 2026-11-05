@@ -21,7 +21,7 @@ func (t *TimestampOffsets) String() string {
 	// Offset (+/-)
 	// %+d automatically handles positive (+) and negative (-) signs
 	sb.WriteString("Timestamp offset: ")
-	sb.WriteString(fmt.Sprintf("%+d", t.OffsetUTCHours))
+	fmt.Fprintf(&sb, "%+d", t.OffsetUTCHours)
 	sb.WriteString(" hour(s)\n")
 
 	// Spring DST (Summer forward)

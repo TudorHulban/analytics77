@@ -57,11 +57,11 @@ func (dc *DataCenter) Snapshot(w io.Writer) error {
 	// slices.Sort(keys)
 
 	for _, item := range sites {
-		if _, errPrintSite := fmt.Fprintf(w, "[%s]\n", item); errPrintSite != nil {
+		if _, errPrintSite := fmt.Fprintf(w, "[%s]\n", item.String()); errPrintSite != nil {
 			return errPrintSite
 		}
 
-		if _, errPrintSnapshot := fmt.Fprintf(w, "[%s]\n", dc.data[item.Name].Site); errPrintSnapshot != nil {
+		if _, errPrintSnapshot := fmt.Fprintf(w, "[%s]\n", dc.data[item.Name].Site.String()); errPrintSnapshot != nil {
 			return errPrintSnapshot
 		}
 

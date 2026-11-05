@@ -13,8 +13,8 @@ import (
 )
 
 type DCSite struct {
-	Site site.Site
 	Data *analytics.Registry
+	Site site.Site
 }
 
 // Stores in UTC times.
@@ -54,7 +54,7 @@ func (dc *DataCenter) AddSite(item site.Site) error {
 		dc.data[item.Name] = &DCSite{
 			Site: item,
 			Data: analytics.NewRegistry(
-				int8(time.Now().Month()),
+				int8(time.Now().Month()), //nolint:gosec
 
 				item.TimestampDSTSpring,
 				item.TimestampDSTWinter,

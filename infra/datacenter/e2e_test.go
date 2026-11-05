@@ -6,20 +6,25 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/domain/analytics"
+	"github.com/tudorhulban/analytics77/domain/offsets"
 	"github.com/tudorhulban/analytics77/domain/site"
 	"github.com/tudorhulban/analytics77/shared"
 )
 
 func TestDataCenter(t *testing.T) {
-	dc, errCr := NewDataCenter()
-	require.NoError(t, errCr)
-	require.NotNil(t, dc)
+	datacenter, errCrDatacenter := NewDataCenter()
+	require.NoError(t, errCrDatacenter)
+	require.NotNil(t, datacenter)
 
-	require.Empty(t, dc.AddEvents())
-	require.Empty(t, dc.AddEvents(nil))
+	require.Empty(t, datacenter.AddEvents())
+	require.Empty(t, datacenter.AddEvents(nil))
 
 	site1Test := site.Site{
 		Name: "xxxx - " + site.SiteName(t.Name()),
+
+		TimestampOffsets: offsets.TimestampOffsets{
+			OffsetUTCHours: -2,
+		},
 	}
 
 	localTime := time.Now()
@@ -35,61 +40,67 @@ func TestDataCenter(t *testing.T) {
 		IsPrivateIP:   true,
 	}
 
-	require.Empty(t, dc.AddEvents(&req1))
+	require.Empty(t, datacenter.AddEvents(&req1))
 
-	require.Len(t, dc.data, 1, "site1 should have been added")
+	require.Len(t, datacenter.data, 1, "site1 should have been added")
 
-	dsSite1, exists1 := dc.data[site1Test.Name]
+	dcSite1, exists1 := datacenter.data[site1Test.Name]
 	require.True(t, exists1)
-	require.NotNil(t, dsSite1)
+	require.NotNil(t, dcSite1)
+	require.Equal(t,
+		site1Test.Name,
+		dcSite1.Site.Name,
+	)
 
-	siteNames := dc.GetSiteNames()
+	siteNames := datacenter.GetSiteNames()
 	require.Len(t, siteNames, 1)
 	require.EqualValues(t, req1.SiteKey, siteNames[0])
 
 	require.False(t,
-		dsSite1.
+		dcSite1.
 			Data.
 			GetActiveSlot().
 			IsZero(),
 	)
 	require.True(t,
-		dsSite1.
+		dcSite1.
 			Data.
 			GetPreviousSlot().
 			IsZero(),
 	)
 	require.True(t,
-		dsSite1.
+		dcSite1.
 			Data.
 			HistoryAggregateTopN().
 			IsZero(),
 	)
 
-	hoursWithData, howMany := dsSite1.
+	// dcSite1.Data.Snapshot(os.Stdout)
+
+	hoursWithData, howMany := dcSite1.
 		Data.
 		CurrentMonthHoursWithData(int8(localTime.Day()))
 	require.EqualValues(t, 1, howMany)
 	require.EqualValues(t,
-		localTime.Hour(),
+		localTime.Hour()+int(site1Test.OffsetUTCHours),
 		hoursWithData[0],
 	)
 
 	require.EqualValues(t,
 		0,
-		dsSite1.
+		dcSite1.
 			Data.
 			PreviousMonthTotalRecords(),
 	)
 
 	require.EqualValues(t,
 		1,
-		dsSite1.
+		dcSite1.
 			Data.
 			CurrentMonthTotalRecords(),
 	)
 
-	aggregates1 := dsSite1.Data.CurrentMonthAggregateTopN()
+	aggregates1 := dcSite1.Data.CurrentMonthAggregateTopN()
 	require.EqualValues(t,
 		analytics.Brave,
 		*aggregates1.Browsers.Names[0].Load(),
@@ -99,27 +110,27 @@ func TestDataCenter(t *testing.T) {
 		aggregates1.Browsers.Names[0].Load(),
 	)
 
-	dc.Advance(site1Test)
+	datacenter.Advance(site1Test)
 
 	require.EqualValues(t,
 		0,
-		dsSite1.
+		dcSite1.
 			Data.
 			CurrentMonthTotalRecords(),
 	)
 
 	require.EqualValues(t,
 		1,
-		dsSite1.
+		dcSite1.
 			Data.
 			PreviousMonthTotalRecords(),
 	)
 
-	dc.Advance(site1Test)
+	datacenter.Advance(site1Test)
 
 	require.EqualValues(t,
 		1,
-		dsSite1.
+		dcSite1.
 			Data.
 			HistoryTotalRecords(),
 	)
@@ -150,9 +161,9 @@ func TestDataCenter(t *testing.T) {
 		IsPrivateIP:   true,
 	}
 
-	require.Empty(t, dc.AddEvents(&req2, &req3))
+	require.Empty(t, datacenter.AddEvents(&req2, &req3))
 
-	dcSite2, exists2 := dc.data[site2Test.Name]
+	dcSite2, exists2 := datacenter.data[site2Test.Name]
 	require.True(t, exists2)
 	require.NotNil(t, dcSite2)
 
