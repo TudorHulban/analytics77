@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/domain/analytics"
 	"github.com/tudorhulban/analytics77/domain/calendar"
 	"github.com/tudorhulban/analytics77/domain/offsets"
@@ -14,20 +16,26 @@ import (
 
 type ResponseRecordsPerSite map[site.SiteName]uint32
 
-func (r ResponseRecordsPerSite) Verify(keys []site.SiteName, values []uint32) bool {
-	if len(keys) != len(values) {
-		return false
-	}
+func (r ResponseRecordsPerSite) Verify(tb testing.TB, siteNames []site.SiteName, expectedNoRecords []uint32) {
+	tb.Helper()
 
-	for ix, key := range keys {
+	require.Equal(tb,
+		len(siteNames),
+		len(expectedNoRecords),
+	)
+
+	for ix, key := range siteNames {
 		value, exists := r[key]
+		require.True(tb, exists)
+		require.Equal(tb,
+			value,
+			expectedNoRecords[ix],
 
-		if !exists || value != values[ix] {
-			return false
-		}
+			"value (%v) vs. expected (%v)",
+			value,
+			expectedNoRecords[ix],
+		)
 	}
-
-	return true
 }
 
 func (r ResponseRecordsPerSite) String() string {

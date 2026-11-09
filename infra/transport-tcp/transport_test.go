@@ -14,6 +14,7 @@ import (
 	"github.com/tudorhulban/analytics77/cmd"
 	"github.com/tudorhulban/analytics77/domain/offsets"
 	"github.com/tudorhulban/analytics77/domain/site"
+	"github.com/tudorhulban/analytics77/infra/datacenter"
 	"github.com/tudorhulban/analytics77/services/sgeo"
 	"github.com/tudorhulban/analytics77/services/slogging"
 	"github.com/tudorhulban/analytics77/services/sstorage"
@@ -28,8 +29,6 @@ func TestTransport_TCP(t *testing.T) {
 	offsetsROU := offsets.TimestampOffsets{
 		OffsetUTCHours: -3,
 	}
-
-	apiKey := os.Getenv(cmd.OSAPIGeolocation)
 
 	serviceLogging, fnCloseLogging, errCrServiceLogging := slogging.NewServiceLogging("", os.Stdout)
 	require.NoError(t, errCrServiceLogging)
@@ -48,7 +47,7 @@ func TestTransport_TCP(t *testing.T) {
 
 	serviceGeo, errCrServiceGeo := sgeo.NewServiceGeo(
 		&sgeo.ParamsNewServiceGeo{
-			APIKeyGeolocation: apiKey,
+			APIKeyGeolocation: os.Getenv(cmd.OSAPIGeolocation),
 		},
 		serviceStorage,
 	)
@@ -76,8 +75,7 @@ func TestTransport_TCP(t *testing.T) {
 				},
 			},
 
-			expectedCountSites: 1,
-
+			expectedCountSites:     1,
 			expectedSites:          []site.SiteName{"example.com"},
 			expectedRecordsPerSite: []uint32{1},
 		},
@@ -99,27 +97,31 @@ func TestTransport_TCP(t *testing.T) {
 					TimestampUNIX: time.Now().Unix(),
 				},
 			},
-			expectedCountSites: 2,
 
+			expectedCountSites:     2,
 			expectedSites:          []site.SiteName{"api.com", "metrics.com"},
 			expectedRecordsPerSite: []uint32{1, 1},
 		},
 	}
 
-	for _, tc := range tests {
+	for _, testCase := range tests {
 		t.Run(
-			tc.description,
+			testCase.description,
 			func(t *testing.T) {
 				t.Parallel()
 
 				listener, errListener := net.Listen("tcp", "127.0.0.1:0") //nolint:noctx
 				require.NoError(t, errListener)
 
+				dc, errCr := datacenter.NewDataCenter()
+				require.NoError(t, errCr)
+
 				transportTCP, errCrTransport := NewTransportTCP(
 					listener,
 					&PiersNewTransportTCP{
 						ServiceLogging: serviceLogging,
 						ServiceGeo:     serviceGeo,
+						Datacenter:     dc,
 					},
 				)
 				require.NoError(t, errCrTransport)
@@ -144,7 +146,7 @@ func TestTransport_TCP(t *testing.T) {
 				require.NotZero(t, connClient)
 
 				require.NoError(t,
-					gob.NewEncoder(connClient).Encode(&tc.inputRequests),
+					gob.NewEncoder(connClient).Encode(&testCase.inputRequests),
 				)
 
 				// Close to flush and trigger EOF on the server side.
@@ -154,30 +156,32 @@ func TestTransport_TCP(t *testing.T) {
 				transportTCP.Stop()
 
 				require.EqualValues(t,
-					tc.expectedCountSites,
+					testCase.expectedCountSites,
 					len(transportTCP.Datacenter.GetSiteNames()),
 				)
 
-				hoursWithData, howMany := transportTCP.Datacenter.CurrentDayHoursWithData(&offsetsROU)
+				hoursWithData, howMany := transportTCP.
+					Datacenter.
+					CurrentDayHoursWithData(&offsetsROU)
 				require.EqualValues(t, 1, howMany)
 
 				fmt.Println(hoursWithData)
 
-				recordsPerSite := transportTCP.Datacenter.GetCurrentHourRecordsPerSite(&offsetsROU)
+				recordsPerSite := transportTCP.
+					Datacenter.
+					GetCurrentHourRecordsPerSite(&offsetsROU)
 
 				transportTCP.Datacenter.Snapshot(os.Stdout)
 
 				fmt.Println(recordsPerSite)
 
-				require.True(t,
-					recordsPerSite.Verify(
-						tc.expectedSites,
-						tc.expectedRecordsPerSite,
-					),
+				recordsPerSite.Verify(t,
+					testCase.expectedSites,
+					testCase.expectedRecordsPerSite,
 				)
 
 				require.EqualValues(t,
-					tc.expectedCountSites,
+					testCase.expectedCountSites,
 					len(transportTCP.Datacenter.GetCurrentHourRecordsPerSite(&offsetsROU)),
 				)
 			},
