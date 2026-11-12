@@ -99,9 +99,11 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 
 		dcSite, exists := dc.data[forSiteName]
 		if !exists {
+			// create the new site.
 			dcSite = &DCSite{
 				Site: site.Site{
-					Name: forSiteName,
+					Name:             forSiteName,
+					TimestampOffsets: dc.defaultOffsets,
 				},
 				Data: analytics.NewRegistry(
 					offsets.ExtractMonth(event.TimestampUNIX),
@@ -112,15 +114,16 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 		}
 
 		// TODO: test case for new site.
-		evCalendarMonth, evCalendarDay, evHour := offsets.ExtractMonthDayHour(
-			event.TimestampUNIX,
-			&offsets.TimestampOffsets{
-				OffsetUTCHours: dcSite.Site.OffsetUTCHours,
+		evCalendarMonth, evCalendarDay, evHour := offsets.
+			ExtractMonthDayHour(
+				event.TimestampUNIX,
+				&offsets.TimestampOffsets{
+					OffsetUTCHours: dcSite.Site.OffsetUTCHours,
 
-				TimestampDSTSpring: dcSite.Site.TimestampDSTSpring,
-				TimestampDSTWinter: dcSite.Site.TimestampDSTWinter,
-			},
-		)
+					TimestampDSTSpring: dcSite.Site.TimestampDSTSpring,
+					TimestampDSTWinter: dcSite.Site.TimestampDSTWinter,
+				},
+			)
 
 		dcSite.
 			Data.

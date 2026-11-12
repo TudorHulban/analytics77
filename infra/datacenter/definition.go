@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/tudorhulban/analytics77/domain/analytics"
+	"github.com/tudorhulban/analytics77/domain/offsets"
 	"github.com/tudorhulban/analytics77/domain/site"
 	"github.com/tudorhulban/hxerrors"
 )
@@ -22,9 +23,12 @@ type DCSite struct {
 type DataCenter struct {
 	data map[site.SiteName]*DCSite
 	mu   sync.RWMutex
+
+	// used in case of automatic site creation.
+	defaultOffsets offsets.TimestampOffsets
 }
 
-func NewDataCenter(sites ...site.Site) (*DataCenter, error) {
+func NewDataCenter(defaultOffsets offsets.TimestampOffsets, sites ...site.Site) (*DataCenter, error) {
 	result := DataCenter{
 		data: map[site.SiteName]*DCSite{},
 	}

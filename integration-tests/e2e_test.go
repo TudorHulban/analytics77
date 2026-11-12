@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/cmd"
 	"github.com/tudorhulban/analytics77/domain/offsets"
+	"github.com/tudorhulban/analytics77/fixtures"
 
 	"github.com/tudorhulban/analytics77/infra/datacenter"
 	transporttcp "github.com/tudorhulban/analytics77/infra/transport-tcp"
@@ -112,7 +113,7 @@ func TestAnalytics_E2E(t *testing.T) {
 				listener, errListener := net.Listen("tcp", "127.0.0.1:0") //nolint:noctx
 				require.NoError(t, errListener)
 
-				datacenter, errCrDatacenter := datacenter.NewDataCenter()
+				datacenter, errCrDatacenter := datacenter.NewDataCenter(fixtures.DefaultOffset())
 				require.NoError(t, errCrDatacenter)
 				require.NotNil(t, datacenter)
 

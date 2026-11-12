@@ -14,6 +14,7 @@ import (
 	"github.com/tudorhulban/analytics77/cmd"
 	"github.com/tudorhulban/analytics77/domain/offsets"
 	"github.com/tudorhulban/analytics77/domain/site"
+	"github.com/tudorhulban/analytics77/fixtures"
 	"github.com/tudorhulban/analytics77/infra/datacenter"
 	"github.com/tudorhulban/analytics77/services/sgeo"
 	"github.com/tudorhulban/analytics77/services/slogging"
@@ -26,8 +27,12 @@ func TestTransport_TCP(t *testing.T) {
 
 	dummyURL, _ := url.Parse("https://example.com/analytics")
 
+	now := time.Now()
+	_, offsetSeconds := now.Zone()
+	offsetHours := int64(offsetSeconds / 3600)
+
 	offsetsROU := offsets.TimestampOffsets{
-		OffsetUTCHours: -3,
+		OffsetUTCHours: offsetHours,
 	}
 
 	serviceLogging, fnCloseLogging, errCrServiceLogging := slogging.NewServiceLogging("", os.Stdout)
@@ -113,7 +118,9 @@ func TestTransport_TCP(t *testing.T) {
 				listener, errListener := net.Listen("tcp", "127.0.0.1:0") //nolint:noctx
 				require.NoError(t, errListener)
 
-				dc, errCr := datacenter.NewDataCenter()
+				dc, errCr := datacenter.NewDataCenter(
+					fixtures.DefaultOffset(),
+				)
 				require.NoError(t, errCr)
 
 				transportTCP, errCrTransport := NewTransportTCP(

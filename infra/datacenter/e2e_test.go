@@ -8,11 +8,12 @@ import (
 	"github.com/tudorhulban/analytics77/domain/analytics"
 	"github.com/tudorhulban/analytics77/domain/offsets"
 	"github.com/tudorhulban/analytics77/domain/site"
+	"github.com/tudorhulban/analytics77/fixtures"
 	"github.com/tudorhulban/analytics77/shared"
 )
 
 func TestDataCenter(t *testing.T) {
-	datacenter, errCrDatacenter := NewDataCenter()
+	datacenter, errCrDatacenter := NewDataCenter(fixtures.DefaultOffset())
 	require.NoError(t, errCrDatacenter)
 	require.NotNil(t, datacenter)
 

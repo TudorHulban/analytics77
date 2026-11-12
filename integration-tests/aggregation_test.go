@@ -9,12 +9,13 @@ import (
 	"github.com/tudorhulban/analytics77/domain/analytics"
 	"github.com/tudorhulban/analytics77/domain/calendar"
 	"github.com/tudorhulban/analytics77/domain/site"
+	"github.com/tudorhulban/analytics77/fixtures"
 	"github.com/tudorhulban/analytics77/infra/datacenter"
 	"github.com/tudorhulban/analytics77/shared"
 )
 
 func TestPreviousHourAcrossAprilToMay(t *testing.T) {
-	dc, errCr := datacenter.NewDataCenter()
+	dc, errCr := datacenter.NewDataCenter(fixtures.DefaultOffset())
 	require.NoError(t, errCr)
 	require.NotNil(t, dc)
 

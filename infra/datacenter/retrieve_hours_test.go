@@ -8,6 +8,7 @@ import (
 	"github.com/tudorhulban/analytics77/domain/analytics"
 	"github.com/tudorhulban/analytics77/domain/offsets"
 	"github.com/tudorhulban/analytics77/domain/site"
+	"github.com/tudorhulban/analytics77/fixtures"
 
 	"github.com/tudorhulban/analytics77/shared"
 	"github.com/tudorhulban/hxhelpers"
@@ -18,7 +19,7 @@ func TestCurrentDayHoursWithData(t *testing.T) {
 		OffsetUTCHours: +3,
 	}
 
-	dc, errCr := NewDataCenter()
+	dc, errCr := NewDataCenter(fixtures.DefaultOffset())
 	require.NoError(t, errCr)
 	require.NotNil(t, dc)
 

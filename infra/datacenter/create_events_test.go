@@ -1,6 +1,7 @@
 package datacenter
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -9,12 +10,46 @@ import (
 	"github.com/tudorhulban/analytics77/domain/analytics"
 	"github.com/tudorhulban/analytics77/domain/calendar"
 	"github.com/tudorhulban/analytics77/domain/site"
+	"github.com/tudorhulban/analytics77/fixtures"
 	"github.com/tudorhulban/analytics77/shared"
 )
 
-func TestAddEvents_OlderThanPreviousMonth_DoesNotPanic(t *testing.T) {
-	dc, errCr := NewDataCenter()
+func TestAddEvents_HappyPath(t *testing.T) {
+	now := time.Now()
+
+	siteName := "example.com"
+
+	dc, errCr := NewDataCenter(
+		fixtures.DefaultOffset(now),
+	)
 	require.NoError(t, errCr)
+	require.NotNil(t, dc)
+
+	req := shared.ParamsAddEvent{
+		SiteKey: siteName,
+		Country: "ROU",
+		City:    "Iasi",
+
+		IP:            "82.77.237.37",
+		TimestampUNIX: now.Unix(),
+	}
+
+	require.Empty(t, dc.AddEvents(&req))
+	require.Len(t, dc.data, 1)
+	require.EqualValues(t, dc.GetSiteNames()[0], siteName)
+
+	dcSite, exists := dc.data[site.SiteName(siteName)]
+	require.True(t, exists)
+	require.NotNil(t, dcSite)
+	require.NotNil(t, dcSite.Data)
+
+	dcSite.Data.Snapshot(os.Stdout)
+}
+
+func TestAddEvents_OlderThanPreviousMonth_DoesNotPanic(t *testing.T) {
+	dc, errCr := NewDataCenter(fixtures.DefaultOffset())
+	require.NoError(t, errCr)
+	require.NotNil(t, dc)
 
 	req := shared.ParamsAddEvent{
 		SiteKey:       "localhost",
@@ -30,9 +65,10 @@ func TestAddEvents_OlderThanPreviousMonth_DoesNotPanic(t *testing.T) {
 	)
 }
 
-func TestAddEventsAcrossBoundaries(t *testing.T) {
+func TestAddEvents_AcrossBoundaries(t *testing.T) {
 	siteTest := site.Site{
-		Name: site.SiteName(t.Name()),
+		Name:             site.SiteName(t.Name()),
+		TimestampOffsets: fixtures.DefaultOffset(),
 	}
 
 	now := time.Now()
@@ -76,10 +112,13 @@ func TestAddEventsAcrossBoundaries(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(
 			tc.description,
+
 			func(t *testing.T) {
-				dc, errCr := NewDataCenter()
+				datacenter, errCr := NewDataCenter(
+					fixtures.DefaultOffset(now),
+				)
 				require.NoError(t, errCr)
-				require.NotNil(t, dc)
+				require.NotNil(t, datacenter)
 
 				req := shared.ParamsAddEvent{
 					SiteKey:         string(siteTest.Name),
@@ -91,9 +130,9 @@ func TestAddEventsAcrossBoundaries(t *testing.T) {
 					IsPrivateIP:   true,
 				}
 
-				require.Empty(t, dc.AddEvents(&req))
+				require.Empty(t, datacenter.AddEvents(&req))
 
-				registry, exists := dc.GetRegistry(siteTest.Name)
+				registry, exists := datacenter.GetRegistry(siteTest.Name)
 				require.True(t, exists)
 				require.NotNil(t, registry)
 				require.NotZero(t, registry.CalendarMonthCurrentNumber.Load())

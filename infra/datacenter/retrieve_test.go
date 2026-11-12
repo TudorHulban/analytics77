@@ -7,11 +7,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/domain/offsets"
 	"github.com/tudorhulban/analytics77/domain/site"
+	"github.com/tudorhulban/analytics77/fixtures"
 	"github.com/tudorhulban/analytics77/shared"
 )
 
 func TestGetPreviousHourRecordsPerSite_CrossesMonthBoundary(t *testing.T) {
-	dc, errCr := NewDataCenter()
+	dc, errCr := NewDataCenter(fixtures.DefaultOffset())
 	require.NoError(t, errCr)
 	require.NotNil(t, dc)
 
