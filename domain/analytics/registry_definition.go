@@ -8,11 +8,10 @@ import (
 )
 
 // Registry keeps info as per UTC times.
+//
+// UTC does not depend on DST dates.
 type Registry struct {
 	Slots [7]*MonthActive
-
-	TimestampDSTWinter int64
-	TimestampDSTSpring int64
 
 	CurrentSlot                atomic.Int32
 	CalendarMonthCurrentNumber atomic.Int32
@@ -20,8 +19,6 @@ type Registry struct {
 	muAdvance sync.Mutex
 }
 
-// NewRegistry dsts are spring first, then winter.
-//
 // NewRegistry initial slots:
 //
 // Slots[0] = current month
@@ -37,7 +34,7 @@ type Registry struct {
 // Slots[5] = 5 months back
 //
 // Slots[6] = 6 months back
-func NewRegistry(inMonth int8, dstTimestamps ...int64) *Registry {
+func NewRegistry(inMonth int8) *Registry {
 	var month int32
 
 	if inMonth < 1 {
@@ -53,11 +50,6 @@ func NewRegistry(inMonth int8, dstTimestamps ...int64) *Registry {
 
 	for i := range result.Slots {
 		result.Slots[i] = &MonthActive{}
-	}
-
-	if len(dstTimestamps) == 2 {
-		result.TimestampDSTSpring = dstTimestamps[0]
-		result.TimestampDSTWinter = dstTimestamps[1]
 	}
 
 	return &result

@@ -161,17 +161,14 @@ func (dc *DataCenter) CurrentDayHoursWithData(offset *offsets.TimestampOffsets) 
 	sites := dc.GetSiteNames()
 
 	// Grab the local/machine Unix timestamp instead of forcing UTC
-	now := time.Now().Unix()
+	now := time.Now()
 
 	for _, siteName := range sites {
 		registry, _ := dc.GetRegistry(siteName)
 
 		// Pass the offsets pointer down into the registry method
 		hoursWithData, howMany := registry.
-			CurrentDayHoursWithData(
-				now,
-				offset.OffsetUTCHours,
-			)
+			CurrentDayHoursWithData(now.UTC())
 
 		for _, hour := range hoursWithData[:howMany] {
 			if _, exists := hoursMap[hour]; !exists {

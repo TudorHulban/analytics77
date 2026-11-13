@@ -59,9 +59,6 @@ func (dc *DataCenter) AddSite(item site.Site) error {
 			Site: item,
 			Data: analytics.NewRegistry(
 				int8(time.Now().Month()), //nolint:gosec
-
-				item.TimestampDSTSpring,
-				item.TimestampDSTWinter,
 			),
 		}
 	}

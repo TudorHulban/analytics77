@@ -83,7 +83,7 @@ func TestPreviousHourRecords(t *testing.T) {
 	registryAfter, exists := dc.GetRegistry(site.SiteName(siteName))
 	require.True(t, exists)
 
-	hours, howMany := registryAfter.CurrentDayHoursWithData(localTime.Unix(), int64(utcOffsetHours))
+	hours, howMany := registryAfter.CurrentDayHoursWithData(localTime.UTC())
 	require.EqualValues(t, 2, howMany)
 	require.Empty(t,
 		hxhelpers.NotInSliceSource(
