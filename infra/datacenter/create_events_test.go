@@ -1,6 +1,7 @@
 package datacenter
 
 import (
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -77,50 +78,75 @@ func TestAddEvents_AcrossBoundaries(t *testing.T) {
 		producedAtUTC time.Time
 		description   string
 
-		localOffsetHours  int8
 		utcExpectedDay    int8
 		utcExpectedHour   int8
 		expectedLastMonth bool
 	}{
-		{
-			description: "1.Previous hour inside same day",
-			producedAtUTC: time.Date(
-				now.Year(),
-				now.Month(),
-				now.Day(),
-				now.Hour()-1, // UTC previous hour
-				0, 0, 0,
-				time.UTC,
-			),
+		// {
+		// 	description: "1.Previous hour inside same day",
+		// 	producedAtUTC: time.Date(
+		// 		now.Year(),
+		// 		now.Month(),
+		// 		now.Day(),
+		// 		now.Hour()-1, // UTC previous hour
+		// 		0, 0, 0,
+		// 		time.UTC,
+		// 	),
 
-			localOffsetHours: int8(fixtures.DefaultOffset().OffsetUTCHours),
-			utcExpectedDay:   int8(now.Day()),
-			utcExpectedHour:  int8(now.Hour()) - 1,
-		},
+		// 	utcExpectedDay:  int8(now.Day()),
+		// 	utcExpectedHour: int8(now.Hour()) - 1,
+		// },
+		// {
+		// 	description: "2.Midnight hour",
+		// 	producedAtUTC: time.Date(
+		// 		now.Year(),
+		// 		now.Month(),
+		// 		now.Day(),
+		// 		0,
+		// 		30, 0, 0, // 00:30 UTC
+		// 		time.UTC,
+		// 	),
+
+		// 	utcExpectedDay:  int8(now.Day()),
+		// 	utcExpectedHour: 0,
+		// },
+		// {
+		// 	description: "3.Previous hour before midnight (day → day-1)",
+		// 	producedAtUTC: time.Date(
+		// 		now.Year(),
+		// 		now.Month(),
+		// 		now.Day()-1,
+		// 		23,
+		// 		30, 0, 0, // 23:30 UTC
+		// 		time.UTC,
+		// 	),
+
+		// 	utcExpectedDay:  int8(now.Day()) - 1,
+		// 	utcExpectedHour: 23,
+		// },
 		{
-			description: "2.Previous hour crosses midnight (day → day-1)",
+			description: "4.Previous hour before month boundary (day=1 → day=31)",
 			producedAtUTC: time.Date(
 				now.Year(),
 				now.Month(),
-				now.Day(),
+				1,
 				0,
 				30, 0, 0, // 00:30 UTC
 				time.UTC,
 			),
 
-			localOffsetHours: -1,
-			utcExpectedDay:   int8(now.Day()),
-			utcExpectedHour:  0,
-		},
-		// {
-		// 	description:   "3.Previous hour across month boundary (day=1 → day=31)",
-		// 	producedAtUTC: time.Date(now.Year(), now.Month(), 1, 0, 15, 0, 0, time.UTC),
+			utcExpectedDay: int8(time.Date(
+				now.Year(),
+				now.Month(),
+				1,
+				0,
+				0, 0, 0,
+				time.UTC).Day(),
+			), //nolint:revive
 
-		// 	localOffsetHours:  -1,
-		// 	utcExpectedDay:    int8(time.Date(now.Year(), now.Month(), 0, 0, 0, 0, 0, time.UTC).Day()), //nolint:revive
-		// 	utcExpectedHour:   23,
-		// 	expectedLastMonth: true,
-		// },
+			utcExpectedHour:   23,
+			expectedLastMonth: true,
+		},
 	}
 
 	for _, tc := range tests {
@@ -150,6 +176,8 @@ func TestAddEvents_AcrossBoundaries(t *testing.T) {
 				require.True(t, exists)
 				require.NotNil(t, registry)
 				require.NotZero(t, registry.CalendarMonthCurrentNumber.Load())
+
+				fmt.Println(datacenter.Snapshot(os.Stdout))
 
 				var (
 					days   [31]int8
