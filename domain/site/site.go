@@ -3,8 +3,6 @@ package site
 import (
 	"errors"
 	"fmt"
-
-	"github.com/tudorhulban/analytics77/domain/offsets"
 )
 
 type SiteName string
@@ -12,7 +10,7 @@ type SiteName string
 // Site is based on primitives so no need to pass by reference externally.
 type Site struct {
 	Name         SiteName `json:"name"`
-	SiteLocation string   // IANA Location.
+	SiteLocation string   `json:"location_iana"` // IANA Location.
 }
 
 func NewSite(rawSite map[string]any) (*Site, int8, error) {
@@ -68,65 +66,26 @@ func NewSite(rawSite map[string]any) (*Site, int8, error) {
 			)
 	}
 
-	valueOffsetUTCHours, exists := rawSite["offsetUTCHours"]
+	valueIANALocation, exists := rawSite["location_iana"]
 	if !exists {
 		return nil,
 			0,
-			errors.New("missing offsetUTCHours")
+			errors.New("missing IANA location")
 	}
 
-	offsetUTCHours, couldCastUTCHours := valueOffsetUTCHours.(float64)
-	if !couldCastUTCHours {
+	locationIANA, couldCastLocationIANA := valueIANALocation.(string)
+	if !couldCastLocationIANA {
 		return nil,
 			0,
 			fmt.Errorf(
-				"invalid offsetUTCHours %v",
-				valueOffsetUTCHours,
-			)
-	}
-
-	valueDSTSpring, exists := rawSite["timestampDSTSpring"]
-	if !exists {
-		return nil,
-			0,
-			errors.New("missing timestampDSTSpring")
-	}
-
-	timestampDSTSpring, couldCastDSTSpring := valueDSTSpring.(float64)
-	if !couldCastDSTSpring {
-		return nil,
-			0,
-			fmt.Errorf(
-				"invalid timestampDSTSpring %v",
-				valueDSTSpring,
-			)
-	}
-
-	valueDSTWinter, exists := rawSite["timestampDSTWinter"]
-	if !exists {
-		return nil,
-			0,
-			errors.New("missing timestampDSTWinter")
-	}
-
-	timestampDSTWinter, couldCastDSTWinter := valueDSTWinter.(float64)
-	if !couldCastDSTWinter {
-		return nil,
-			0,
-			fmt.Errorf(
-				"invalid timestampDSTSpring %v",
-				valueDSTSpring,
+				"invalid site name %v",
+				valueSiteName,
 			)
 	}
 
 	result := Site{
-		Name: SiteName(siteName),
-
-		TimestampOffsets: offsets.TimestampOffsets{
-			OffsetUTCHours:     int64(offsetUTCHours),
-			TimestampDSTSpring: int64(timestampDSTSpring),
-			TimestampDSTWinter: int64(timestampDSTWinter),
-		},
+		Name:         SiteName(siteName),
+		SiteLocation: locationIANA,
 	}
 
 	return &result,

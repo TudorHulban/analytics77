@@ -118,21 +118,16 @@ func (c *Configuration) String() string {
 
 	sb.WriteString("  sites: [\n")
 
-	for ix, sit := range c.Sites {
-		if sit == nil {
+	for ix, item := range c.Sites {
+		if item == nil {
 			sb.WriteString("    <nil site>,\n")
 
 			continue
 		}
 
 		fmt.Fprintf(&sb, "    [%d] Site {\n", ix)
-		fmt.Fprintf(&sb, "      name: %s\n", sit.Name)
-
-		// Indent the TimestampOffsets stringer output using SplitSeq (zero allocations for the slice)
-		offsetsStr := sit.TimestampOffsets.String()
-		for line := range strings.SplitSeq(strings.TrimSpace(offsetsStr), "\n") {
-			fmt.Fprintf(&sb, "      %s\n", line)
-		}
+		fmt.Fprintf(&sb, "      name: %s\n", item.Name)
+		fmt.Fprintf(&sb, "      IANA Location: %s\n", item.SiteLocation)
 
 		sb.WriteString("    },\n")
 	}

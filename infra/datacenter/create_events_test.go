@@ -68,8 +68,8 @@ func TestAddEvents_OlderThanPreviousMonth_DoesNotPanic(t *testing.T) {
 
 func TestAddEvents_AcrossBoundaries(t *testing.T) {
 	siteTest := site.Site{
-		Name:             site.SiteName(t.Name()),
-		TimestampOffsets: fixtures.DefaultOffset(),
+		Name:         site.SiteName(t.Name()),
+		SiteLocation: fixtures.DefaultLocationIANA,
 	}
 
 	now := time.Now()

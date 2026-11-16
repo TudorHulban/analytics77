@@ -20,8 +20,5 @@ func TestExtractConfiguration(t *testing.T) {
 	require.NotZero(t, configuration.NameLogfile)
 	require.NotZero(t, configuration.Sites)
 	require.NotZero(t, configuration.Sites[0].Name)
-
-	require.NotZero(t, configuration.Sites[0].OffsetUTCHours)
-	require.NotZero(t, configuration.Sites[0].TimestampDSTSpring)
-	require.NotZero(t, configuration.Sites[0].TimestampDSTWinter)
+	require.NotZero(t, configuration.Sites[0].SiteLocation)
 }

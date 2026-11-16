@@ -109,7 +109,7 @@ func (dc *DataCenter) String() string {
 		fmt.Fprintf(
 			&b,
 			"\n[%s]\n",
-			dc.data[siteName].Site.String(),
+			dc.data[siteName].Site.Name,
 		)
 	}
 
