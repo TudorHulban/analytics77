@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/tudorhulban/analytics77/domain/analytics"
-	"github.com/tudorhulban/analytics77/domain/offsets"
 	"github.com/tudorhulban/analytics77/domain/site"
 	"github.com/tudorhulban/hxerrors"
 )
@@ -18,19 +17,19 @@ type DCSite struct {
 	Site site.Site
 }
 
-// Stores in UTC times.
-// Converts only at the boundaries.
+// Stores records in UTC times. Given this all methods should receive UTC times.
 type DataCenter struct {
 	data map[site.SiteName]*DCSite
-	mu   sync.RWMutex
 
 	// used in case of automatic site creation.
-	defaultOffsets offsets.TimestampOffsets
+	defaultIANALocation string
+	mu                  sync.RWMutex
 }
 
-func NewDataCenter(defaultOffsets offsets.TimestampOffsets, sites ...site.Site) (*DataCenter, error) {
+func NewDataCenter(defaultIANALocation string, sites ...site.Site) (*DataCenter, error) {
 	result := DataCenter{
-		data: map[site.SiteName]*DCSite{},
+		data:                map[site.SiteName]*DCSite{},
+		defaultIANALocation: defaultIANALocation,
 	}
 
 	for _, item := range sites {

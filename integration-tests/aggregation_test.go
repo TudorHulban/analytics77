@@ -15,7 +15,7 @@ import (
 )
 
 func TestPreviousHourAcrossAprilToMay(t *testing.T) {
-	dc, errCr := datacenter.NewDataCenter(fixtures.DefaultOffset())
+	dc, errCr := datacenter.NewDataCenter(fixtures.DefaultLocationIANA)
 	require.NoError(t, errCr)
 	require.NotNil(t, dc)
 

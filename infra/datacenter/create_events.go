@@ -3,6 +3,7 @@ package datacenter
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/tudorhulban/analytics77/domain/analytics"
 	"github.com/tudorhulban/analytics77/domain/calendar"
@@ -92,6 +93,8 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 	//
 	resolved := make([]*analytics.MetricActive, len(indexesNoError))
 
+	nowUTC := time.Now().UTC()
+
 	dc.mu.Lock()
 	for outIx, eventIndex := range indexesNoError {
 		event := events[eventIndex]
@@ -102,8 +105,8 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 			// create the new site.
 			dcSite = &DCSite{
 				Site: site.Site{
-					Name:             forSiteName,
-					TimestampOffsets: dc.defaultOffsets,
+					Name:         forSiteName,
+					SiteLocation: dc.defaultIANALocation,
 				},
 				Data: analytics.NewRegistry(
 					offsets.ExtractMonth(event.TimestampUNIX),
@@ -114,16 +117,10 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 		}
 
 		// TODO: test case for new site.
-		evCalendarMonth, evCalendarDay, evHour := offsets.
-			ExtractMonthDayHour(
-				event.TimestampUNIX,
-				&offsets.TimestampOffsets{
-					OffsetUTCHours: dcSite.Site.OffsetUTCHours,
-
-					TimestampDSTSpring: dcSite.Site.TimestampDSTSpring,
-					TimestampDSTWinter: dcSite.Site.TimestampDSTWinter,
-				},
-			)
+		// TODO: maybe move outside of loop for less allocs.
+		evCalendarMonth := int8(nowUTC.Month()) //nolint:gosec
+		evCalendarDay := int8(nowUTC.Day())     //nolint:gosec
+		evHour := int8(nowUTC.Hour())           //nolint:gosec
 
 		dcSite.
 			Data.

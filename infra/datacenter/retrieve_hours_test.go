@@ -19,7 +19,7 @@ func TestCurrentDayHoursWithData(t *testing.T) {
 		OffsetUTCHours: +3,
 	}
 
-	dc, errCr := NewDataCenter(fixtures.DefaultOffset())
+	dc, errCr := NewDataCenter(fixtures.DefaultLocationIANA)
 	require.NoError(t, errCr)
 	require.NotNil(t, dc)
 
@@ -32,7 +32,7 @@ func TestCurrentDayHoursWithData(t *testing.T) {
 	}
 	localTime := time.Now()
 
-	recordsPerSiteBefore := dc.GetPreviousHourRecordsPerSite(&offsetsROU)
+	recordsPerSiteBefore := dc.GetPreviousHourRecordsPerSite()
 	require.Empty(t, recordsPerSiteBefore)
 
 	request1 := shared.ParamsAddEvent{
@@ -68,7 +68,7 @@ func TestCurrentDayHoursWithData(t *testing.T) {
 		hoursWithDataAfter1[0],
 	)
 
-	recordsPerSiteAfter1 := dc.GetPreviousHourRecordsPerSite(&offsetsROU)
+	recordsPerSiteAfter1 := dc.GetPreviousHourRecordsPerSite()
 	require.Len(t,
 		recordsPerSiteAfter1,
 		1,

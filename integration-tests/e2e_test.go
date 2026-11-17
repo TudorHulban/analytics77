@@ -113,7 +113,7 @@ func TestAnalytics_E2E(t *testing.T) {
 				listener, errListener := net.Listen("tcp", "127.0.0.1:0") //nolint:noctx
 				require.NoError(t, errListener)
 
-				datacenter, errCrDatacenter := datacenter.NewDataCenter(fixtures.DefaultOffset())
+				datacenter, errCrDatacenter := datacenter.NewDataCenter(fixtures.DefaultLocationIANA)
 				require.NoError(t, errCrDatacenter)
 				require.NotNil(t, datacenter)
 

@@ -6,14 +6,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/domain/analytics"
-	"github.com/tudorhulban/analytics77/domain/offsets"
 	"github.com/tudorhulban/analytics77/domain/site"
 	"github.com/tudorhulban/analytics77/fixtures"
 	"github.com/tudorhulban/analytics77/shared"
 )
 
 func TestDataCenter(t *testing.T) {
-	datacenter, errCrDatacenter := NewDataCenter(fixtures.DefaultOffset())
+	datacenter, errCrDatacenter := NewDataCenter(fixtures.DefaultLocationIANA)
 	require.NoError(t, errCrDatacenter)
 	require.NotNil(t, datacenter)
 
@@ -21,11 +20,8 @@ func TestDataCenter(t *testing.T) {
 	require.Empty(t, datacenter.AddEvents(nil))
 
 	site1Test := site.Site{
-		Name: "xxxx - " + site.SiteName(t.Name()),
-
-		TimestampOffsets: offsets.TimestampOffsets{
-			OffsetUTCHours: -2,
-		},
+		Name:         "xxxx - " + site.SiteName(t.Name()),
+		SiteLocation: fixtures.DefaultLocationIANA,
 	}
 
 	localTime := time.Now()
@@ -83,7 +79,7 @@ func TestDataCenter(t *testing.T) {
 		CurrentMonthHoursWithData(int8(localTime.Day()))
 	require.EqualValues(t, 1, howMany)
 	require.EqualValues(t,
-		localTime.Hour()+int(site1Test.OffsetUTCHours),
+		localTime.Hour(),
 		hoursWithData[0],
 	)
 

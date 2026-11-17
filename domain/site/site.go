@@ -3,6 +3,8 @@ package site
 import (
 	"errors"
 	"fmt"
+
+	"github.com/tudorhulban/hxhelpers"
 )
 
 type SiteName string
@@ -91,4 +93,17 @@ func NewSite(rawSite map[string]any) (*Site, int8, error) {
 	return &result,
 		referenceMonth,
 		nil
+}
+
+func (s Site) String() string {
+	if len(s.SiteLocation) == 0 {
+		return string(s.Name)
+	}
+
+	return hxhelpers.Sprintf(
+		"%s (%s)",
+
+		string(s.Name),
+		s.SiteLocation,
+	)
 }

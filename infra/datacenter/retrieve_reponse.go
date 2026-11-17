@@ -71,37 +71,17 @@ func (r ResponseRecordsPerSite) String() string {
 	return builder.String()
 }
 
-// previousHourRecordsPerSiteAt does the real work, parameterized on "now" so
-// tests can land deterministically on month/DST boundaries.
-//
-// The previous hour is derived by re-running full month/day/hour extraction
-// on (nowUTC - 1h), per site, rather than decrementing the current day/hour
-// locally. That's required for two reasons:
-//   - month length varies (28-31 days); "day - 1 -> day 31" is only correct
-//     for months that actually have 31 days
-//   - crossing a DST transition must go through the same civil-calendar math
-//     used everywhere else, or the two paths can disagree at the boundary
-//
-// Each site carries its own DST window, so the extraction uses the caller's
-// UTC offset combined with that registry's DST fields — the same convention
-// AddEvents uses.
-func (dc *DataCenter) previousHourRecordsPerSiteAt(nowUTC int64, offset *offsets.TimestampOffsets) ResponseRecordsPerSite {
-	previousHourUTC := nowUTC - 3600
+func (dc *DataCenter) previousHourRecordsPerSiteAt(nowUTC time.Time) ResponseRecordsPerSite {
+	previousHourUTC := nowUTC.Add(-1 * time.Hour)
 
 	dc.mu.RLock()
 
 	result := make(map[site.SiteName]uint32, len(dc.data))
 
 	for siteName, dcSite := range dc.data {
-		prevMonth, prevDay, prevHour := offsets.ExtractMonthDayHour(
-			previousHourUTC,
-			&offsets.TimestampOffsets{
-				OffsetUTCHours: offset.OffsetUTCHours,
-
-				TimestampDSTSpring: dcSite.Site.TimestampDSTSpring,
-				TimestampDSTWinter: dcSite.Site.TimestampDSTWinter,
-			},
-		)
+		prevMonth := int8(previousHourUTC.Month()) //nolint:gosec
+		prevDay := int8(previousHourUTC.Day())     //nolint:gosec
+		prevHour := previousHourUTC.Hour()         // TODO: move definition outside loop for lower allocs
 
 		var month *analytics.MonthActive
 
@@ -124,19 +104,18 @@ func (dc *DataCenter) previousHourRecordsPerSiteAt(nowUTC int64, offset *offsets
 
 // GetPreviousHourRecordsPerSite returns, per site, the record count for the
 // hour immediately preceding the current one.
-func (dc *DataCenter) GetPreviousHourRecordsPerSite(offset *offsets.TimestampOffsets) ResponseRecordsPerSite {
+func (dc *DataCenter) GetPreviousHourRecordsPerSite() ResponseRecordsPerSite {
 	return dc.
 		previousHourRecordsPerSiteAt(
-			time.Now().Unix(),
-			offset,
+			time.Now(),
 		)
 }
 
-func (dc *DataCenter) GetCurrentHourRecordsPerSite(offset *offsets.TimestampOffsets) ResponseRecordsPerSite {
-	_, ixDay, ixHour := offsets.ExtractMonthDayHour(
-		time.Now().Unix(),
-		offset,
-	)
+func (dc *DataCenter) GetCurrentHourRecordsPerSite() ResponseRecordsPerSite {
+	nowUTC := time.Now().UTC()
+
+	ixDay := int8(nowUTC.Day()) //nolint:gosec
+	ixHour := nowUTC.Hour()
 
 	dc.mu.RLock()
 

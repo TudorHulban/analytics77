@@ -118,9 +118,7 @@ func TestTransport_TCP(t *testing.T) {
 				listener, errListener := net.Listen("tcp", "127.0.0.1:0") //nolint:noctx
 				require.NoError(t, errListener)
 
-				dc, errCr := datacenter.NewDataCenter(
-					fixtures.DefaultOffset(),
-				)
+				dc, errCr := datacenter.NewDataCenter(fixtures.DefaultLocationIANA)
 				require.NoError(t, errCr)
 
 				transportTCP, errCrTransport := NewTransportTCP(
@@ -176,7 +174,7 @@ func TestTransport_TCP(t *testing.T) {
 
 				recordsPerSite := transportTCP.
 					Datacenter.
-					GetCurrentHourRecordsPerSite(&offsetsROU)
+					GetCurrentHourRecordsPerSite()
 
 				transportTCP.Datacenter.Snapshot(os.Stdout)
 
@@ -189,7 +187,7 @@ func TestTransport_TCP(t *testing.T) {
 
 				require.EqualValues(t,
 					testCase.expectedCountSites,
-					len(transportTCP.Datacenter.GetCurrentHourRecordsPerSite(&offsetsROU)),
+					len(transportTCP.Datacenter.GetCurrentHourRecordsPerSite()),
 				)
 			},
 		)

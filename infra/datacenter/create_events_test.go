@@ -20,11 +20,9 @@ func TestAddEvents_HappyPath(t *testing.T) {
 
 	siteName := "example.com"
 
-	dc, errCr := NewDataCenter(
-		fixtures.DefaultOffset(now),
-	)
+	datacenter, errCr := NewDataCenter(fixtures.DefaultLocationIANA)
 	require.NoError(t, errCr)
-	require.NotNil(t, dc)
+	require.NotNil(t, datacenter)
 
 	req := shared.ParamsAddEvent{
 		SiteKey: siteName,
@@ -35,11 +33,11 @@ func TestAddEvents_HappyPath(t *testing.T) {
 		TimestampUNIX: now.Unix(),
 	}
 
-	require.Empty(t, dc.AddEvents(&req))
-	require.Len(t, dc.data, 1)
-	require.EqualValues(t, dc.GetSiteNames()[0], siteName)
+	require.Empty(t, datacenter.AddEvents(&req))
+	require.Len(t, datacenter.data, 1)
+	require.EqualValues(t, datacenter.GetSiteNames()[0], siteName)
 
-	dcSite, exists := dc.data[site.SiteName(siteName)]
+	dcSite, exists := datacenter.data[site.SiteName(siteName)]
 	require.True(t, exists)
 	require.NotNil(t, dcSite)
 	require.NotNil(t, dcSite.Data)
@@ -48,7 +46,7 @@ func TestAddEvents_HappyPath(t *testing.T) {
 }
 
 func TestAddEvents_OlderThanPreviousMonth_DoesNotPanic(t *testing.T) {
-	dc, errCr := NewDataCenter(fixtures.DefaultOffset())
+	dc, errCr := NewDataCenter(fixtures.DefaultLocationIANA)
 	require.NoError(t, errCr)
 	require.NotNil(t, dc)
 
@@ -154,9 +152,7 @@ func TestAddEvents_AcrossBoundaries(t *testing.T) {
 			tc.description,
 
 			func(t *testing.T) {
-				datacenter, errCr := NewDataCenter(
-					fixtures.DefaultOffset(now),
-				)
+				datacenter, errCr := NewDataCenter(fixtures.DefaultLocationIANA)
 				require.NoError(t, errCr)
 				require.NotNil(t, datacenter)
 

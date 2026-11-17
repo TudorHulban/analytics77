@@ -122,7 +122,7 @@ func (r *Registry) CurrentMonthHoursWithData(forCalendarDay int8) ([24]int8, int
 //
 // Method returns hours in UTC time.
 func (r *Registry) CurrentDayHoursWithData(timestampUTC time.Time) ([24]int8, int8) {
-	return r.CurrentMonthHoursWithData(int8(timestampUTC.Day()))
+	return r.CurrentMonthHoursWithData(int8(timestampUTC.Day())) //nolint:gosec
 }
 
 // CurrentMonthDaysWithData returns a stack‑allocated array of up to 31 days

@@ -14,9 +14,9 @@ import (
 )
 
 func TestPreviousHourRecords(t *testing.T) {
-	dc, errCr := NewDataCenter(fixtures.DefaultOffset())
+	datacenter, errCr := NewDataCenter(fixtures.DefaultLocationIANA)
 	require.NoError(t, errCr)
-	require.NotNil(t, dc)
+	require.NotNil(t, datacenter)
 
 	siteName := "localhost"
 
@@ -47,20 +47,16 @@ func TestPreviousHourRecords(t *testing.T) {
 		IsPrivateIP:   true,
 	}
 
-	require.Empty(t, dc.AddEvents(&req1))
+	require.Empty(t, datacenter.AddEvents(&req1))
 
-	registryBefore, exists := dc.GetRegistry(site.SiteName(siteName))
+	registryBefore, exists := datacenter.GetRegistry(site.SiteName(siteName))
 	require.True(t, exists)
 	require.EqualValues(t,
 		localTime.Month(),
 		registryBefore.CalendarMonthCurrentNumber.Load(),
 	)
 
-	recordsPreviousHourBefore := dc.GetPreviousHourRecordsPerSite(
-		&offsets.TimestampOffsets{
-			OffsetUTCHours: int64(utcOffsetHours),
-		},
-	)
+	recordsPreviousHourBefore := datacenter.GetPreviousHourRecordsPerSite()
 	require.Len(t, recordsPreviousHourBefore, 1)
 	require.Zero(t,
 		recordsPreviousHourBefore[site.SiteName(siteName)],
@@ -78,9 +74,9 @@ func TestPreviousHourRecords(t *testing.T) {
 		IsPrivateIP:   true,
 	}
 
-	require.Empty(t, dc.AddEvents(&req2))
+	require.Empty(t, datacenter.AddEvents(&req2))
 
-	registryAfter, exists := dc.GetRegistry(site.SiteName(siteName))
+	registryAfter, exists := datacenter.GetRegistry(site.SiteName(siteName))
 	require.True(t, exists)
 
 	hours, howMany := registryAfter.CurrentDayHoursWithData(localTime.UTC())
@@ -92,11 +88,7 @@ func TestPreviousHourRecords(t *testing.T) {
 			int8(localTime.Hour())),
 	)
 
-	recordsPreviousHourAfter := dc.GetPreviousHourRecordsPerSite(
-		&offsets.TimestampOffsets{
-			OffsetUTCHours: int64(utcOffsetHours),
-		},
-	)
+	recordsPreviousHourAfter := datacenter.GetPreviousHourRecordsPerSite()
 	require.Len(t, recordsPreviousHourAfter, 1)
 	require.EqualValues(t,
 		1,

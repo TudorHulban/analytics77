@@ -5,35 +5,43 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tudorhulban/analytics77/domain/offsets"
 	"github.com/tudorhulban/analytics77/domain/site"
 	"github.com/tudorhulban/analytics77/fixtures"
 	"github.com/tudorhulban/analytics77/shared"
 )
 
 func TestGetPreviousHourRecordsPerSite_CrossesMonthBoundary(t *testing.T) {
-	dc, errCr := NewDataCenter(fixtures.DefaultOffset())
+	datacenter, errCr := NewDataCenter(fixtures.DefaultLocationIANA)
 	require.NoError(t, errCr)
-	require.NotNil(t, dc)
+	require.NotNil(t, datacenter)
 
 	siteName := "localhost"
-	offset := offsets.TimestampOffsets{
-		OffsetUTCHours: 0,
-	}
 
 	// 2024 is a leap year: Feb has 29 days. If the code just swapped a
 	// hardcoded "31" for a hardcoded "28/29/30", this would still fail.
-	lastHourFeb := time.Date(2024, time.February, 29, 23, 15, 0, 0, time.UTC)
-	nowMarch := time.Date(2024, time.March, 1, 0, 30, 0, 0, time.UTC)
+	lastHourFebUTC := time.Date(
+		2024,
+		time.February,
+		29,
+		23, 15, 0, 0,
+		time.UTC,
+	)
+	nowMarchUTC := time.Date(
+		2024,
+		time.March,
+		1,
+		0, 30, 0, 0,
+		time.UTC,
+	)
 
 	// First event seeds the registry's current month as February.
 	require.Empty(t,
-		dc.AddEvents(
+		datacenter.AddEvents(
 			&shared.ParamsAddEvent{
 				SiteKey: siteName,
 				IP:      "127.0.0.1",
 
-				TimestampUNIX: lastHourFeb.Unix(),
+				TimestampUNIX: lastHourFebUTC.Unix(),
 				IsPrivateIP:   true,
 			},
 		),
@@ -44,18 +52,18 @@ func TestGetPreviousHourRecordsPerSite_CrossesMonthBoundary(t *testing.T) {
 	// "current". This mirrors how the registry actually gets here in
 	// production; it is not test-only setup.
 	require.Empty(t,
-		dc.AddEvents(
+		datacenter.AddEvents(
 			&shared.ParamsAddEvent{
 				SiteKey: siteName,
 				IP:      "127.0.0.1",
 
-				TimestampUNIX: nowMarch.Unix(),
+				TimestampUNIX: nowMarchUTC.Unix(),
 				IsPrivateIP:   true,
 			},
 		),
 	)
 
-	registry, exists := dc.GetRegistry(site.SiteName(siteName))
+	registry, exists := datacenter.GetRegistry(site.SiteName(siteName))
 	require.True(t, exists)
 
 	require.NotNil(t, registry)
@@ -66,7 +74,7 @@ func TestGetPreviousHourRecordsPerSite_CrossesMonthBoundary(t *testing.T) {
 
 	// At March 1st 00:30, "the previous hour" is Feb 29 23:xx -> the data
 	// that belongs to it lives in GetPreviousMonth(), not GetCurrentMonth().
-	records := dc.previousHourRecordsPerSiteAt(nowMarch.Unix(), &offset)
+	records := datacenter.previousHourRecordsPerSiteAt(nowMarchUTC)
 
 	require.Len(t, records, 1)
 	require.EqualValues(t,
