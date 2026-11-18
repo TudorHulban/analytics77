@@ -1,14 +1,58 @@
 package datacenter
 
 import (
+	"bytes"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/domain/site"
 	"github.com/tudorhulban/analytics77/fixtures"
+
 	"github.com/tudorhulban/analytics77/shared"
 )
+
+func TestSnapshot(t *testing.T) {
+	numSites := 3
+	// recordsPerSite := 5
+
+	sites := []site.Site{}
+
+	for ix := range numSites {
+		sites = append(
+			sites,
+			site.Site{
+				Name:         site.SiteName(fmt.Sprintf("site-%d", ix)),
+				SiteLocation: fixtures.DefaultLocationIANA,
+			},
+		)
+	}
+
+	datacenter, errCrDatacenter := NewDataCenter(
+		fixtures.DefaultLocationIANA,
+		sites...,
+	)
+	require.NoError(t, errCrDatacenter)
+
+	// Execute Snapshot
+	var buf bytes.Buffer
+
+	require.NoError(t,
+		datacenter.Snapshot(&buf),
+	)
+
+	output := buf.String()
+
+	fmt.Println(output)
+
+	for ix := range numSites {
+		require.Contains(t,
+			output,
+			fmt.Sprintf("site-%d", ix),
+		)
+	}
+}
 
 func TestGetPreviousHourRecordsPerSite_CrossesMonthBoundary(t *testing.T) {
 	datacenter, errCr := NewDataCenter(fixtures.DefaultLocationIANA)
@@ -41,8 +85,8 @@ func TestGetPreviousHourRecordsPerSite_CrossesMonthBoundary(t *testing.T) {
 				SiteKey: siteName,
 				IP:      "127.0.0.1",
 
-				TimestampUNIX: lastHourFebUTC.Unix(),
-				IsPrivateIP:   true,
+				TimestampUTC: lastHourFebUTC.Unix(),
+				IsPrivateIP:  true,
 			},
 		),
 	)
@@ -57,8 +101,8 @@ func TestGetPreviousHourRecordsPerSite_CrossesMonthBoundary(t *testing.T) {
 				SiteKey: siteName,
 				IP:      "127.0.0.1",
 
-				TimestampUNIX: nowMarchUTC.Unix(),
-				IsPrivateIP:   true,
+				TimestampUTC: nowMarchUTC.Unix(),
+				IsPrivateIP:  true,
 			},
 		),
 	)

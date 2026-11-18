@@ -1,8 +1,6 @@
 package analytics
 
 import (
-	"fmt"
-	"strings"
 	"sync"
 	"sync/atomic"
 )
@@ -96,26 +94,5 @@ func (*Registry) ForEachMetric(slot *MonthActive, fn func(day int8, hour int8, m
 
 			fn(day, hour, metric)
 		}
-	}
-}
-
-func (r *Registry) WriteTo(b *strings.Builder) {
-	r.GetActiveSlot().WriteTo(b, "current")
-	r.GetPreviousSlot().WriteTo(b, "previous")
-
-	// archived months (the remaining 5 slots)
-	for ix := range 7 {
-		month := r.Slots[ix]
-
-		// skip current and previous
-		if ix == int(r.CurrentSlot.Load()) {
-			continue
-		}
-
-		if ix == int((r.CurrentSlot.Load()+7-1)%7) {
-			continue
-		}
-
-		month.WriteTo(b, fmt.Sprintf("slot[%d]", ix))
 	}
 }

@@ -7,7 +7,6 @@ import (
 
 	"github.com/tudorhulban/analytics77/domain/analytics"
 	"github.com/tudorhulban/analytics77/domain/calendar"
-	"github.com/tudorhulban/analytics77/domain/offsets"
 	"github.com/tudorhulban/analytics77/domain/site"
 	"github.com/tudorhulban/analytics77/services/sgeo"
 
@@ -25,7 +24,7 @@ import (
 //
 //  2. Pointer resolution under lock (structure only)
 //     - Ensures dc.data[site] exists.
-//     - Extracts (calendarMonth, calendarDay, hour) using site-level DST/offsets.
+//     - Extracts calendarMonth, calendarDay, hour.
 //     - Determines the correct month buffer:
 //     * MonthCurrent   → events from the active calendar month
 //     * MonthPrevious  → events from the immediately preceding month
@@ -54,9 +53,6 @@ import (
 //
 //	otherwise
 //	    → event is older than previous month and ignored.
-//
-// No time mocking, no abstraction layers, no background rollover.
-// Month transitions are strictly event-driven.
 func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 	if len(events) == 0 {
 		return nil
@@ -91,7 +87,7 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 	//    We do NOT increment inside the lock.
 	//    We only ensure that dc.data[site] exists and is stable.
 	//
-	resolved := make([]*analytics.MetricActive, len(indexesNoError))
+	resolvedMetrics := make([]*analytics.MetricActive, len(indexesNoError))
 
 	nowUTC := time.Now().UTC()
 
@@ -109,7 +105,7 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 					SiteLocation: dc.defaultIANALocation,
 				},
 				Data: analytics.NewRegistry(
-					offsets.ExtractMonth(event.TimestampUNIX),
+					int8(nowUTC.Month()),
 				),
 			}
 
@@ -117,28 +113,24 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 		}
 
 		// TODO: test case for new site.
-		// TODO: maybe move outside of loop for less allocs.
-		evCalendarMonth := int8(nowUTC.Month()) //nolint:gosec
-		evCalendarDay := int8(nowUTC.Day())     //nolint:gosec
-		evHour := int8(nowUTC.Hour())           //nolint:gosec
+		evTime := time.Unix(event.TimestampUTC, 0).UTC()
 
-		dcSite.
-			Data.
-			CalendarMonthCurrentNumber.
-			CompareAndSwap(0, int32(evCalendarMonth))
+		evCalendarMonth := int8(evTime.Month()) //nolint:gosec
+		evCalendarDay := int8(evTime.Day())     //nolint:gosec
+		evHour := int8(evTime.Hour())           //nolint:gosec
 
 		monthNumber := int8(dcSite.Data.CalendarMonthCurrentNumber.Load()) //nolint:gosec
 
 		switch {
 		case evCalendarMonth == monthNumber:
 			// Same calendar month → current month buffer.
-			resolved[outIx] = &dcSite.
+			resolvedMetrics[outIx] = &dcSite.
 				Data.
 				GetActiveSlot()[calendar.CalendarDayToIndex(evCalendarDay)][evHour]
 
 		case evCalendarMonth+1 == monthNumber || (evCalendarMonth == 12 && monthNumber == 1):
 			// Event belongs to previous calendar month.
-			resolved[outIx] = &dcSite.
+			resolvedMetrics[outIx] = &dcSite.
 				Data.
 				GetPreviousSlot()[calendar.CalendarDayToIndex(evCalendarDay)][evHour]
 
@@ -147,7 +139,7 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 			dcSite.Data.Advance()
 
 			// After rollover, the new month becomes current.
-			resolved[outIx] = &dcSite.
+			resolvedMetrics[outIx] = &dcSite.
 				Data.
 				GetActiveSlot()[calendar.CalendarDayToIndex(evCalendarDay)][evHour]
 
@@ -167,7 +159,7 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 	//    - no global lock
 	//
 	for outIx, eventIndex := range indexesNoError {
-		slot := resolved[outIx]
+		slot := resolvedMetrics[outIx]
 		if slot == nil {
 			continue // event already ignored in default above
 		}

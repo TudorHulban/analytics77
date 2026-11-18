@@ -25,7 +25,7 @@ type ParamsAddEvent struct {
 	IP              string
 	ASNOrganization string
 
-	TimestampUNIX int64
+	TimestampUTC int64
 
 	Browser         analytics.Browser
 	OperatingSystem analytics.OS

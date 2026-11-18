@@ -112,7 +112,7 @@ func (req Request) AsParamsAddEvent(geo *sgeo.ServiceGeo) (*ParamsAddEvent, erro
 			Browser: browser,
 
 			ASNOrganization: geoInfo.ASN.Organization,
-			TimestampUNIX:   req.TimestampUNIX,
+			TimestampUTC:    req.TimestampUNIX,
 			IsPrivateIP:     geoInfo.IsPrivate,
 		},
 		nil

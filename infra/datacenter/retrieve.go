@@ -1,8 +1,10 @@
 package datacenter
 
 import (
+	"cmp"
 	"fmt"
 	"io"
+	"slices"
 
 	"github.com/tudorhulban/analytics77/domain/analytics"
 	"github.com/tudorhulban/analytics77/domain/site"
@@ -43,30 +45,62 @@ func (dc *DataCenter) GetSiteNames() []site.SiteName {
 
 // Snapshot writes snapshots of all registries into w.
 // It acquires a read lock and delegates snapshotting to each Registry.
+// func (dc *DataCenter) Snapshot(w io.Writer) error {
+// 	dc.mu.RLock()
+// 	defer dc.mu.RUnlock()
+
+// 	// Stable ordering of sites
+// 	sites := make([]site.Site, 0, len(dc.data))
+
+// 	for _, dcSite := range dc.data {
+// 		sites = append(sites, dcSite.Site)
+// 	}
+
+// 	// slices.Sort(keys)
+
+// 	for _, item := range sites {
+// 		if _, errPrintSite := fmt.Fprintf(w, "[%s]\n", item.String()); errPrintSite != nil {
+// 			return errPrintSite
+// 		}
+
+// 		if _, errPrintSnapshot := fmt.Fprintf(w, "[%s]\n", dc.data[item.Name].Site.String()); errPrintSnapshot != nil {
+// 			return errPrintSnapshot
+// 		}
+
+// 		if _, errPrintEmptyLine := fmt.Fprintln(w); errPrintEmptyLine != nil {
+// 			return errPrintEmptyLine
+// 		}
+// 	}
+
+// 	return nil
+// }
+
 func (dc *DataCenter) Snapshot(w io.Writer) error {
 	dc.mu.RLock()
 	defer dc.mu.RUnlock()
 
-	// Stable ordering of sites
+	// Gather and sort sites for stable ordering
 	sites := make([]site.Site, 0, len(dc.data))
-
 	for _, dcSite := range dc.data {
 		sites = append(sites, dcSite.Site)
 	}
 
-	// slices.Sort(keys)
+	// Sort stably by site name/string representation
+	slices.SortFunc(
+		sites,
+		func(a, b site.Site) int {
+			return cmp.Compare(a.String(), b.String())
+		},
+	)
 
 	for _, item := range sites {
-		if _, errPrintSite := fmt.Fprintf(w, "[%s]\n", item.String()); errPrintSite != nil {
+		if _, errPrintSite := fmt.Fprintf(w, "[Site: %s]\n", item.String()); errPrintSite != nil {
 			return errPrintSite
 		}
 
-		if _, errPrintSnapshot := fmt.Fprintf(w, "[%s]\n", dc.data[item.Name].Site.String()); errPrintSnapshot != nil {
-			return errPrintSnapshot
-		}
-
-		if _, errPrintEmptyLine := fmt.Fprintln(w); errPrintEmptyLine != nil {
-			return errPrintEmptyLine
+		dcSite := dc.data[item.Name]
+		if errPrinRegistry := dcSite.Data.Snapshot(w); errPrinRegistry != nil {
+			return errPrinRegistry
 		}
 	}
 

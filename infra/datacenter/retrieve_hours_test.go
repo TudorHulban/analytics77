@@ -42,7 +42,7 @@ func TestCurrentDayHoursWithData(t *testing.T) {
 		Browser:         analytics.Brave,
 		OperatingSystem: analytics.Linux,
 
-		TimestampUNIX: offsets.GetHourInOffsetAsUTC(
+		TimestampUTC: offsets.GetHourInOffsetAsUTC(
 			localTime,
 			localTime.Hour(),
 			int(offsetsROU.OffsetUTCHours),
@@ -87,7 +87,7 @@ func TestCurrentDayHoursWithData(t *testing.T) {
 		Browser:         analytics.Brave,
 		OperatingSystem: analytics.Linux,
 
-		TimestampUNIX: offsets.GetHourInOffsetAsUTC(oneHourBefore, oneHourBefore.Hour(), int(offsetsROU.OffsetUTCHours)),
+		TimestampUTC: offsets.GetHourInOffsetAsUTC(oneHourBefore, oneHourBefore.Hour(), int(offsetsROU.OffsetUTCHours)),
 
 		IsPrivateIP: true,
 	}

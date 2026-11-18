@@ -37,7 +37,7 @@ func TestPreviousHourAcrossAprilToMay(t *testing.T) {
 		Browser:         analytics.Brave,
 		OperatingSystem: analytics.Linux,
 
-		TimestampUNIX: may1.Unix(),
+		TimestampUTC: may1.Unix(),
 
 		IsPrivateIP: true,
 	}
@@ -50,7 +50,7 @@ func TestPreviousHourAcrossAprilToMay(t *testing.T) {
 		Browser:         analytics.Brave,
 		OperatingSystem: analytics.Linux,
 
-		TimestampUNIX: april30.Unix(),
+		TimestampUTC: april30.Unix(),
 
 		IsPrivateIP: true,
 	}

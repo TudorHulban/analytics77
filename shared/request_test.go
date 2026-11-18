@@ -108,7 +108,7 @@ func TestRequest_AsParamsAddEvent(t *testing.T) {
 
 				require.EqualValues(t,
 					1717500000,
-					res.TimestampUNIX,
+					res.TimestampUTC,
 					"timestamp mismtch",
 				)
 			},

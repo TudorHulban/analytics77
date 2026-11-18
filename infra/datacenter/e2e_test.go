@@ -33,8 +33,8 @@ func TestDataCenter(t *testing.T) {
 		Browser:         analytics.Brave,
 		OperatingSystem: analytics.Linux,
 
-		TimestampUNIX: localTime.Unix(),
-		IsPrivateIP:   true,
+		TimestampUTC: localTime.Unix(),
+		IsPrivateIP:  true,
 	}
 
 	require.Empty(t, datacenter.AddEvents(&req1))
@@ -143,8 +143,8 @@ func TestDataCenter(t *testing.T) {
 		Browser:         analytics.Brave,
 		OperatingSystem: analytics.Android,
 
-		TimestampUNIX: localTime.Unix(),
-		IsPrivateIP:   true,
+		TimestampUTC: localTime.Unix(),
+		IsPrivateIP:  true,
 	}
 
 	req3 := shared.ParamsAddEvent{
@@ -154,8 +154,8 @@ func TestDataCenter(t *testing.T) {
 		Browser:         analytics.Chrome,
 		OperatingSystem: analytics.Android,
 
-		TimestampUNIX: localTime.Unix(),
-		IsPrivateIP:   true,
+		TimestampUTC: localTime.Unix(),
+		IsPrivateIP:  true,
 	}
 
 	require.Empty(t, datacenter.AddEvents(&req2, &req3))

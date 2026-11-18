@@ -1,7 +1,6 @@
 package datacenter
 
 import (
-	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -29,8 +28,8 @@ func TestAddEvents_HappyPath(t *testing.T) {
 		Country: "ROU",
 		City:    "Iasi",
 
-		IP:            "82.77.237.37",
-		TimestampUNIX: now.Unix(),
+		IP:           "82.77.237.37",
+		TimestampUTC: now.Unix(),
 	}
 
 	require.Empty(t, datacenter.AddEvents(&req))
@@ -46,20 +45,20 @@ func TestAddEvents_HappyPath(t *testing.T) {
 }
 
 func TestAddEvents_OlderThanPreviousMonth_DoesNotPanic(t *testing.T) {
-	dc, errCr := NewDataCenter(fixtures.DefaultLocationIANA)
+	datacenter, errCr := NewDataCenter(fixtures.DefaultLocationIANA)
 	require.NoError(t, errCr)
-	require.NotNil(t, dc)
+	require.NotNil(t, datacenter)
 
 	req := shared.ParamsAddEvent{
-		SiteKey:       "localhost",
-		IP:            "127.0.0.1",
-		TimestampUNIX: 0, // 1970 — older than any retained window
-		IsPrivateIP:   true,
+		SiteKey:      "localhost",
+		IP:           "127.0.0.1",
+		TimestampUTC: 0, // 1970 — older than any retained window
+		IsPrivateIP:  true,
 	}
 
 	require.NotPanics(t,
 		func() {
-			dc.AddEvents(&req)
+			datacenter.AddEvents(&req)
 		},
 	)
 }
@@ -70,7 +69,7 @@ func TestAddEvents_AcrossBoundaries(t *testing.T) {
 		SiteLocation: fixtures.DefaultLocationIANA,
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
 
 	tests := []struct {
 		producedAtUTC time.Time
@@ -80,48 +79,48 @@ func TestAddEvents_AcrossBoundaries(t *testing.T) {
 		utcExpectedHour   int8
 		expectedLastMonth bool
 	}{
-		// {
-		// 	description: "1.Previous hour inside same day",
-		// 	producedAtUTC: time.Date(
-		// 		now.Year(),
-		// 		now.Month(),
-		// 		now.Day(),
-		// 		now.Hour()-1, // UTC previous hour
-		// 		0, 0, 0,
-		// 		time.UTC,
-		// 	),
+		{
+			description: "1.Previous hour inside same day",
+			producedAtUTC: time.Date(
+				now.Year(),
+				now.Month(),
+				now.Day(),
+				now.Hour()-1, // UTC previous hour
+				0, 0, 0,
+				time.UTC,
+			),
 
-		// 	utcExpectedDay:  int8(now.Day()),
-		// 	utcExpectedHour: int8(now.Hour()) - 1,
-		// },
-		// {
-		// 	description: "2.Midnight hour",
-		// 	producedAtUTC: time.Date(
-		// 		now.Year(),
-		// 		now.Month(),
-		// 		now.Day(),
-		// 		0,
-		// 		30, 0, 0, // 00:30 UTC
-		// 		time.UTC,
-		// 	),
+			utcExpectedDay:  int8(now.Day()),
+			utcExpectedHour: int8(now.Hour()) - 1,
+		},
+		{
+			description: "2.Midnight hour",
+			producedAtUTC: time.Date(
+				now.Year(),
+				now.Month(),
+				now.Day(),
+				0,
+				30, 0, 0, // 00:30 UTC
+				time.UTC,
+			),
 
-		// 	utcExpectedDay:  int8(now.Day()),
-		// 	utcExpectedHour: 0,
-		// },
-		// {
-		// 	description: "3.Previous hour before midnight (day → day-1)",
-		// 	producedAtUTC: time.Date(
-		// 		now.Year(),
-		// 		now.Month(),
-		// 		now.Day()-1,
-		// 		23,
-		// 		30, 0, 0, // 23:30 UTC
-		// 		time.UTC,
-		// 	),
+			utcExpectedDay:  int8(now.Day()),
+			utcExpectedHour: 0,
+		},
+		{
+			description: "3.Previous hour before midnight (day → day-1)",
+			producedAtUTC: time.Date(
+				now.Year(),
+				now.Month(),
+				now.Day()-1,
+				23,
+				30, 0, 0, // 23:30 UTC
+				time.UTC,
+			),
 
-		// 	utcExpectedDay:  int8(now.Day()) - 1,
-		// 	utcExpectedHour: 23,
-		// },
+			utcExpectedDay:  int8(now.Day()) - 1,
+			utcExpectedHour: 23,
+		},
 		{
 			description: "4.Previous hour before month boundary (day=1 → day=31)",
 			producedAtUTC: time.Date(
@@ -131,7 +130,8 @@ func TestAddEvents_AcrossBoundaries(t *testing.T) {
 				0,
 				30, 0, 0, // 00:30 UTC
 				time.UTC,
-			),
+			).
+				Add(-1 * time.Hour),
 
 			utcExpectedDay: int8(time.Date(
 				now.Year(),
@@ -139,7 +139,8 @@ func TestAddEvents_AcrossBoundaries(t *testing.T) {
 				1,
 				0,
 				0, 0, 0,
-				time.UTC).Day(),
+				time.UTC).
+				AddDate(0, 0, -1).Day(),
 			), //nolint:revive
 
 			utcExpectedHour:   23,
@@ -162,8 +163,8 @@ func TestAddEvents_AcrossBoundaries(t *testing.T) {
 					Browser:         analytics.Brave,
 					OperatingSystem: analytics.Linux,
 
-					TimestampUNIX: tc.producedAtUTC.Unix(),
-					IsPrivateIP:   true,
+					TimestampUTC: tc.producedAtUTC.Unix(),
+					IsPrivateIP:  true,
 				}
 
 				require.Empty(t, datacenter.AddEvents(&req))
@@ -173,7 +174,10 @@ func TestAddEvents_AcrossBoundaries(t *testing.T) {
 				require.NotNil(t, registry)
 				require.NotZero(t, registry.CalendarMonthCurrentNumber.Load())
 
-				fmt.Println(datacenter.Snapshot(os.Stdout))
+				// fmt.Println(
+				// 	"datacenter snapshot:",
+				// 	datacenter.Snapshot(os.Stdout),
+				// )
 
 				var (
 					days   [31]int8

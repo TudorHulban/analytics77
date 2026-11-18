@@ -11,8 +11,12 @@ type SiteName string
 
 // Site is based on primitives so no need to pass by reference externally.
 type Site struct {
-	Name         SiteName `json:"name"`
-	SiteLocation string   `json:"location_iana"` // IANA Location.
+	Name SiteName `json:"name"`
+
+	// IANA Location.
+	// Should be used only at displaying records.
+	// For adding records UTC time should be used in tests.
+	SiteLocation string `json:"location_iana"`
 }
 
 func NewSite(rawSite map[string]any) (*Site, int8, error) {
@@ -101,7 +105,7 @@ func (s Site) String() string {
 	}
 
 	return hxhelpers.Sprintf(
-		"%s (%s)",
+		"Name: %s IANA Location: %s",
 
 		string(s.Name),
 		s.SiteLocation,
