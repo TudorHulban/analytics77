@@ -105,7 +105,7 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 					SiteLocation: dc.defaultIANALocation,
 				},
 				Data: analytics.NewRegistry(
-					int8(nowUTC.Month()),
+					int8(nowUTC.Month()), //nolint:gosec
 				),
 			}
 

@@ -17,16 +17,13 @@ func TestSnapshot(t *testing.T) {
 	numSites := 3
 	// recordsPerSite := 5
 
-	sites := []site.Site{}
+	sites := make([]site.Site, numSites)
 
 	for ix := range numSites {
-		sites = append(
-			sites,
-			site.Site{
-				Name:         site.SiteName(fmt.Sprintf("site-%d", ix)),
-				SiteLocation: fixtures.DefaultLocationIANA,
-			},
-		)
+		sites[ix] = site.Site{
+			Name:         site.SiteName(fmt.Sprintf("site-%d", ix)),
+			SiteLocation: fixtures.DefaultLocationIANA,
+		}
 	}
 
 	datacenter, errCrDatacenter := NewDataCenter(
@@ -118,7 +115,7 @@ func TestGetPreviousHourRecordsPerSite_CrossesMonthBoundary(t *testing.T) {
 
 	// At March 1st 00:30, "the previous hour" is Feb 29 23:xx -> the data
 	// that belongs to it lives in GetPreviousMonth(), not GetCurrentMonth().
-	records := datacenter.previousHourRecordsPerSiteAt(nowMarchUTC)
+	records := datacenter.PreviousHourRecordsPerSiteAt(nowMarchUTC)
 
 	require.Len(t, records, 1)
 	require.EqualValues(t,

@@ -71,7 +71,7 @@ func (r ResponseRecordsPerSite) String() string {
 	return builder.String()
 }
 
-func (dc *DataCenter) previousHourRecordsPerSiteAt(nowUTC time.Time) ResponseRecordsPerSite {
+func (dc *DataCenter) PreviousHourRecordsPerSiteAt(nowUTC time.Time) ResponseRecordsPerSite {
 	previousHourUTC := nowUTC.Add(-1 * time.Hour)
 
 	dc.mu.RLock()
@@ -106,7 +106,7 @@ func (dc *DataCenter) previousHourRecordsPerSiteAt(nowUTC time.Time) ResponseRec
 // hour immediately preceding the current one.
 func (dc *DataCenter) GetPreviousHourRecordsPerSite() ResponseRecordsPerSite {
 	return dc.
-		previousHourRecordsPerSiteAt(
+		PreviousHourRecordsPerSiteAt(
 			time.Now(),
 		)
 }

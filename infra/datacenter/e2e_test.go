@@ -24,7 +24,7 @@ func TestDataCenter(t *testing.T) {
 		SiteLocation: fixtures.DefaultLocationIANA,
 	}
 
-	localTime := time.Now()
+	nowUTC := time.Now().UTC()
 
 	req1 := shared.ParamsAddEvent{
 		SiteKey: string(site1Test.Name),
@@ -33,7 +33,7 @@ func TestDataCenter(t *testing.T) {
 		Browser:         analytics.Brave,
 		OperatingSystem: analytics.Linux,
 
-		TimestampUTC: localTime.Unix(),
+		TimestampUTC: nowUTC.Unix(),
 		IsPrivateIP:  true,
 	}
 
@@ -76,11 +76,12 @@ func TestDataCenter(t *testing.T) {
 
 	hoursWithData, howMany := dcSite1.
 		Data.
-		CurrentMonthHoursWithData(int8(localTime.Day()))
+		CurrentMonthHoursWithData(int8(nowUTC.Day()))
 	require.EqualValues(t, 1, howMany)
 	require.EqualValues(t,
-		localTime.Hour(),
+		nowUTC.Hour(),
 		hoursWithData[0],
+		"hours mismatch",
 	)
 
 	require.EqualValues(t,
@@ -143,7 +144,7 @@ func TestDataCenter(t *testing.T) {
 		Browser:         analytics.Brave,
 		OperatingSystem: analytics.Android,
 
-		TimestampUTC: localTime.Unix(),
+		TimestampUTC: nowUTC.Unix(),
 		IsPrivateIP:  true,
 	}
 
@@ -154,7 +155,7 @@ func TestDataCenter(t *testing.T) {
 		Browser:         analytics.Chrome,
 		OperatingSystem: analytics.Android,
 
-		TimestampUTC: localTime.Unix(),
+		TimestampUTC: nowUTC.Unix(),
 		IsPrivateIP:  true,
 	}
 

@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/domain/analytics"
-	"github.com/tudorhulban/analytics77/domain/offsets"
 	"github.com/tudorhulban/analytics77/domain/site"
 	"github.com/tudorhulban/analytics77/fixtures"
 	"github.com/tudorhulban/analytics77/shared"
@@ -20,20 +19,11 @@ func TestPreviousHourRecords(t *testing.T) {
 
 	siteName := "localhost"
 
-	localTime := time.Now()
-	_, offsetSeconds := localTime.Zone()
-
-	utcOffsetHours := offsetSeconds / 3600
-
-	hourLocalAsUTC := offsets.GetHourInOffsetAsUTC(
-		localTime,
-		localTime.Hour(),
-		utcOffsetHours,
-	)
+	nowUTC := time.Now().UTC()
 
 	t.Logf(
 		"hourLocalAsUTC: %s",
-		time.Unix(hourLocalAsUTC, 0).UTC().Format("2006-01-02 15:04:05"),
+		time.Unix(nowUTC.Unix(), 0).UTC().Format("2006-01-02 15:04:05"),
 	)
 
 	req1 := shared.ParamsAddEvent{
@@ -43,7 +33,7 @@ func TestPreviousHourRecords(t *testing.T) {
 		Browser:         analytics.Brave,
 		OperatingSystem: analytics.Linux,
 
-		TimestampUTC: hourLocalAsUTC,
+		TimestampUTC: nowUTC.Unix(),
 		IsPrivateIP:  true,
 	}
 
@@ -52,7 +42,7 @@ func TestPreviousHourRecords(t *testing.T) {
 	registryBefore, exists := datacenter.GetRegistry(site.SiteName(siteName))
 	require.True(t, exists)
 	require.EqualValues(t,
-		localTime.Month(),
+		nowUTC.Month(),
 		registryBefore.CalendarMonthCurrentNumber.Load(),
 	)
 
@@ -70,7 +60,7 @@ func TestPreviousHourRecords(t *testing.T) {
 		Browser:         analytics.Brave,
 		OperatingSystem: analytics.Linux,
 
-		TimestampUTC: hourLocalAsUTC - 1*3600,
+		TimestampUTC: nowUTC.Unix() - 1*3600,
 		IsPrivateIP:  true,
 	}
 
@@ -79,16 +69,16 @@ func TestPreviousHourRecords(t *testing.T) {
 	registryAfter, exists := datacenter.GetRegistry(site.SiteName(siteName))
 	require.True(t, exists)
 
-	hours, howMany := registryAfter.CurrentDayHoursWithData(localTime.UTC())
+	hours, howMany := registryAfter.CurrentDayHoursWithData(nowUTC.UTC())
 	require.EqualValues(t, 2, howMany)
 	require.Empty(t,
 		hxhelpers.NotInSliceSource(
 			hours[:],
-			int8(localTime.Hour()),
-			int8(localTime.Hour())),
+			int8(nowUTC.Hour()),
+			int8(nowUTC.Hour())),
 	)
 
-	recordsPreviousHourAfter := datacenter.GetPreviousHourRecordsPerSite()
+	recordsPreviousHourAfter := datacenter.PreviousHourRecordsPerSiteAt(nowUTC.UTC())
 	require.Len(t, recordsPreviousHourAfter, 1)
 	require.EqualValues(t,
 		1,
