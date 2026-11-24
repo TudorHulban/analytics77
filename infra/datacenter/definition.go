@@ -9,6 +9,7 @@ import (
 
 	"github.com/tudorhulban/analytics77/domain/analytics"
 	"github.com/tudorhulban/analytics77/domain/site"
+	"github.com/tudorhulban/analytics77/fixtures"
 	"github.com/tudorhulban/hxerrors"
 )
 
@@ -23,16 +24,37 @@ type DataCenter struct {
 
 	// used in case of automatic site creation.
 	defaultIANALocation string
-	mu                  sync.RWMutex
+	defaultTimeNow      func() time.Time
+
+	mu sync.RWMutex
 }
 
-func NewDataCenter(defaultIANALocation string, sites ...site.Site) (*DataCenter, error) {
-	result := DataCenter{
-		data:                map[site.SiteName]*DCSite{},
-		defaultIANALocation: defaultIANALocation,
+type ParamsNewDataCenter struct {
+	DefaultIANALocation string
+	DefaultTimeNow      func() time.Time
+
+	Sites []site.Site
+}
+
+func NewDataCenter(params ParamsNewDataCenter) (*DataCenter, error) {
+	if len(params.DefaultIANALocation) == 0 {
+		params.DefaultIANALocation = fixtures.DefaultLocationIANA
 	}
 
-	for _, item := range sites {
+	if params.DefaultTimeNow == nil {
+		params.DefaultTimeNow = func() time.Time {
+			return time.Now().UTC()
+		}
+	}
+
+	result := DataCenter{
+		data: map[site.SiteName]*DCSite{},
+
+		defaultIANALocation: params.DefaultIANALocation,
+		defaultTimeNow:      params.DefaultTimeNow,
+	}
+
+	for _, item := range params.Sites {
 		if errAdd := result.AddSite(item); errAdd != nil {
 			return nil,
 				errAdd
@@ -57,7 +79,7 @@ func (dc *DataCenter) AddSite(item site.Site) error {
 		dc.data[item.Name] = &DCSite{
 			Site: item,
 			Data: analytics.NewRegistry(
-				int8(time.Now().Month()), //nolint:gosec
+				int8(dc.defaultTimeNow().UTC().Month()), //nolint:gosec
 			),
 		}
 	}

@@ -89,8 +89,6 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 	//
 	resolvedMetrics := make([]*analytics.MetricActive, len(indexesNoError))
 
-	nowUTC := time.Now().UTC()
-
 	dc.mu.Lock()
 	for outIx, eventIndex := range indexesNoError {
 		event := events[eventIndex]
@@ -105,7 +103,7 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 					SiteLocation: dc.defaultIANALocation,
 				},
 				Data: analytics.NewRegistry(
-					int8(nowUTC.Month()), //nolint:gosec
+					int8(dc.defaultTimeNow().Month()), //nolint:gosec
 				),
 			}
 
@@ -134,7 +132,7 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 				Data.
 				GetPreviousSlot()[calendar.CalendarDayToIndex(evCalendarDay)][evHour]
 
-		case evCalendarMonth-1 == monthNumber:
+		case evCalendarMonth-1 == monthNumber || (evCalendarMonth == 1 && monthNumber == 12):
 			// Event belongs to next calendar month → rollover required.
 			dcSite.Data.Advance()
 

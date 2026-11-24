@@ -19,11 +19,15 @@ func TestCurrentDayHoursWithData(t *testing.T) {
 		OffsetUTCHours: +3,
 	}
 
-	dc, errCr := NewDataCenter(fixtures.DefaultLocationIANA)
+	datacenter, errCr := NewDataCenter(
+		ParamsNewDataCenter{
+			DefaultIANALocation: fixtures.DefaultLocationIANA,
+		},
+	)
 	require.NoError(t, errCr)
-	require.NotNil(t, dc)
+	require.NotNil(t, datacenter)
 
-	hoursWithDataBefore, howManyBefore := dc.CurrentDayHoursWithData(&offsetsROU)
+	hoursWithDataBefore, howManyBefore := datacenter.CurrentDayHoursWithData(&offsetsROU)
 	require.Zero(t, howManyBefore)
 	require.Zero(t, hoursWithDataBefore)
 
@@ -32,7 +36,7 @@ func TestCurrentDayHoursWithData(t *testing.T) {
 	}
 	localTime := time.Now()
 
-	recordsPerSiteBefore := dc.GetPreviousHourRecordsPerSite()
+	recordsPerSiteBefore := datacenter.GetPreviousHourRecordsPerSite()
 	require.Empty(t, recordsPerSiteBefore)
 
 	request1 := shared.ParamsAddEvent{
@@ -51,9 +55,9 @@ func TestCurrentDayHoursWithData(t *testing.T) {
 		IsPrivateIP: true,
 	}
 
-	require.Empty(t, dc.AddEvents(&request1))
+	require.Empty(t, datacenter.AddEvents(&request1))
 
-	hoursWithDataAfter1, howManyAfter1 := dc.CurrentDayHoursWithData(&offsetsROU)
+	hoursWithDataAfter1, howManyAfter1 := datacenter.CurrentDayHoursWithData(&offsetsROU)
 	require.EqualValues(t,
 		1,
 		howManyAfter1,
@@ -68,7 +72,7 @@ func TestCurrentDayHoursWithData(t *testing.T) {
 		hoursWithDataAfter1[0],
 	)
 
-	recordsPerSiteAfter1 := dc.GetPreviousHourRecordsPerSite()
+	recordsPerSiteAfter1 := datacenter.GetPreviousHourRecordsPerSite()
 	require.Len(t,
 		recordsPerSiteAfter1,
 		1,
@@ -92,9 +96,9 @@ func TestCurrentDayHoursWithData(t *testing.T) {
 		IsPrivateIP: true,
 	}
 
-	require.Empty(t, dc.AddEvents(&request2))
+	require.Empty(t, datacenter.AddEvents(&request2))
 
-	hoursWithDataAfter2, howManyAfter2 := dc.CurrentDayHoursWithData(&offsetsROU)
+	hoursWithDataAfter2, howManyAfter2 := datacenter.CurrentDayHoursWithData(&offsetsROU)
 	require.EqualValues(t,
 		2,
 		howManyAfter2,

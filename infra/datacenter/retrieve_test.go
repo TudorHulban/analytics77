@@ -26,11 +26,14 @@ func TestSnapshot(t *testing.T) {
 		}
 	}
 
-	datacenter, errCrDatacenter := NewDataCenter(
-		fixtures.DefaultLocationIANA,
-		sites...,
+	datacenter, errCr := NewDataCenter(
+		ParamsNewDataCenter{
+			DefaultIANALocation: fixtures.DefaultLocationIANA,
+
+			Sites: sites,
+		},
 	)
-	require.NoError(t, errCrDatacenter)
+	require.NoError(t, errCr)
 
 	// Execute Snapshot
 	var buf bytes.Buffer
@@ -52,11 +55,7 @@ func TestSnapshot(t *testing.T) {
 }
 
 func TestGetPreviousHourRecordsPerSite_CrossesMonthBoundary(t *testing.T) {
-	datacenter, errCr := NewDataCenter(fixtures.DefaultLocationIANA)
-	require.NoError(t, errCr)
-	require.NotNil(t, datacenter)
-
-	siteName := "localhost"
+	siteName := t.Name()
 
 	// 2024 is a leap year: Feb has 29 days. If the code just swapped a
 	// hardcoded "31" for a hardcoded "28/29/30", this would still fail.
@@ -67,6 +66,18 @@ func TestGetPreviousHourRecordsPerSite_CrossesMonthBoundary(t *testing.T) {
 		23, 15, 0, 0,
 		time.UTC,
 	)
+
+	datacenter, errCr := NewDataCenter(
+		ParamsNewDataCenter{
+			DefaultIANALocation: fixtures.DefaultLocationIANA,
+			DefaultTimeNow: func() time.Time {
+				return lastHourFebUTC
+			},
+		},
+	)
+	require.NoError(t, errCr)
+	require.NotNil(t, datacenter)
+
 	nowMarchUTC := time.Date(
 		2024,
 		time.March,

@@ -12,8 +12,12 @@ import (
 )
 
 func TestDataCenter(t *testing.T) {
-	datacenter, errCrDatacenter := NewDataCenter(fixtures.DefaultLocationIANA)
-	require.NoError(t, errCrDatacenter)
+	datacenter, errCr := NewDataCenter(
+		ParamsNewDataCenter{
+			DefaultIANALocation: fixtures.DefaultLocationIANA,
+		},
+	)
+	require.NoError(t, errCr)
 	require.NotNil(t, datacenter)
 
 	require.Empty(t, datacenter.AddEvents())

@@ -8,8 +8,8 @@ import (
 type MonthActive [31]DayActive
 
 func (m *MonthActive) IsZero() bool {
-	for i := range m {
-		if !m[i].IsZero() {
+	for ixDay := range m {
+		if !m[ixDay].IsZero() {
 			return false // Found data in one of the days
 		}
 	}

@@ -118,7 +118,11 @@ func TestTransport_TCP(t *testing.T) {
 				listener, errListener := net.Listen("tcp", "127.0.0.1:0") //nolint:noctx
 				require.NoError(t, errListener)
 
-				dc, errCr := datacenter.NewDataCenter(fixtures.DefaultLocationIANA)
+				datacenter, errCr := datacenter.NewDataCenter(
+					datacenter.ParamsNewDataCenter{
+						DefaultIANALocation: fixtures.DefaultLocationIANA,
+					},
+				)
 				require.NoError(t, errCr)
 
 				transportTCP, errCrTransport := NewTransportTCP(
@@ -126,7 +130,7 @@ func TestTransport_TCP(t *testing.T) {
 					&PiersNewTransportTCP{
 						ServiceLogging: serviceLogging,
 						ServiceGeo:     serviceGeo,
-						Datacenter:     dc,
+						Datacenter:     datacenter,
 					},
 				)
 				require.NoError(t, errCrTransport)

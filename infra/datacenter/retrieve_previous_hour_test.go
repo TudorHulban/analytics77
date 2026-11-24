@@ -13,7 +13,11 @@ import (
 )
 
 func TestPreviousHourRecords(t *testing.T) {
-	datacenter, errCr := NewDataCenter(fixtures.DefaultLocationIANA)
+	datacenter, errCr := NewDataCenter(
+		ParamsNewDataCenter{
+			DefaultIANALocation: fixtures.DefaultLocationIANA,
+		},
+	)
 	require.NoError(t, errCr)
 	require.NotNil(t, datacenter)
 

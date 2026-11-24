@@ -19,7 +19,11 @@ func TestAddEvents_HappyPath(t *testing.T) {
 
 	siteName := "example.com"
 
-	datacenter, errCr := NewDataCenter(fixtures.DefaultLocationIANA)
+	datacenter, errCr := NewDataCenter(
+		ParamsNewDataCenter{
+			DefaultIANALocation: fixtures.DefaultLocationIANA,
+		},
+	)
 	require.NoError(t, errCr)
 	require.NotNil(t, datacenter)
 
@@ -45,7 +49,11 @@ func TestAddEvents_HappyPath(t *testing.T) {
 }
 
 func TestAddEvents_OlderThanPreviousMonth_DoesNotPanic(t *testing.T) {
-	datacenter, errCr := NewDataCenter(fixtures.DefaultLocationIANA)
+	datacenter, errCr := NewDataCenter(
+		ParamsNewDataCenter{
+			DefaultIANALocation: fixtures.DefaultLocationIANA,
+		},
+	)
 	require.NoError(t, errCr)
 	require.NotNil(t, datacenter)
 
@@ -153,7 +161,11 @@ func TestAddEvents_AcrossBoundaries(t *testing.T) {
 			tc.description,
 
 			func(t *testing.T) {
-				datacenter, errCr := NewDataCenter(fixtures.DefaultLocationIANA)
+				datacenter, errCr := NewDataCenter(
+					ParamsNewDataCenter{
+						DefaultIANALocation: fixtures.DefaultLocationIANA,
+					},
+				)
 				require.NoError(t, errCr)
 				require.NotNil(t, datacenter)
 
