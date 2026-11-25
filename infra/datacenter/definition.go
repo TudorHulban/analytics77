@@ -23,8 +23,8 @@ type DataCenter struct {
 	data map[site.SiteName]*DCSite
 
 	// used in case of automatic site creation.
-	defaultIANALocation string
 	defaultTimeNow      func() time.Time
+	defaultIANALocation string
 
 	mu sync.RWMutex
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/tudorhulban/analytics77/domain/calendar"
 	"github.com/tudorhulban/analytics77/domain/site"
 	"github.com/tudorhulban/analytics77/services/sgeo"
+	"github.com/tudorhulban/hxhelpers"
 
 	"github.com/tudorhulban/analytics77/shared"
 )
@@ -111,7 +112,12 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 		}
 
 		// TODO: test case for new site.
-		evTime := time.Unix(event.TimestampUTC, 0).UTC()
+		evTime := hxhelpers.Ternary(
+			event.TimestampUTC == 0,
+
+			time.Now().UTC(),
+			time.Unix(event.TimestampUTC, 0).UTC(),
+		)
 
 		evCalendarMonth := int8(evTime.Month()) //nolint:gosec
 		evCalendarDay := int8(evTime.Day())     //nolint:gosec

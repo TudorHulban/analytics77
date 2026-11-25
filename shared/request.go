@@ -21,7 +21,7 @@ type Request struct {
 	Host       string
 	Method     string
 
-	TimestampUNIX int64
+	TimestampUTC int64
 }
 
 func (req Request) AsParamsAddEvent(geo *sgeo.ServiceGeo) (*ParamsAddEvent, error) {
@@ -112,7 +112,7 @@ func (req Request) AsParamsAddEvent(geo *sgeo.ServiceGeo) (*ParamsAddEvent, erro
 			Browser: browser,
 
 			ASNOrganization: geoInfo.ASN.Organization,
-			TimestampUTC:    req.TimestampUNIX,
+			TimestampUTC:    req.TimestampUTC,
 			IsPrivateIP:     geoInfo.IsPrivate,
 		},
 		nil

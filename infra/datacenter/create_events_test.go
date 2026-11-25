@@ -17,7 +17,7 @@ import (
 func TestAddEvents_HappyPath(t *testing.T) {
 	now := time.Now()
 
-	siteName := "example.com"
+	siteName := t.Name()
 
 	datacenter, errCr := NewDataCenter(
 		ParamsNewDataCenter{
@@ -44,6 +44,43 @@ func TestAddEvents_HappyPath(t *testing.T) {
 	require.True(t, exists)
 	require.NotNil(t, dcSite)
 	require.NotNil(t, dcSite.Data)
+
+	dcSite.Data.Snapshot(os.Stdout)
+}
+
+func TestAddEvent_Without_Timestamp(t *testing.T) {
+	siteName := t.Name()
+
+	datacenter, errCr := NewDataCenter(
+		ParamsNewDataCenter{
+			DefaultIANALocation: fixtures.DefaultLocationIANA,
+		},
+	)
+	require.NoError(t, errCr)
+	require.NotNil(t, datacenter)
+
+	request := shared.ParamsAddEvent{
+		SiteKey: siteName,
+		Country: "ROU",
+		City:    "Iasi",
+
+		IP: "82.77.237.37",
+	}
+
+	require.Empty(t, datacenter.AddEvents(&request))
+	require.Len(t, datacenter.data, 1)
+	require.EqualValues(t,
+		datacenter.GetSiteNames()[0],
+		siteName,
+	)
+
+	dcSite, exists := datacenter.data[site.SiteName(siteName)]
+	require.True(t, exists)
+	require.NotNil(t, dcSite)
+	require.NotNil(t, dcSite.Data)
+	require.False(t,
+		dcSite.Data.GetActiveSlot().IsZero(),
+	)
 
 	dcSite.Data.Snapshot(os.Stdout)
 }

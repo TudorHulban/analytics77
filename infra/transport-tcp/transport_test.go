@@ -71,12 +71,12 @@ func TestTransport_TCP(t *testing.T) {
 			description: "1. Send single request",
 			inputRequests: shared.Requests{
 				{
-					RemoteAddr:    "10.0.0.1",
-					Host:          "example.com",
-					Method:        http.MethodPost,
-					URL:           dummyURL,
-					Header:        map[string][]string{"Content-Type": {"application/json"}},
-					TimestampUNIX: time.Now().Unix(),
+					RemoteAddr:   "10.0.0.1",
+					Host:         "example.com",
+					Method:       http.MethodPost,
+					URL:          dummyURL,
+					Header:       map[string][]string{"Content-Type": {"application/json"}},
+					TimestampUTC: time.Now().Unix(),
 				},
 			},
 
@@ -88,18 +88,18 @@ func TestTransport_TCP(t *testing.T) {
 			description: "2. Send multiple requests in one batch",
 			inputRequests: shared.Requests{
 				{
-					RemoteAddr:    "10.0.0.2",
-					Host:          "api.com",
-					Method:        "GET",
-					URL:           dummyURL,
-					TimestampUNIX: time.Now().Unix(),
+					RemoteAddr:   "10.0.0.2",
+					Host:         "api.com",
+					Method:       "GET",
+					URL:          dummyURL,
+					TimestampUTC: time.Now().Unix(),
 				},
 				{
-					RemoteAddr:    "10.0.0.3",
-					Host:          "metrics.com",
-					Method:        "PUT",
-					URL:           dummyURL,
-					TimestampUNIX: time.Now().Unix(),
+					RemoteAddr:   "10.0.0.3",
+					Host:         "metrics.com",
+					Method:       "PUT",
+					URL:          dummyURL,
+					TimestampUTC: time.Now().Unix(),
 				},
 			},
 

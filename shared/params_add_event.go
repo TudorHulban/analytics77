@@ -25,7 +25,7 @@ type ParamsAddEvent struct {
 	IP              string
 	ASNOrganization string
 
-	TimestampUTC int64
+	TimestampUTC int64 // if ingestion time missing processing time would be used.
 
 	Browser         analytics.Browser
 	OperatingSystem analytics.OS

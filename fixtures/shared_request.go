@@ -26,7 +26,7 @@ func NewRequest(withHost, withIP string) shared.Request {
 			"X-Real-IP":       {withIP},
 		},
 
-		TimestampUNIX: time.Now().Unix(),
+		TimestampUTC: time.Now().Unix(),
 	}
 }
 

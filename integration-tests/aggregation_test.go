@@ -29,7 +29,7 @@ func TestPreviousHourAcrossAprilToMay(t *testing.T) {
 		time.UTC,
 	)
 
-	datacenter, errCr := datacenter.NewDataCenter(
+	dataCenter, errCr := datacenter.NewDataCenter(
 		datacenter.ParamsNewDataCenter{
 			DefaultIANALocation: fixtures.DefaultLocationIANA,
 			DefaultTimeNow: func() time.Time {
@@ -38,7 +38,7 @@ func TestPreviousHourAcrossAprilToMay(t *testing.T) {
 		},
 	)
 	require.NoError(t, errCr)
-	require.NotNil(t, datacenter)
+	require.NotNil(t, dataCenter)
 
 	// April 30, 23:30 UTC.
 	april30 := may1.Add(-1 * time.Hour)
@@ -57,7 +57,7 @@ func TestPreviousHourAcrossAprilToMay(t *testing.T) {
 		TimestampUTC: may1.Unix(),
 	}
 	require.Empty(t,
-		datacenter.AddEvents(&reqMay1),
+		dataCenter.AddEvents(&reqMay1),
 	)
 
 	// Insert April 30 event.
@@ -71,14 +71,14 @@ func TestPreviousHourAcrossAprilToMay(t *testing.T) {
 		TimestampUTC: april30.Unix(),
 	}
 	require.Empty(t,
-		datacenter.AddEvents(&reqApril30),
+		dataCenter.AddEvents(&reqApril30),
 	)
 
 	// verify seed results
 
-	datacenter.Snapshot(os.Stdout)
+	dataCenter.Snapshot(os.Stdout)
 
-	registry, exists := datacenter.GetRegistry(site.SiteName(siteName))
+	registry, exists := dataCenter.GetRegistry(site.SiteName(siteName))
 	require.True(t, exists)
 	require.NotNil(t, registry)
 

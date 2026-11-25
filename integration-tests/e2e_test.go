@@ -75,7 +75,7 @@ func TestAnalytics_E2E(t *testing.T) {
 					URL:        dummyURL,
 					Header:     map[string][]string{"Content-Type": {"application/json"}},
 
-					TimestampUNIX: localTime.Unix(),
+					TimestampUTC: localTime.Unix(),
 				},
 			},
 			expectedRecordCount: 1,
@@ -90,7 +90,7 @@ func TestAnalytics_E2E(t *testing.T) {
 					Method:     "GET",
 					URL:        dummyURL,
 
-					TimestampUNIX: localTime.Unix(),
+					TimestampUTC: localTime.Unix(),
 				},
 				{
 					RemoteAddr: "82.77.237.39",
@@ -98,7 +98,7 @@ func TestAnalytics_E2E(t *testing.T) {
 					Method:     "PUT",
 					URL:        dummyURL,
 
-					TimestampUNIX: localTime.Unix(),
+					TimestampUTC: localTime.Unix(),
 				},
 			},
 			expectedRecordCount: 2,
