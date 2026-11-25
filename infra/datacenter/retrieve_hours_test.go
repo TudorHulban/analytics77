@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/domain/analytics"
-	"github.com/tudorhulban/analytics77/domain/offsets"
 	"github.com/tudorhulban/analytics77/domain/site"
 	"github.com/tudorhulban/analytics77/fixtures"
 
@@ -15,10 +14,6 @@ import (
 )
 
 func TestCurrentDayHoursWithData(t *testing.T) {
-	offsetsROU := offsets.TimestampOffsets{
-		OffsetUTCHours: +3,
-	}
-
 	datacenter, errCr := NewDataCenter(
 		ParamsNewDataCenter{
 			DefaultIANALocation: fixtures.DefaultLocationIANA,
@@ -27,13 +22,14 @@ func TestCurrentDayHoursWithData(t *testing.T) {
 	require.NoError(t, errCr)
 	require.NotNil(t, datacenter)
 
-	hoursWithDataBefore, howManyBefore := datacenter.CurrentDayHoursWithData(&offsetsROU)
+	hoursWithDataBefore, howManyBefore := datacenter.CurrentDayHoursWithData()
 	require.Zero(t, howManyBefore)
 	require.Zero(t, hoursWithDataBefore)
 
 	site1Test := site.Site{
 		Name: "xxxx - " + site.SiteName(t.Name()),
 	}
+
 	localTime := time.Now()
 
 	recordsPerSiteBefore := datacenter.GetPreviousHourRecordsPerSite()
@@ -46,18 +42,13 @@ func TestCurrentDayHoursWithData(t *testing.T) {
 		Browser:         analytics.Brave,
 		OperatingSystem: analytics.Linux,
 
-		TimestampUTC: offsets.GetHourInOffsetAsUTC(
-			localTime,
-			localTime.Hour(),
-			int(offsetsROU.OffsetUTCHours),
-		),
-
-		IsPrivateIP: true,
+		TimestampUTC: localTime.UTC().Unix(),
+		IsPrivateIP:  true,
 	}
 
 	require.Empty(t, datacenter.AddEvents(&request1))
 
-	hoursWithDataAfter1, howManyAfter1 := datacenter.CurrentDayHoursWithData(&offsetsROU)
+	hoursWithDataAfter1, howManyAfter1 := datacenter.CurrentDayHoursWithData()
 	require.EqualValues(t,
 		1,
 		howManyAfter1,
@@ -68,7 +59,7 @@ func TestCurrentDayHoursWithData(t *testing.T) {
 		"hoursWithDataAfter should be not zero in most cases",
 	)
 	require.EqualValues(t,
-		localTime.Hour()-int(offsetsROU.OffsetUTCHours),
+		localTime.Hour(),
 		hoursWithDataAfter1[0],
 	)
 
@@ -91,14 +82,13 @@ func TestCurrentDayHoursWithData(t *testing.T) {
 		Browser:         analytics.Brave,
 		OperatingSystem: analytics.Linux,
 
-		TimestampUTC: offsets.GetHourInOffsetAsUTC(oneHourBefore, oneHourBefore.Hour(), int(offsetsROU.OffsetUTCHours)),
-
-		IsPrivateIP: true,
+		TimestampUTC: localTime.UTC().Unix(),
+		IsPrivateIP:  true,
 	}
 
 	require.Empty(t, datacenter.AddEvents(&request2))
 
-	hoursWithDataAfter2, howManyAfter2 := datacenter.CurrentDayHoursWithData(&offsetsROU)
+	hoursWithDataAfter2, howManyAfter2 := datacenter.CurrentDayHoursWithData()
 	require.EqualValues(t,
 		2,
 		howManyAfter2,
@@ -109,7 +99,7 @@ func TestCurrentDayHoursWithData(t *testing.T) {
 		"hoursWithDataAfter should be not zero in most cases",
 	)
 	require.Empty(t,
-		hxhelpers.NotInSliceSource(hoursWithDataAfter2[:howManyAfter2], int8(oneHourBefore.Hour()-int(offsetsROU.OffsetUTCHours)), int8(localTime.Hour()-int(offsetsROU.OffsetUTCHours))),
+		hxhelpers.NotInSliceSource(hoursWithDataAfter2[:howManyAfter2], int8(oneHourBefore.Hour()), int8(localTime.Hour())),
 		hoursWithDataAfter2,
 	)
 }

@@ -10,7 +10,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/cmd"
-	"github.com/tudorhulban/analytics77/domain/offsets"
 	"github.com/tudorhulban/analytics77/fixtures"
 
 	"github.com/tudorhulban/analytics77/infra/datacenter"
@@ -24,11 +23,6 @@ import (
 
 func TestAnalytics_E2E(t *testing.T) {
 	localTime := time.Now()
-	_, offsetSeconds := localTime.Zone()
-
-	utcOffset := offsets.TimestampOffsets{
-		OffsetUTCHours: int64(offsetSeconds / 3600),
-	}
 
 	apiKey := os.Getenv(cmd.OSAPIGeolocation)
 
@@ -172,7 +166,7 @@ func TestAnalytics_E2E(t *testing.T) {
 
 				hoursWithData, noHours := transportTCP.
 					Datacenter.
-					CurrentDayHoursWithData(&utcOffset)
+					CurrentDayHoursWithData()
 
 				require.NotZero(t, noHours)
 				require.LessOrEqual(t, noHours, int8(2))

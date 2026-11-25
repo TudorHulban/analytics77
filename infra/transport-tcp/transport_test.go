@@ -12,7 +12,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/cmd"
-	"github.com/tudorhulban/analytics77/domain/offsets"
 	"github.com/tudorhulban/analytics77/domain/site"
 	"github.com/tudorhulban/analytics77/fixtures"
 	"github.com/tudorhulban/analytics77/infra/datacenter"
@@ -26,14 +25,6 @@ func TestTransport_TCP(t *testing.T) {
 	t.Parallel()
 
 	dummyURL, _ := url.Parse("https://example.com/analytics")
-
-	now := time.Now()
-	_, offsetSeconds := now.Zone()
-	offsetHours := int64(offsetSeconds / 3600)
-
-	offsetsROU := offsets.TimestampOffsets{
-		OffsetUTCHours: offsetHours,
-	}
 
 	serviceLogging, fnCloseLogging, errCrServiceLogging := slogging.NewServiceLogging("", os.Stdout)
 	require.NoError(t, errCrServiceLogging)
@@ -171,7 +162,7 @@ func TestTransport_TCP(t *testing.T) {
 
 				hoursWithData, howMany := transportTCP.
 					Datacenter.
-					CurrentDayHoursWithData(&offsetsROU)
+					CurrentDayHoursWithData()
 				require.EqualValues(t, 1, howMany)
 
 				fmt.Println(hoursWithData)

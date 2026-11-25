@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/domain/analytics"
 	"github.com/tudorhulban/analytics77/domain/calendar"
-	"github.com/tudorhulban/analytics77/domain/offsets"
 	"github.com/tudorhulban/analytics77/domain/site"
 )
 
@@ -134,7 +133,7 @@ func (dc *DataCenter) GetCurrentHourRecordsPerSite() ResponseRecordsPerSite {
 }
 
 // CurrentDayHoursWithData returns UTC hours.
-func (dc *DataCenter) CurrentDayHoursWithData(offset *offsets.TimestampOffsets) ([24]int8, int8) {
+func (dc *DataCenter) CurrentDayHoursWithData() ([24]int8, int8) {
 	hoursMap := make(map[int8]struct{})
 
 	sites := dc.GetSiteNames()
