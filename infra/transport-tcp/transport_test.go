@@ -12,9 +12,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/cmd"
-	"github.com/tudorhulban/analytics77/helpers"
+	"github.com/tudorhulban/analytics77/domain/site"
+	"github.com/tudorhulban/analytics77/fixtures"
 	"github.com/tudorhulban/analytics77/infra/datacenter"
-	"github.com/tudorhulban/analytics77/services/sanalytics"
 	"github.com/tudorhulban/analytics77/services/sgeo"
 	"github.com/tudorhulban/analytics77/services/slogging"
 	"github.com/tudorhulban/analytics77/services/sstorage"
@@ -26,14 +26,8 @@ func TestTransport_TCP(t *testing.T) {
 
 	dummyURL, _ := url.Parse("https://example.com/analytics")
 
-	offsetsROU := helpers.TimestampOffsets{
-		OffsetUTCHours: -3,
-	}
-
-	apiKey := os.Getenv(cmd.OSAPIGeolocation)
-
-	serviceLogging, fnCloseLogging, erCrServiceLogging := slogging.NewServiceLogging("", os.Stdout)
-	require.NoError(t, erCrServiceLogging)
+	serviceLogging, fnCloseLogging, errCrServiceLogging := slogging.NewServiceLogging("", os.Stdout)
+	require.NoError(t, errCrServiceLogging)
 
 	defer fnCloseLogging()
 
@@ -49,7 +43,7 @@ func TestTransport_TCP(t *testing.T) {
 
 	serviceGeo, errCrServiceGeo := sgeo.NewServiceGeo(
 		&sgeo.ParamsNewServiceGeo{
-			APIKeyGeolocation: apiKey,
+			APIKeyGeolocation: os.Getenv(cmd.OSAPIGeolocation),
 		},
 		serviceStorage,
 	)
@@ -60,7 +54,7 @@ func TestTransport_TCP(t *testing.T) {
 		description   string
 		inputRequests shared.Requests
 
-		expectedSites          []datacenter.Site
+		expectedSites          []site.SiteName
 		expectedRecordsPerSite []uint32
 		expectedCountSites     int
 	}{
@@ -68,67 +62,66 @@ func TestTransport_TCP(t *testing.T) {
 			description: "1. Send single request",
 			inputRequests: shared.Requests{
 				{
-					RemoteAddr:    "10.0.0.1",
-					Host:          "example.com",
-					Method:        http.MethodPost,
-					URL:           dummyURL,
-					Header:        map[string][]string{"Content-Type": {"application/json"}},
-					TimestampUNIX: time.Now().Unix(),
+					RemoteAddr:   "10.0.0.1",
+					Host:         "example.com",
+					Method:       http.MethodPost,
+					URL:          dummyURL,
+					Header:       map[string][]string{"Content-Type": {"application/json"}},
+					TimestampUTC: time.Now().Unix(),
 				},
 			},
 
-			expectedCountSites: 1,
-
-			expectedSites:          []datacenter.Site{"example.com"},
+			expectedCountSites:     1,
+			expectedSites:          []site.SiteName{"example.com"},
 			expectedRecordsPerSite: []uint32{1},
 		},
 		{
 			description: "2. Send multiple requests in one batch",
 			inputRequests: shared.Requests{
 				{
-					RemoteAddr:    "10.0.0.2",
-					Host:          "api.com",
-					Method:        "GET",
-					URL:           dummyURL,
-					TimestampUNIX: time.Now().Unix(),
+					RemoteAddr:   "10.0.0.2",
+					Host:         "api.com",
+					Method:       "GET",
+					URL:          dummyURL,
+					TimestampUTC: time.Now().Unix(),
 				},
 				{
-					RemoteAddr:    "10.0.0.3",
-					Host:          "metrics.com",
-					Method:        "PUT",
-					URL:           dummyURL,
-					TimestampUNIX: time.Now().Unix(),
+					RemoteAddr:   "10.0.0.3",
+					Host:         "metrics.com",
+					Method:       "PUT",
+					URL:          dummyURL,
+					TimestampUTC: time.Now().Unix(),
 				},
 			},
-			expectedCountSites: 2,
 
-			expectedSites:          []datacenter.Site{"api.com", "metrics.com"},
+			expectedCountSites:     2,
+			expectedSites:          []site.SiteName{"api.com", "metrics.com"},
 			expectedRecordsPerSite: []uint32{1, 1},
 		},
 	}
 
-	for _, tc := range tests {
+	for _, testCase := range tests {
 		t.Run(
-			tc.description,
+			testCase.description,
 			func(t *testing.T) {
 				t.Parallel()
 
 				listener, errListener := net.Listen("tcp", "127.0.0.1:0") //nolint:noctx
 				require.NoError(t, errListener)
 
-				serviceAnalytics, errCrAnalytics := sanalytics.NewServiceAnalytics(
-					&sanalytics.PiersNewServiceAnalytics{
-						ServiceGeo: serviceGeo,
+				datacenter, errCr := datacenter.NewDataCenter(
+					datacenter.ParamsNewDataCenter{
+						DefaultIANALocation: fixtures.DefaultLocationIANA,
 					},
-					&offsetsROU,
 				)
-				require.NoError(t, errCrAnalytics)
+				require.NoError(t, errCr)
 
 				transportTCP, errCrTransport := NewTransportTCP(
 					listener,
 					&PiersNewTransportTCP{
-						ServiceLogging:   serviceLogging,
-						ServiceAnalytics: serviceAnalytics,
+						ServiceLogging: serviceLogging,
+						ServiceGeo:     serviceGeo,
+						Datacenter:     datacenter,
 					},
 				)
 				require.NoError(t, errCrTransport)
@@ -153,7 +146,7 @@ func TestTransport_TCP(t *testing.T) {
 				require.NotZero(t, connClient)
 
 				require.NoError(t,
-					gob.NewEncoder(connClient).Encode(&tc.inputRequests),
+					gob.NewEncoder(connClient).Encode(&testCase.inputRequests),
 				)
 
 				// Close to flush and trigger EOF on the server side.
@@ -163,31 +156,33 @@ func TestTransport_TCP(t *testing.T) {
 				transportTCP.Stop()
 
 				require.EqualValues(t,
-					tc.expectedCountSites,
-					len(serviceAnalytics.DC.GetSiteNames()),
+					testCase.expectedCountSites,
+					len(transportTCP.Datacenter.GetSiteNames()),
 				)
 
-				hoursWithData, howMany := serviceAnalytics.DC.CurrentDayHoursWithData(&offsetsROU)
+				hoursWithData, howMany := transportTCP.
+					Datacenter.
+					CurrentDayHoursWithData()
 				require.EqualValues(t, 1, howMany)
 
 				fmt.Println(hoursWithData)
 
-				recordsPerSite := serviceAnalytics.DC.GetCurrentHourRecordsPerSite(&offsetsROU)
+				recordsPerSite := transportTCP.
+					Datacenter.
+					GetCurrentHourRecordsPerSite()
 
-				serviceAnalytics.DC.Snapshot(os.Stdout)
+				transportTCP.Datacenter.Snapshot(os.Stdout)
 
 				fmt.Println(recordsPerSite)
 
-				require.True(t,
-					recordsPerSite.Verify(
-						tc.expectedSites,
-						tc.expectedRecordsPerSite,
-					),
+				recordsPerSite.Verify(t,
+					testCase.expectedSites,
+					testCase.expectedRecordsPerSite,
 				)
 
 				require.EqualValues(t,
-					tc.expectedCountSites,
-					len(serviceAnalytics.DC.GetCurrentHourRecordsPerSite(&offsetsROU)),
+					testCase.expectedCountSites,
+					len(transportTCP.Datacenter.GetCurrentHourRecordsPerSite()),
 				)
 			},
 		)

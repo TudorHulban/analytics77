@@ -1,10 +1,43 @@
-package helpers
+package offsets
+
+import (
+	"fmt"
+	"strings"
+	"time"
+)
 
 type TimestampOffsets struct {
-	OffsetUTCHours int64
+	OffsetUTCHours int64 `json:"offsetUTCHours"`
 
-	TimestampDSTWinter int64 // Epoch when DST ends (falls back to winter/standard time)
-	TimestampDSTSpring int64 // Epoch when DST starts (springs forward to summer time)
+	TimestampDSTSpring int64 `json:"timestampDSTSpring"` // Epoch when DST starts (springs forward to summer time)
+	TimestampDSTWinter int64 `json:"timestampDSTWinter"` // Epoch when DST ends (falls back to winter/standard time)
+}
+
+func (t *TimestampOffsets) String() string {
+	var sb strings.Builder
+
+	sb.Grow(128) // Pre-allocate approximate buffer size to avoid reallocations
+
+	// Offset (+/-)
+	// %+d automatically handles positive (+) and negative (-) signs
+	sb.WriteString("Timestamp offset: ")
+	fmt.Fprintf(&sb, "%+d", t.OffsetUTCHours)
+	sb.WriteString(" hour(s)\n")
+
+	// Spring DST (Summer forward)
+	springTime := time.Unix(t.TimestampDSTSpring, 0).UTC()
+
+	sb.WriteString("Spring DST at ")
+	sb.WriteString(springTime.Format("January 2, 3 PM"))
+	sb.WriteString("\n")
+
+	// Autumn DST (Winter fallback)
+	winterTime := time.Unix(t.TimestampDSTWinter, 0).UTC()
+
+	sb.WriteString("Autumn DST at ")
+	sb.WriteString(winterTime.Format("January 2, 3 PM"))
+
+	return sb.String()
 }
 
 // ExtractMonthDayHour converts a UTC Unix timestamp into the *real* calendar day (1–31)
@@ -79,7 +112,7 @@ func ExtractMonthDayHour(timestampUTC int64, offsets *TimestampOffsets) (int8, i
 		mp = mp - 9
 	}
 
-	return int8(mp), int8(day), int8(hour)
+	return int8(mp), int8(day), int8(hour) //nolint:gosec
 }
 
 func ExtractMonth(timestampUTC int64) int8 {
@@ -108,8 +141,8 @@ func ExtractMonth(timestampUTC int64) int8 {
 
 	// Convert shifted calendar month to standard 1..12 month
 	if mp < 10 {
-		return int8(mp + 3)
+		return int8(mp + 3) //nolint:gosec
 	}
 
-	return int8(mp - 9)
+	return int8(mp - 9) //nolint:gosec
 }

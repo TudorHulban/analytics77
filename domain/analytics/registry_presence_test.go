@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tudorhulban/analytics77/domain/dhelpers"
+	"github.com/tudorhulban/analytics77/domain/calendar"
 	"github.com/tudorhulban/hxhelpers"
 )
 
@@ -46,7 +46,7 @@ func TestPreviousMonthHoursWithData(t *testing.T) {
 	r.GetPreviousSlot()[dayStorage][5].RecordsPerPeriod.Store(10)
 	r.GetPreviousSlot()[dayStorage][23].RecordsPerPeriod.Store(7)
 
-	daysWithData, howMany := r.PreviousMonthHoursWithData(dhelpers.IndexToCalendarDay(dayStorage))
+	daysWithData, howMany := r.PreviousMonthHoursWithData(calendar.IndexToCalendarDay(dayStorage))
 
 	want := []int8{0, 5, 23}
 
@@ -103,7 +103,7 @@ func TestCurrentMonthHoursWithData(t *testing.T) {
 	r.GetActiveSlot()[storageDay][22].RecordsPerPeriod.Store(1)
 
 	daysWithData, howMany := r.
-		CurrentMonthHoursWithData(dhelpers.IndexToCalendarDay(int8(storageDay)))
+		CurrentMonthHoursWithData(calendar.IndexToCalendarDay(int8(storageDay)))
 
 	want := []int8{1, 7, 22}
 

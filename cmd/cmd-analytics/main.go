@@ -14,12 +14,12 @@ import (
 )
 
 func main() {
-	configRaw := initialization.Configuration(cmd.PathConfig)
+	configRaw := initialization.GetConfigurationRaw(cmd.PathConfig)
 
 	// dir, _ := os.Getwd()
 	// fmt.Println("Current Working Directory:", dir)
 
-	configuration, errParse := extractConfiguration(configRaw)
+	configuration, errParse := initialization.NewConfiguration(configRaw)
 	if errParse != nil {
 		fmt.Printf(
 			"error extract configuration: %s\n",
@@ -31,21 +31,7 @@ func main() {
 		)
 	}
 
-	app := appanalytics.InitializeApp(
-		&appanalytics.ParamsInitializeApp{
-			ConfigPortRPC:   configuration.portRPC,
-			ConfigPortHTTP:  configuration.portHTTP,
-			PathFilesPublic: "./public",
-
-			PathLogFile:       configuration.nameLogfile,
-			KeyGeolocationAPI: os.Getenv(cmd.OSAPIGeolocation),
-		},
-
-		&appanalytics.PiersInitializeApp{
-			Writer:   os.Stderr,
-			FuncExit: os.Exit,
-		},
-	)
+	fmt.Println(configuration)
 
 	// Context that cancels on SIGINT or SIGTERM
 	ctx, stop := signal.NotifyContext(
@@ -71,6 +57,22 @@ func main() {
 
 		os.Exit(1)
 	}()
+
+	app := appanalytics.InitializeApp(
+		&appanalytics.ParamsInitializeApp{
+			ConfigPortRPC:   configuration.PortRPC,
+			ConfigPortHTTP:  configuration.PortHTTP,
+			PathFilesPublic: cmd.PublicFolder,
+
+			PathLogFile:       configuration.NameLogfile,
+			KeyGeolocationAPI: os.Getenv(cmd.OSAPIGeolocation),
+		},
+
+		&appanalytics.PiersInitializeApp{
+			Writer:   os.Stderr,
+			FuncExit: os.Exit,
+		},
+	)
 
 	// context.Canceled is not an error — it is the shutdown request itself
 	if errStart := app.Start(ctx); errStart != nil {

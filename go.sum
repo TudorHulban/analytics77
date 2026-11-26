@@ -240,6 +240,8 @@ github.com/tudorhulban/hx-lru v0.0.0-20260618131954-37b17a4f088d h1:rUcPfUmpcPyU
 github.com/tudorhulban/hx-lru v0.0.0-20260618131954-37b17a4f088d/go.mod h1:8DkV5XpfWFosmra+3mershtR+ejZQuF8ZHS000fmKG8=
 github.com/tudorhulban/hxerrors v0.0.2-0.20260730145821-55e4d22a89bf h1:CEReztxZYJ2GyYoHsXDbsUjL2ymIxVUMcPWfGj/JE1s=
 github.com/tudorhulban/hxerrors v0.0.2-0.20260730145821-55e4d22a89bf/go.mod h1:hOn42e3DQQR6RKUkggdx9uaWHdUHM0bDDXxhy0s4dqQ=
+github.com/tudorhulban/hxerrors v0.0.2-0.20261029120901-8e878d3c566f h1:92z47xLFWX/gFLDV00W+xYSiNjYG3k2GSCh3AoSpnfw=
+github.com/tudorhulban/hxerrors v0.0.2-0.20261029120901-8e878d3c566f/go.mod h1:hOn42e3DQQR6RKUkggdx9uaWHdUHM0bDDXxhy0s4dqQ=
 github.com/tudorhulban/hxhelpers v0.0.2-0.20260918114531-5650ce7d056f h1:e3K8p67/4BI0E77OBrtJquaNke5YGw+7f/OetqgCk5A=
 github.com/tudorhulban/hxhelpers v0.0.2-0.20260918114531-5650ce7d056f/go.mod h1:T5/KxotTN+8Qqoj/FXt4mulwOzEp9HC0gUqMhHK+i0M=
 github.com/tudorhulban/hxhelpers v0.0.3-0.20261016104008-ef202173279b h1:YzM11V8Sq6yyM0z7FFrI3M7ML+pKtagUOK+mcCWyEy0=

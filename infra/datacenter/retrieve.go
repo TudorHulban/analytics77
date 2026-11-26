@@ -1,11 +1,13 @@
 package datacenter
 
 import (
+	"cmp"
 	"fmt"
 	"io"
 	"slices"
 
 	"github.com/tudorhulban/analytics77/domain/analytics"
+	"github.com/tudorhulban/analytics77/domain/site"
 )
 
 // GetRegistry returns the Registry for the given site.
@@ -14,26 +16,26 @@ import (
 // This method uses a read lock because it does not mutate the DataCenter.
 // The caller must treat the returned pointer as read‑only unless they
 // explicitly coordinate ingestion through AddEvents.
-func (dc *DataCenter) GetRegistry(site Site) (*analytics.Registry, bool) {
+func (dc *DataCenter) GetRegistry(siteName site.SiteName) (*analytics.Registry, bool) {
 	dc.mu.RLock()
 
-	result, exists := dc.data[site]
+	dcSite, exists := dc.data[siteName]
 
 	dc.mu.RUnlock()
 
-	return result, exists
+	return dcSite.Data, exists
 }
 
 // ListSites returns a snapshot of all sites currently present in the DataCenter.
 // The returned slice is a copy of the map keys and is safe for the caller to use.
 // This method acquires a read lock and does not mutate the DataCenter.
-func (dc *DataCenter) GetSiteNames() []Site {
+func (dc *DataCenter) GetSiteNames() []site.SiteName {
 	dc.mu.RLock()
 
-	result := make([]Site, 0, len(dc.data))
+	result := make([]site.SiteName, 0, len(dc.data))
 
-	for site := range dc.data {
-		result = append(result, site)
+	for siteName := range dc.data {
+		result = append(result, siteName)
 	}
 
 	dc.mu.RUnlock()
@@ -43,30 +45,62 @@ func (dc *DataCenter) GetSiteNames() []Site {
 
 // Snapshot writes snapshots of all registries into w.
 // It acquires a read lock and delegates snapshotting to each Registry.
+// func (dc *DataCenter) Snapshot(w io.Writer) error {
+// 	dc.mu.RLock()
+// 	defer dc.mu.RUnlock()
+
+// 	// Stable ordering of sites
+// 	sites := make([]site.Site, 0, len(dc.data))
+
+// 	for _, dcSite := range dc.data {
+// 		sites = append(sites, dcSite.Site)
+// 	}
+
+// 	// slices.Sort(keys)
+
+// 	for _, item := range sites {
+// 		if _, errPrintSite := fmt.Fprintf(w, "[%s]\n", item.String()); errPrintSite != nil {
+// 			return errPrintSite
+// 		}
+
+// 		if _, errPrintSnapshot := fmt.Fprintf(w, "[%s]\n", dc.data[item.Name].Site.String()); errPrintSnapshot != nil {
+// 			return errPrintSnapshot
+// 		}
+
+// 		if _, errPrintEmptyLine := fmt.Fprintln(w); errPrintEmptyLine != nil {
+// 			return errPrintEmptyLine
+// 		}
+// 	}
+
+// 	return nil
+// }
+
 func (dc *DataCenter) Snapshot(w io.Writer) error {
 	dc.mu.RLock()
 	defer dc.mu.RUnlock()
 
-	// Stable ordering of sites
-	keys := make([]string, 0, len(dc.data))
-
-	for dcSite := range dc.data {
-		keys = append(keys, string(dcSite))
+	// Gather and sort sites for stable ordering
+	sites := make([]site.Site, 0, len(dc.data))
+	for _, dcSite := range dc.data {
+		sites = append(sites, dcSite.Site)
 	}
 
-	slices.Sort(keys)
+	// Sort stably by site name/string representation
+	slices.SortFunc(
+		sites,
+		func(a, b site.Site) int {
+			return cmp.Compare(a.String(), b.String())
+		},
+	)
 
-	for _, site := range keys {
-		if _, errPrintSite := fmt.Fprintf(w, "[%s]\n", site); errPrintSite != nil {
+	for _, item := range sites {
+		if _, errPrintSite := fmt.Fprintf(w, "[Site: %s]\n", item.String()); errPrintSite != nil {
 			return errPrintSite
 		}
 
-		if errPrintSnapshot := dc.data[Site(site)].Snapshot(w); errPrintSnapshot != nil {
-			return errPrintSnapshot
-		}
-
-		if _, errPrintEmptyLine := fmt.Fprintln(w); errPrintEmptyLine != nil {
-			return errPrintEmptyLine
+		dcSite := dc.data[item.Name]
+		if errPrinRegistry := dcSite.Data.Snapshot(w); errPrinRegistry != nil {
+			return errPrinRegistry
 		}
 	}
 

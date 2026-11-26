@@ -1,9 +1,16 @@
 package datacenter
 
 import (
+	"errors"
+	"fmt"
+	"time"
+
 	"github.com/tudorhulban/analytics77/domain/analytics"
-	"github.com/tudorhulban/analytics77/domain/dhelpers"
-	"github.com/tudorhulban/analytics77/helpers"
+	"github.com/tudorhulban/analytics77/domain/calendar"
+	"github.com/tudorhulban/analytics77/domain/site"
+	"github.com/tudorhulban/analytics77/services/sgeo"
+	"github.com/tudorhulban/hxhelpers"
+
 	"github.com/tudorhulban/analytics77/shared"
 )
 
@@ -18,7 +25,7 @@ import (
 //
 //  2. Pointer resolution under lock (structure only)
 //     - Ensures dc.data[site] exists.
-//     - Extracts (calendarMonth, calendarDay, hour) using site-level DST/offsets.
+//     - Extracts calendarMonth, calendarDay, hour.
 //     - Determines the correct month buffer:
 //     * MonthCurrent   → events from the active calendar month
 //     * MonthPrevious  → events from the immediately preceding month
@@ -47,9 +54,6 @@ import (
 //
 //	otherwise
 //	    → event is older than previous month and ignored.
-//
-// No time mocking, no abstraction layers, no background rollover.
-// Month transitions are strictly event-driven.
 func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 	if len(events) == 0 {
 		return nil
@@ -84,54 +88,64 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 	//    We do NOT increment inside the lock.
 	//    We only ensure that dc.data[site] exists and is stable.
 	//
-	resolved := make([]*analytics.MetricActive, len(indexesNoError))
+	resolvedMetrics := make([]*analytics.MetricActive, len(indexesNoError))
 
 	dc.mu.Lock()
 	for outIx, eventIndex := range indexesNoError {
 		event := events[eventIndex]
-		site := Site(event.SiteKey)
+		forSiteName := site.SiteName(event.SiteKey)
 
-		registrySite, exists := dc.data[site]
+		dcSite, exists := dc.data[forSiteName]
 		if !exists {
-			registrySite = analytics.NewRegistry(
-				helpers.ExtractMonth(event.TimestampUNIX),
-			)
+			// create the new site.
+			dcSite = &DCSite{
+				Site: site.Site{
+					Name:         forSiteName,
+					SiteLocation: dc.defaultIANALocation,
+				},
+				Data: analytics.NewRegistry(
+					int8(dc.defaultTimeNow().Month()), //nolint:gosec
+				),
+			}
 
-			dc.data[site] = registrySite
+			dc.data[forSiteName] = dcSite
 		}
 
-		evCalendarMonth, evCalendarDay, evHour := helpers.ExtractMonthDayHour(
-			event.TimestampUNIX,
-			&helpers.TimestampOffsets{
-				OffsetUTCHours: event.OffsetUTCHours,
+		// TODO: test case for new site.
+		evTime := hxhelpers.Ternary(
+			event.TimestampUTC == 0,
 
-				TimestampDSTSpring: registrySite.TimestampDSTSpring,
-				TimestampDSTWinter: registrySite.TimestampDSTWinter,
-			},
+			time.Now().UTC(),
+			time.Unix(event.TimestampUTC, 0).UTC(),
 		)
 
-		registrySite.CalendarMonthCurrentNumber.CompareAndSwap(0, int32(evCalendarMonth))
+		evCalendarMonth := int8(evTime.Month()) //nolint:gosec
+		evCalendarDay := int8(evTime.Day())     //nolint:gosec
+		evHour := int8(evTime.Hour())           //nolint:gosec
 
-		monthNumber := int8(registrySite.CalendarMonthCurrentNumber.Load()) //nolint:gosec
+		monthNumber := int8(dcSite.Data.CalendarMonthCurrentNumber.Load()) //nolint:gosec
 
 		switch {
 		case evCalendarMonth == monthNumber:
 			// Same calendar month → current month buffer.
-			resolved[outIx] = &registrySite.
-				GetActiveSlot()[dhelpers.CalendarDayToIndex(evCalendarDay)][evHour]
+			resolvedMetrics[outIx] = &dcSite.
+				Data.
+				GetActiveSlot()[calendar.CalendarDayToIndex(evCalendarDay)][evHour]
 
 		case evCalendarMonth+1 == monthNumber || (evCalendarMonth == 12 && monthNumber == 1):
 			// Event belongs to previous calendar month.
-			resolved[outIx] = &registrySite.
-				GetPreviousSlot()[dhelpers.CalendarDayToIndex(evCalendarDay)][evHour]
+			resolvedMetrics[outIx] = &dcSite.
+				Data.
+				GetPreviousSlot()[calendar.CalendarDayToIndex(evCalendarDay)][evHour]
 
-		case evCalendarMonth-1 == monthNumber:
+		case evCalendarMonth-1 == monthNumber || (evCalendarMonth == 1 && monthNumber == 12):
 			// Event belongs to next calendar month → rollover required.
-			registrySite.Advance()
+			dcSite.Data.Advance()
 
 			// After rollover, the new month becomes current.
-			resolved[outIx] = &registrySite.
-				GetActiveSlot()[dhelpers.CalendarDayToIndex(evCalendarDay)][evHour]
+			resolvedMetrics[outIx] = &dcSite.
+				Data.
+				GetActiveSlot()[calendar.CalendarDayToIndex(evCalendarDay)][evHour]
 
 		default:
 			// Older than previous month → either archive or ignore.
@@ -149,7 +163,7 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 	//    - no global lock
 	//
 	for outIx, eventIndex := range indexesNoError {
-		slot := resolved[outIx]
+		slot := resolvedMetrics[outIx]
 		if slot == nil {
 			continue // event already ignored in default above
 		}
@@ -170,4 +184,45 @@ func (dc *DataCenter) AddEvents(events ...*shared.ParamsAddEvent) []error {
 	}
 
 	return nil
+}
+
+func (dc *DataCenter) RecordEvents(events shared.Requests, geo *sgeo.ServiceGeo) ([]error, []error) {
+	if geo == nil {
+		return nil,
+			[]error{
+				errors.New(
+					"AsParamsAddEvent - passed ServiceGeo is nil",
+				),
+			}
+	}
+
+	errorsTransformation := make([]error, 0, len(events))
+	validEvents := make([]*shared.ParamsAddEvent, 0, len(events))
+
+	for ix, event := range events {
+		param, errTransformation := event.AsParamsAddEvent(geo)
+		if errTransformation != nil {
+			errorsTransformation = append(
+				errorsTransformation,
+				fmt.Errorf(
+					"transformation error for event %d:%w",
+					ix,
+					errTransformation,
+				),
+			)
+
+			continue
+		}
+
+		validEvents = append(validEvents, param)
+	}
+
+	if len(validEvents) == 0 {
+		return errorsTransformation,
+			nil
+	}
+
+	errorsProcess := dc.AddEvents(validEvents...)
+
+	return errorsTransformation, errorsProcess
 }

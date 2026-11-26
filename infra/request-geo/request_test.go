@@ -3,8 +3,11 @@ package requestgeo
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"testing"
 	"time"
+
+	"github.com/tudorhulban/analytics77/cmd"
 )
 
 func TestGetLocationByIP(t *testing.T) {
@@ -12,7 +15,7 @@ func TestGetLocationByIP(t *testing.T) {
 		Timeout: 5 * time.Second,
 	}
 
-	apiKey := ""
+	apiKey := os.Getenv(cmd.OSAPIGeolocation)
 	targetIP := "82.76.117.202"
 
 	location, errGeo := GetLocationByIP(
@@ -28,5 +31,5 @@ func TestGetLocationByIP(t *testing.T) {
 		return
 	}
 
-	fmt.Print(*location)
+	fmt.Println(*location)
 }

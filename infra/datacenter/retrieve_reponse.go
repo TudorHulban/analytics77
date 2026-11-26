@@ -4,29 +4,37 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/domain/analytics"
-	"github.com/tudorhulban/analytics77/domain/dhelpers"
-	"github.com/tudorhulban/analytics77/helpers"
+	"github.com/tudorhulban/analytics77/domain/calendar"
+	"github.com/tudorhulban/analytics77/domain/site"
 )
 
-type ResponseRecordsPerSite map[Site]uint32
+type ResponseRecordsPerSite map[site.SiteName]uint32
 
-func (r ResponseRecordsPerSite) Verify(keys []Site, values []uint32) bool {
-	if len(keys) != len(values) {
-		return false
-	}
+func (r ResponseRecordsPerSite) Verify(tb testing.TB, siteNames []site.SiteName, expectedNoRecords []uint32) {
+	tb.Helper()
 
-	for ix, key := range keys {
+	require.Equal(tb,
+		len(siteNames),
+		len(expectedNoRecords),
+	)
+
+	for ix, key := range siteNames {
 		value, exists := r[key]
+		require.True(tb, exists)
+		require.Equal(tb,
+			value,
+			expectedNoRecords[ix],
 
-		if !exists || value != values[ix] {
-			return false
-		}
+			"value (%v) vs. expected (%v)",
+			value,
+			expectedNoRecords[ix],
+		)
 	}
-
-	return true
 }
 
 func (r ResponseRecordsPerSite) String() string {
@@ -34,7 +42,7 @@ func (r ResponseRecordsPerSite) String() string {
 		return "{}"
 	}
 
-	keys := make([]Site, 0, len(r))
+	keys := make([]site.SiteName, 0, len(r))
 
 	for k := range r {
 		keys = append(keys, k)
@@ -62,50 +70,30 @@ func (r ResponseRecordsPerSite) String() string {
 	return builder.String()
 }
 
-// previousHourRecordsPerSiteAt does the real work, parameterized on "now" so
-// tests can land deterministically on month/DST boundaries.
-//
-// The previous hour is derived by re-running full month/day/hour extraction
-// on (nowUTC - 1h), per site, rather than decrementing the current day/hour
-// locally. That's required for two reasons:
-//   - month length varies (28-31 days); "day - 1 -> day 31" is only correct
-//     for months that actually have 31 days
-//   - crossing a DST transition must go through the same civil-calendar math
-//     used everywhere else, or the two paths can disagree at the boundary
-//
-// Each site carries its own DST window, so the extraction uses the caller's
-// UTC offset combined with that registry's DST fields — the same convention
-// AddEvents uses.
-func (dc *DataCenter) previousHourRecordsPerSiteAt(nowUTC int64, offsets *helpers.TimestampOffsets) ResponseRecordsPerSite {
-	previousHourUTC := nowUTC - 3600
+func (dc *DataCenter) PreviousHourRecordsPerSiteAt(nowUTC time.Time) ResponseRecordsPerSite {
+	previousHourUTC := nowUTC.Add(-1 * time.Hour)
 
 	dc.mu.RLock()
 
-	result := make(map[Site]uint32, len(dc.data))
+	result := make(map[site.SiteName]uint32, len(dc.data))
 
-	for siteKey, registry := range dc.data {
-		prevMonth, prevDay, prevHour := helpers.ExtractMonthDayHour(
-			previousHourUTC,
-			&helpers.TimestampOffsets{
-				OffsetUTCHours: offsets.OffsetUTCHours,
-
-				TimestampDSTSpring: registry.TimestampDSTSpring,
-				TimestampDSTWinter: registry.TimestampDSTWinter,
-			},
-		)
+	for siteName, dcSite := range dc.data {
+		prevMonth := int8(previousHourUTC.Month()) //nolint:gosec
+		prevDay := int8(previousHourUTC.Day())     //nolint:gosec
+		prevHour := previousHourUTC.Hour()         // TODO: move definition outside loop for lower allocs
 
 		var month *analytics.MonthActive
 
 		switch prevMonth {
-		case int8(registry.CalendarMonthCurrentNumber.Load()): //nolint:gosec
-			month = registry.GetActiveSlot()
+		case int8(dcSite.Data.CalendarMonthCurrentNumber.Load()): //nolint:gosec
+			month = dcSite.Data.GetActiveSlot()
 
 		default:
 			// The hour we're after fell into the previous calendar month.
-			month = registry.GetPreviousSlot()
+			month = dcSite.Data.GetPreviousSlot()
 		}
 
-		result[siteKey] = month[dhelpers.CalendarDayToIndex(prevDay)][prevHour].RecordsPerPeriod.Load()
+		result[siteName] = month[calendar.CalendarDayToIndex(prevDay)][prevHour].RecordsPerPeriod.Load()
 	}
 
 	dc.mu.RUnlock()
@@ -115,22 +103,28 @@ func (dc *DataCenter) previousHourRecordsPerSiteAt(nowUTC int64, offsets *helper
 
 // GetPreviousHourRecordsPerSite returns, per site, the record count for the
 // hour immediately preceding the current one.
-func (dc *DataCenter) GetPreviousHourRecordsPerSite(offsets *helpers.TimestampOffsets) ResponseRecordsPerSite {
-	return dc.previousHourRecordsPerSiteAt(time.Now().Unix(), offsets)
+func (dc *DataCenter) GetPreviousHourRecordsPerSite() ResponseRecordsPerSite {
+	return dc.
+		PreviousHourRecordsPerSiteAt(
+			time.Now(),
+		)
 }
 
-func (dc *DataCenter) GetCurrentHourRecordsPerSite(offsets *helpers.TimestampOffsets) ResponseRecordsPerSite {
-	_, ixDay, ixHour := helpers.ExtractMonthDayHour(
-		time.Now().Unix(),
-		offsets,
-	)
+func (dc *DataCenter) GetCurrentHourRecordsPerSite() ResponseRecordsPerSite {
+	nowUTC := time.Now().UTC()
+
+	ixDay := int8(nowUTC.Day()) //nolint:gosec
+	ixHour := nowUTC.Hour()
 
 	dc.mu.RLock()
 
-	result := make(map[Site]uint32, len(dc.data))
+	result := make(map[site.SiteName]uint32, len(dc.data))
 
-	for siteKey, registry := range dc.data {
-		result[siteKey] = registry.GetActiveSlot()[dhelpers.CalendarDayToIndex(ixDay)][ixHour].RecordsPerPeriod.Load()
+	for siteName, dcSite := range dc.data {
+		result[siteName] = dcSite.
+			Data.
+			GetActiveSlot()[calendar.CalendarDayToIndex(ixDay)][ixHour].
+			RecordsPerPeriod.Load()
 	}
 
 	dc.mu.RUnlock()
@@ -139,19 +133,20 @@ func (dc *DataCenter) GetCurrentHourRecordsPerSite(offsets *helpers.TimestampOff
 }
 
 // CurrentDayHoursWithData returns UTC hours.
-func (dc *DataCenter) CurrentDayHoursWithData(offsets *helpers.TimestampOffsets) ([24]int8, int8) {
+func (dc *DataCenter) CurrentDayHoursWithData() ([24]int8, int8) {
 	hoursMap := make(map[int8]struct{})
 
 	sites := dc.GetSiteNames()
 
 	// Grab the local/machine Unix timestamp instead of forcing UTC
-	now := time.Now().Unix()
+	now := time.Now()
 
-	for _, site := range sites {
-		registry, _ := dc.GetRegistry(site)
+	for _, siteName := range sites {
+		registry, _ := dc.GetRegistry(siteName)
 
 		// Pass the offsets pointer down into the registry method
-		hoursWithData, howMany := registry.CurrentDayHoursWithData(now, offsets.OffsetUTCHours)
+		hoursWithData, howMany := registry.
+			CurrentDayHoursWithData(now.UTC())
 
 		for _, hour := range hoursWithData[:howMany] {
 			if _, exists := hoursMap[hour]; !exists {

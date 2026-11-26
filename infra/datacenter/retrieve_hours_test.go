@@ -6,87 +6,110 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/domain/analytics"
-	"github.com/tudorhulban/analytics77/helpers"
+	"github.com/tudorhulban/analytics77/domain/site"
+	"github.com/tudorhulban/analytics77/fixtures"
+
 	"github.com/tudorhulban/analytics77/shared"
 	"github.com/tudorhulban/hxhelpers"
 )
 
 func TestCurrentDayHoursWithData(t *testing.T) {
-	offsetsROU := helpers.TimestampOffsets{
-		OffsetUTCHours: +3,
-	}
+	datacenter, errCr := NewDataCenter(
+		ParamsNewDataCenter{
+			DefaultIANALocation: fixtures.DefaultLocationIANA,
+		},
+	)
+	require.NoError(t, errCr)
+	require.NotNil(t, datacenter)
 
-	dc := NewDataCenter()
-	require.NotNil(t, dc)
-
-	hoursWithDataBefore, howManyBefore := dc.CurrentDayHoursWithData(&offsetsROU)
+	hoursWithDataBefore, howManyBefore := datacenter.CurrentDayHoursWithData()
 	require.Zero(t, howManyBefore)
 	require.Zero(t, hoursWithDataBefore)
 
-	site1 := "localhost"
-	localTime := time.Now()
+	site1Test := site.Site{
+		Name: "xxxx - " + site.SiteName(t.Name()),
+	}
 
-	recordsPerSiteBefore := dc.GetPreviousHourRecordsPerSite(&offsetsROU)
+	testTime := time.Now()
+
+	recordsPerSiteBefore := datacenter.GetPreviousHourRecordsPerSite()
 	require.Empty(t, recordsPerSiteBefore)
 
 	request1 := shared.ParamsAddEvent{
-		SiteKey: site1,
+		SiteKey: string(site1Test.Name),
 
 		IP:              "127.0.0.1",
 		Browser:         analytics.Brave,
 		OperatingSystem: analytics.Linux,
 
-		TimestampUNIX: helpers.GetHourInOffsetAsUTC(
-			localTime,
-			localTime.Hour(),
-			int(offsetsROU.OffsetUTCHours),
-		),
-
-		IsPrivateIP: true,
+		TimestampUTC: testTime.UTC().Unix(),
+		IsPrivateIP:  true,
 	}
 
-	require.Empty(t, dc.AddEvents(&request1))
+	require.Empty(t, datacenter.AddEvents(&request1))
 
-	hoursWithDataAfter1, howManyAfter1 := dc.CurrentDayHoursWithData(&offsetsROU)
-	require.EqualValues(t, 1, howManyAfter1, "howManyAfter should be 1")
-	require.NotZero(t, hoursWithDataAfter1, "hoursWithDataAfter should be not zero in most cases")
+	hoursWithDataAfter1, howManyAfter1 := datacenter.CurrentDayHoursWithData()
 	require.EqualValues(t,
-		localTime.Hour()-int(offsetsROU.OffsetUTCHours),
+		1,
+		howManyAfter1,
+
+		"with request 1 we should have requests in one hour only",
+	)
+	require.NotZero(t,
+		hoursWithDataAfter1,
+		"hoursWithDataAfter should be not zero in most cases",
+	)
+	require.EqualValues(t,
+		testTime.UTC().Hour(),
 		hoursWithDataAfter1[0],
+
+		"retrieved hour (%v) is UTC vs test hour (%v)",
+		hoursWithDataAfter1[0],
+		testTime.UTC().Hour(),
 	)
 
-	recordsPerSiteAfter1 := dc.GetPreviousHourRecordsPerSite(&offsetsROU)
-	require.Len(t, recordsPerSiteAfter1, 1, "should be 1 as site was added")
-	require.Zero(t, recordsPerSiteAfter1[Site(site1)])
+	recordsPerSiteAfter1 := datacenter.GetPreviousHourRecordsPerSite()
+	require.Len(t,
+		recordsPerSiteAfter1,
+		1,
+		"should be 1 as site was added",
+	)
+	require.Zero(t,
+		recordsPerSiteAfter1[site1Test.Name],
+	)
 
-	oneHourBefore := localTime.Add(-1 * time.Hour)
+	oneHourBefore := testTime.UTC().Add(-1 * time.Hour)
 
 	request2 := shared.ParamsAddEvent{
-		SiteKey: site1,
+		SiteKey: string(site1Test.Name),
 
 		IP:              "127.0.0.1",
 		Browser:         analytics.Brave,
 		OperatingSystem: analytics.Linux,
 
-		TimestampUNIX: helpers.GetHourInOffsetAsUTC(oneHourBefore, oneHourBefore.Hour(), int(offsetsROU.OffsetUTCHours)),
-
-		IsPrivateIP: true,
+		TimestampUTC: oneHourBefore.Unix(),
+		IsPrivateIP:  true,
 	}
 
-	require.Empty(t, dc.AddEvents(&request2))
+	require.Empty(t, datacenter.AddEvents(&request2))
 
-	hoursWithDataAfter2, howManyAfter2 := dc.CurrentDayHoursWithData(&offsetsROU)
+	hoursWithDataAfter2, howManyAfter2 := datacenter.CurrentDayHoursWithData()
 	require.EqualValues(t,
 		2,
 		howManyAfter2,
-		"howManyAfter should be 1",
+
+		"with request 2 we should have records in different hours",
 	)
 	require.NotZero(t,
 		hoursWithDataAfter2,
 		"hoursWithDataAfter should be not zero in most cases",
 	)
 	require.Empty(t,
-		hxhelpers.NotInSliceSource(hoursWithDataAfter2[:howManyAfter2], int8(oneHourBefore.Hour()-int(offsetsROU.OffsetUTCHours)), int8(localTime.Hour()-int(offsetsROU.OffsetUTCHours))),
+		hxhelpers.NotInSliceSource(
+			hoursWithDataAfter2[:howManyAfter2],
+
+			int8(oneHourBefore.Hour()),
+			int8(testTime.UTC().Hour())),
 		hoursWithDataAfter2,
 	)
 }

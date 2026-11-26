@@ -41,7 +41,7 @@ coverage:
 	go tool cover -html=coverage.out
 
 test-local: 
-	@go test -failfast -count=1 -shuffle=on -cpu=4,8 ./... -json -cover -race | tparse -smallscreen
+	@go test -v -failfast -count=1 -shuffle=on -cpu=4,8 ./... -json -cover -race | tparse -smallscreen
 
 # Run tests forcing the legacy RDTSCP implementation
 test-legacy: 

@@ -38,7 +38,7 @@ func NewServiceLogging(pathLogFile string, writer ...io.Writer) (*ServiceLogging
 
 	ingestor, errCrIngestor := bytearena.NewIngestor(
 		bytearena.Size100K(),
-		hxhelpers.TernaryLazy[io.Writer](
+		hxhelpers.TernaryLazy(
 			len(writer) == 1,
 			func() io.Writer {
 				return writer[0]

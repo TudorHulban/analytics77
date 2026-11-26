@@ -30,24 +30,23 @@ func (g GeoIP) String() string {
 
 	var sb strings.Builder
 
-	// Location segment
-	var locParts []string
+	var partsLocation []string
 	if g.Location.City != "" {
-		locParts = append(locParts, g.Location.City)
+		partsLocation = append(partsLocation, g.Location.City)
 	}
 
 	if g.Location.District != "" {
-		locParts = append(locParts, g.Location.District)
+		partsLocation = append(partsLocation, g.Location.District)
 	}
 
 	if g.Location.CountryCode != "" {
-		locParts = append(locParts, g.Location.CountryCode)
+		partsLocation = append(partsLocation, g.Location.CountryCode)
 	}
 
 	sb.WriteString("GeoIP[")
 
-	if len(locParts) > 0 {
-		sb.WriteString(strings.Join(locParts, ", "))
+	if len(partsLocation) > 0 {
+		sb.WriteString(strings.Join(partsLocation, ", "))
 	} else {
 		sb.WriteString("Unknown Location")
 	}

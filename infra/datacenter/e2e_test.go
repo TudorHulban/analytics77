@@ -6,74 +6,103 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/domain/analytics"
+	"github.com/tudorhulban/analytics77/domain/site"
+	"github.com/tudorhulban/analytics77/fixtures"
 	"github.com/tudorhulban/analytics77/shared"
 )
 
 func TestDataCenter(t *testing.T) {
-	dc := NewDataCenter()
-	require.NotNil(t, dc)
+	datacenter, errCr := NewDataCenter(
+		ParamsNewDataCenter{
+			DefaultIANALocation: fixtures.DefaultLocationIANA,
+		},
+	)
+	require.NoError(t, errCr)
+	require.NotNil(t, datacenter)
 
-	require.Empty(t, dc.AddEvents())
-	require.Empty(t, dc.AddEvents(nil))
+	require.Empty(t, datacenter.AddEvents())
+	require.Empty(t, datacenter.AddEvents(nil))
 
-	site1 := "localhost"
+	site1Test := site.Site{
+		Name:         "xxxx - " + site.SiteName(t.Name()),
+		SiteLocation: fixtures.DefaultLocationIANA,
+	}
 
-	localTime := time.Now()
-	_, offsetSeconds := localTime.Zone()
-
-	utcOffsetHours := offsetSeconds / 3600
+	nowUTC := time.Now().UTC()
 
 	req1 := shared.ParamsAddEvent{
-		SiteKey: site1,
+		SiteKey: string(site1Test.Name),
 
 		IP:              "127.0.0.1",
 		Browser:         analytics.Brave,
 		OperatingSystem: analytics.Linux,
 
-		TimestampUNIX:  localTime.Unix(),
-		OffsetUTCHours: int64(utcOffsetHours),
-
-		IsPrivateIP: true,
+		TimestampUTC: nowUTC.Unix(),
+		IsPrivateIP:  true,
 	}
 
-	require.Empty(t, dc.AddEvents(&req1))
+	require.Empty(t, datacenter.AddEvents(&req1))
 
-	require.Len(t, dc.data, 1, "site1 should have been added")
+	require.Len(t, datacenter.data, 1, "site1 should have been added")
 
-	registry1, exists1 := dc.data[Site(site1)]
+	dcSite1, exists1 := datacenter.data[site1Test.Name]
 	require.True(t, exists1)
-	require.NotNil(t, registry1)
+	require.NotNil(t, dcSite1)
+	require.Equal(t,
+		site1Test.Name,
+		dcSite1.Site.Name,
+	)
 
-	siteNames := dc.GetSiteNames()
+	siteNames := datacenter.GetSiteNames()
 	require.Len(t, siteNames, 1)
 	require.EqualValues(t, req1.SiteKey, siteNames[0])
 
 	require.False(t,
-		registry1.GetActiveSlot().IsZero(),
+		dcSite1.
+			Data.
+			GetActiveSlot().
+			IsZero(),
 	)
 	require.True(t,
-		registry1.GetPreviousSlot().IsZero(),
+		dcSite1.
+			Data.
+			GetPreviousSlot().
+			IsZero(),
 	)
-	require.True(t, registry1.HistoryAggregateTopN().IsZero())
+	require.True(t,
+		dcSite1.
+			Data.
+			HistoryAggregateTopN().
+			IsZero(),
+	)
 
-	hoursWithData, howMany := registry1.CurrentMonthHoursWithData(int8(localTime.Day()))
+	// dcSite1.Data.Snapshot(os.Stdout)
+
+	hoursWithData, howMany := dcSite1.
+		Data.
+		CurrentMonthHoursWithData(int8(nowUTC.Day()))
 	require.EqualValues(t, 1, howMany)
 	require.EqualValues(t,
-		localTime.Hour(),
+		nowUTC.Hour(),
 		hoursWithData[0],
+		"hours mismatch",
 	)
 
 	require.EqualValues(t,
 		0,
-		registry1.PreviousMonthTotalRecords(),
+		dcSite1.
+			Data.
+			PreviousMonthTotalRecords(),
 	)
 
 	require.EqualValues(t,
 		1,
-		registry1.CurrentMonthTotalRecords(),
+		dcSite1.
+			Data.
+			CurrentMonthTotalRecords(),
 	)
 
-	aggregates1 := registry1.CurrentMonthAggregateTopN()
+	aggregates1 := dcSite1.Data.CurrentMonthAggregateTopN()
 	require.EqualValues(t,
 		analytics.Brave,
 		*aggregates1.Browsers.Names[0].Load(),
@@ -83,66 +112,74 @@ func TestDataCenter(t *testing.T) {
 		aggregates1.Browsers.Names[0].Load(),
 	)
 
-	dc.Advance(Site(site1))
+	datacenter.Advance(site1Test)
 
 	require.EqualValues(t,
 		0,
-		registry1.CurrentMonthTotalRecords(),
+		dcSite1.
+			Data.
+			CurrentMonthTotalRecords(),
 	)
 
 	require.EqualValues(t,
 		1,
-		registry1.PreviousMonthTotalRecords(),
+		dcSite1.
+			Data.
+			PreviousMonthTotalRecords(),
 	)
 
-	dc.Advance(Site(site1))
+	datacenter.Advance(site1Test)
 
 	require.EqualValues(t,
 		1,
-		registry1.HistoryTotalRecords(),
+		dcSite1.
+			Data.
+			HistoryTotalRecords(),
 	)
 
-	site2 := "Cloudflare"
+	site2Test := site.Site{
+		Name: "yyyy - " + site.SiteName(t.Name()),
+	}
 
 	req2 := shared.ParamsAddEvent{
-		SiteKey: site2,
+		SiteKey: string(site2Test.Name),
 
 		IP:              "1.1.1.1",
 		Browser:         analytics.Brave,
 		OperatingSystem: analytics.Android,
 
-		TimestampUNIX:  localTime.Unix(),
-		OffsetUTCHours: int64(utcOffsetHours),
-
-		IsPrivateIP: true,
+		TimestampUTC: nowUTC.Unix(),
+		IsPrivateIP:  true,
 	}
 
 	req3 := shared.ParamsAddEvent{
-		SiteKey: site2,
+		SiteKey: string(site2Test.Name),
 
 		IP:              "1.1.1.1",
 		Browser:         analytics.Chrome,
 		OperatingSystem: analytics.Android,
 
-		TimestampUNIX:  localTime.Unix(),
-		OffsetUTCHours: int64(utcOffsetHours),
-
-		IsPrivateIP: true,
+		TimestampUTC: nowUTC.Unix(),
+		IsPrivateIP:  true,
 	}
 
-	require.Empty(t, dc.AddEvents(&req2, &req3))
+	require.Empty(t, datacenter.AddEvents(&req2, &req3))
 
-	registry2, exists2 := dc.data[Site(site2)]
+	dcSite2, exists2 := datacenter.data[site2Test.Name]
 	require.True(t, exists2)
-	require.NotNil(t, registry2)
+	require.NotNil(t, dcSite2)
 
 	require.EqualValues(t,
 		0,
-		registry2.PreviousMonthTotalRecords(),
+		dcSite2.
+			Data.
+			PreviousMonthTotalRecords(),
 	)
 
 	require.EqualValues(t,
 		2,
-		registry2.CurrentMonthTotalRecords(),
+		dcSite2.
+			Data.
+			CurrentMonthTotalRecords(),
 	)
 }

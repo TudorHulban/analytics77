@@ -9,9 +9,7 @@ import (
 	"strings"
 
 	"github.com/tudorhulban/analytics77/domain/analytics"
-	"github.com/tudorhulban/analytics77/helpers"
 	"github.com/tudorhulban/analytics77/services/sgeo"
-
 	"github.com/tudorhulban/hxhelpers"
 )
 
@@ -23,24 +21,11 @@ type Request struct {
 	Host       string
 	Method     string
 
-	TimestampUNIX  int64
-	OffsetUTCHours int64
+	TimestampUTC int64
 }
 
-type PiersAsParamsAddEvent struct {
-	Offsets    *helpers.TimestampOffsets
-	ServiceGeo *sgeo.ServiceGeo
-}
-
-func (req Request) AsParamsAddEvent(dependencies *PiersAsParamsAddEvent) (*ParamsAddEvent, error) {
-	if dependencies.Offsets == nil {
-		return nil,
-			errors.New(
-				"AsParamsAddEvent - passed offsets is nil",
-			)
-	}
-
-	if dependencies.ServiceGeo == nil {
+func (req Request) AsParamsAddEvent(geo *sgeo.ServiceGeo) (*ParamsAddEvent, error) {
+	if geo == nil {
 		return nil,
 			errors.New(
 				"AsParamsAddEvent - passed ServiceGeo is nil",
@@ -67,7 +52,7 @@ func (req Request) AsParamsAddEvent(dependencies *PiersAsParamsAddEvent) (*Param
 	}
 
 	if !ip.IsPrivate() && !ip.IsLoopback() {
-		responseGeo, errGeo := dependencies.ServiceGeo.GetIPGeo(ip)
+		responseGeo, errGeo := geo.GetIPGeo(ip)
 		if errGeo != nil {
 			return nil,
 				fmt.Errorf(
@@ -127,16 +112,8 @@ func (req Request) AsParamsAddEvent(dependencies *PiersAsParamsAddEvent) (*Param
 			Browser: browser,
 
 			ASNOrganization: geoInfo.ASN.Organization,
-
-			OffsetUTCHours: hxhelpers.Ternary(
-				req.OffsetUTCHours > 0,
-
-				req.OffsetUTCHours,
-				dependencies.Offsets.OffsetUTCHours,
-			),
-			TimestampUNIX: req.TimestampUNIX,
-
-			IsPrivateIP: geoInfo.IsPrivate,
+			TimestampUTC:    req.TimestampUTC,
+			IsPrivateIP:     geoInfo.IsPrivate,
 		},
 		nil
 }

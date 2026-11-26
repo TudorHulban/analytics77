@@ -3,7 +3,29 @@ package analytics
 import (
 	"fmt"
 	"io"
+	"strings"
 )
+
+func (r *Registry) WriteTo(b *strings.Builder) {
+	r.GetActiveSlot().WriteTo(b, "current")
+	r.GetPreviousSlot().WriteTo(b, "previous")
+
+	// archived months (the remaining 5 slots)
+	for ix := range 7 {
+		month := r.Slots[ix]
+
+		// skip current and previous
+		if ix == int(r.CurrentSlot.Load()) {
+			continue
+		}
+
+		if ix == int((r.CurrentSlot.Load()+7-1)%7) {
+			continue
+		}
+
+		month.WriteTo(b, fmt.Sprintf("slot[%d]", ix))
+	}
+}
 
 // Snapshot writes a textual snapshot of the registry into w.
 func (r *Registry) Snapshot(w io.Writer) error {

@@ -11,8 +11,6 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/favicon"
 	"github.com/gofiber/fiber/v3/middleware/static"
-	"github.com/tudorhulban/analytics77/helpers"
-	"github.com/tudorhulban/analytics77/infra/initialization"
 	transporttcp "github.com/tudorhulban/analytics77/infra/transport-tcp"
 	"github.com/tudorhulban/analytics77/services/slogging"
 	"github.com/tudorhulban/hxerrors"
@@ -75,33 +73,10 @@ func InitializeApp(params *ParamsInitializeApp, piers *PiersInitializeApp) *App 
 		)
 	}
 
-	serviceAnalytics, errInitialization := initialization.Services(
-		&initialization.ParamsServices{
-			Offsets: helpers.TimestampOffsets{
-				OffsetUTCHours: params.OffsetUTCHours,
-			},
-			APIKeyGeolocation: params.KeyGeolocationAPI,
-
-			ServiceLogging: serviceLogging,
-		},
-	)
-	if errInitialization != nil {
-		fmt.Fprintf(
-			piers.Writer,
-			"error create listener: %s\n",
-			errInitialization.Error(),
-		)
-
-		piers.FuncExit(
-			hxerrors.OSExitForConnectivityIssues,
-		)
-	}
-
 	transportTCP, errCrTransport := transporttcp.NewTransportTCP(
 		listener,
 		&transporttcp.PiersNewTransportTCP{
-			ServiceLogging:   serviceLogging,
-			ServiceAnalytics: serviceAnalytics,
+			ServiceLogging: serviceLogging,
 		},
 	)
 	if errCrTransport != nil {
@@ -152,9 +127,7 @@ func InitializeApp(params *ParamsInitializeApp, piers *PiersInitializeApp) *App 
 		transportWS:   transportWS,
 		transportTCP:  transportTCP,
 
-		serviceAnalytics: serviceAnalytics,
-		serviceLogging:   serviceLogging,
-
+		serviceLogging:  serviceLogging,
 		fnFreeResources: fnCloseLogging,
 
 		portHTTP: params.ConfigPortHTTP,

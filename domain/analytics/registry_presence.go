@@ -1,8 +1,9 @@
 package analytics
 
 import (
-	"github.com/tudorhulban/analytics77/domain/dhelpers"
-	"github.com/tudorhulban/analytics77/helpers"
+	"time"
+
+	"github.com/tudorhulban/analytics77/domain/calendar"
 )
 
 // PreviousMonthDaysWithData returns a stack‑allocated array of up to 31 days.
@@ -69,7 +70,7 @@ func (r *Registry) PreviousMonthHoursWithData(forCalendarDay int8) ([24]int8, in
 		return hoursWithData, 0
 	}
 
-	dayIndex := dhelpers.CalendarDayToIndex(forCalendarDay)
+	dayIndex := calendar.CalendarDayToIndex(forCalendarDay)
 	prev := r.GetPreviousSlot()
 
 	for hour := range int8(24) {
@@ -99,7 +100,7 @@ func (r *Registry) CurrentMonthHoursWithData(forCalendarDay int8) ([24]int8, int
 		return hoursWithData, 0
 	}
 
-	dayIndex := dhelpers.CalendarDayToIndex(forCalendarDay)
+	dayIndex := calendar.CalendarDayToIndex(forCalendarDay)
 	curr := r.GetActiveSlot()
 
 	for hour := range int8(24) {
@@ -118,18 +119,10 @@ func (r *Registry) CurrentMonthHoursWithData(forCalendarDay int8) ([24]int8, int
 // the day numbers need to be translated to calendar days.
 //
 // Registry stores storage hours as UTC time.
-func (r *Registry) CurrentDayHoursWithData(timestampUTC, offsetUTCHours int64) ([24]int8, int8) {
-	_, currentDay, _ := helpers.ExtractMonthDayHour(
-		timestampUTC,
-		&helpers.TimestampOffsets{
-			OffsetUTCHours: offsetUTCHours,
-
-			TimestampDSTSpring: r.TimestampDSTSpring,
-			TimestampDSTWinter: r.TimestampDSTWinter,
-		},
-	)
-
-	return r.CurrentMonthHoursWithData(currentDay)
+//
+// Method returns hours in UTC time.
+func (r *Registry) CurrentDayHoursWithData(timestampUTC time.Time) ([24]int8, int8) {
+	return r.CurrentMonthHoursWithData(int8(timestampUTC.Day())) //nolint:gosec
 }
 
 // CurrentMonthDaysWithData returns a stack‑allocated array of up to 31 days

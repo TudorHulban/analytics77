@@ -10,9 +10,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tudorhulban/analytics77/cmd"
 	"github.com/tudorhulban/analytics77/domain/analytics"
-	"github.com/tudorhulban/analytics77/helpers"
 	"github.com/tudorhulban/analytics77/services/sgeo"
 	"github.com/tudorhulban/analytics77/services/sstorage"
+	"github.com/tudorhulban/hxhelpers"
 )
 
 func ForwardAnalytics(r *http.Request, encoder *gob.Encoder) error {
@@ -50,63 +50,51 @@ func TestRequest_AsParamsAddEvent(t *testing.T) {
 	require.NoError(t, errCrServiceGeo)
 	require.NotNil(t, serviceGeo)
 
-	offsetsROU := helpers.TimestampOffsets{
-		OffsetUTCHours: -3,
-	}
-
 	tests := []struct {
-		piers    *PiersAsParamsAddEvent
 		validate func(t *testing.T, res *ParamsAddEvent)
 
 		name        string
 		errContains string
-		req         Request
+		request     Request
 
-		wantErr bool
+		skipServiceGeo bool
+		wantError      bool
 	}{
 		{
-			name: "1. Error - Offsets is nil",
-			req:  Request{RemoteAddr: "127.0.0.1:8080"},
-			piers: &PiersAsParamsAddEvent{
-				Offsets:    nil,
-				ServiceGeo: serviceGeo,
+			name: "1. No Error - Request timestamp is zero.",
+			request: Request{
+				RemoteAddr: "127.0.0.1:8080",
 			},
-			wantErr:     true,
-			errContains: "AsParamsAddEvent - passed offsets is nil",
+
+			wantError: false,
 		},
 		{
-			name: "2. Error - ServiceGeo is nil",
-			req:  Request{RemoteAddr: "127.0.0.1:8080"},
-			piers: &PiersAsParamsAddEvent{
-				Offsets:    &offsetsROU,
-				ServiceGeo: nil,
-			},
-			wantErr:     true,
+			name:        "2. Error - ServiceGeo is nil",
 			errContains: "AsParamsAddEvent - passed ServiceGeo is nil",
+			request: Request{
+				RemoteAddr: "127.0.0.1:8080",
+			},
+
+			skipServiceGeo: true,
+			wantError:      true,
 		},
 		{
-			name: "3. Error - Invalid IP Address",
-			req:  Request{RemoteAddr: "not-an-ip-address"},
-			piers: &PiersAsParamsAddEvent{
-				Offsets:    &offsetsROU,
-				ServiceGeo: serviceGeo,
-			},
-			wantErr: true, // Should fail at netip.ParseAddr
+			name:    "3. Error - Invalid IP Address",
+			request: Request{RemoteAddr: "not-an-ip-address"},
+
+			wantError: true, // Should fail at netip.ParseAddr
 		},
 		{
 			name: "4. Happy Path - Chrome User Agent and Valid Parse",
-			req: Request{
-				RemoteAddr:     "82.77.237.37:53",
-				Host:           "some-site.eu",
-				Header:         map[string][]string{"User-Agent": {"Mozilla/5.0 Chrome/120.0.0.0"}},
-				TimestampUNIX:  1717500000,
-				OffsetUTCHours: 2,
+			request: Request{
+				RemoteAddr:   "82.77.237.37:53",
+				Host:         "some-site.eu",
+				Header:       map[string][]string{"User-Agent": {"Mozilla/5.0 Chrome/120.0.0.0"}},
+				TimestampUTC: 1717500000,
 			},
-			piers: &PiersAsParamsAddEvent{
-				Offsets:    &offsetsROU,
-				ServiceGeo: serviceGeo,
-			},
-			wantErr: false,
+
+			wantError: false,
+
 			validate: func(t *testing.T, res *ParamsAddEvent) {
 				t.Helper()
 
@@ -126,27 +114,20 @@ func TestRequest_AsParamsAddEvent(t *testing.T) {
 
 				require.EqualValues(t,
 					1717500000,
-					res.TimestampUNIX,
+					res.TimestampUTC,
 					"timestamp mismtch",
-				)
-				require.EqualValues(t,
-					2,
-					res.OffsetUTCHours,
-					"offset mismatch",
 				)
 			},
 		},
 		{
 			name: "5. Happy Path - Safari User Agent Fallback (No Chrome)",
-			req: Request{
+			request: Request{
 				RemoteAddr: "82.77.237.38",
 				Header:     map[string][]string{"User-Agent": {"Mozilla/5.0 Safari/605.1.15"}},
 			},
-			piers: &PiersAsParamsAddEvent{
-				Offsets:    &offsetsROU,
-				ServiceGeo: serviceGeo,
-			},
-			wantErr: false,
+
+			wantError: false,
+
 			validate: func(t *testing.T, res *ParamsAddEvent) {
 				t.Helper()
 
@@ -160,15 +141,13 @@ func TestRequest_AsParamsAddEvent(t *testing.T) {
 		},
 		{
 			name: "6. Happy Path - Unknown Browser Default",
-			req: Request{
+			request: Request{
 				RemoteAddr: "127.0.0.1",
 				Header:     map[string][]string{"User-Agent": {"Curl/7.81.0"}},
 			},
-			piers: &PiersAsParamsAddEvent{
-				Offsets:    &offsetsROU,
-				ServiceGeo: serviceGeo,
-			},
-			wantErr: false,
+
+			wantError: false,
+
 			validate: func(t *testing.T, res *ParamsAddEvent) {
 				t.Helper()
 
@@ -181,9 +160,17 @@ func TestRequest_AsParamsAddEvent(t *testing.T) {
 		t.Run(
 			tc.name,
 			func(t *testing.T) {
-				result, errTransformation := tc.req.AsParamsAddEvent(tc.piers)
+				result, errTransformation := tc.request.
+					AsParamsAddEvent(
+						hxhelpers.Ternary(
+							tc.skipServiceGeo,
 
-				if tc.wantErr {
+							nil,
+							serviceGeo,
+						),
+					)
+
+				if tc.wantError {
 					require.Error(t, errTransformation)
 
 					if tc.errContains != "" {

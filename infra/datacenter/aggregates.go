@@ -4,23 +4,24 @@ import (
 	"fmt"
 
 	"github.com/tudorhulban/analytics77/domain/analytics"
+	"github.com/tudorhulban/analytics77/domain/site"
 )
 
-func (dc *DataCenter) CurrentMonthAggregateTopNForHour(day, hour int8, sites ...Site) ([]*analytics.AggregatedTopN, error) {
+func (dc *DataCenter) CurrentMonthAggregateTopNForHour(day, hour int8, sites ...site.SiteName) ([]*analytics.AggregatedTopN, error) {
 	if len(sites) == 0 {
 		return nil, analytics.ErrInvalidInput
 	}
 
 	result := make([]*analytics.AggregatedTopN, 0)
 
-	for _, site := range sites {
-		if registry, exists := dc.GetRegistry(site); exists {
+	for _, item := range sites {
+		if registry, exists := dc.GetRegistry(item); exists {
 			aggregate, errAgg := registry.CurrentMonthAggregateTopNForHour(day, hour)
 			if errAgg != nil {
 				return nil,
 					fmt.Errorf(
 						"error for site: %q : %w",
-						site,
+						item,
 						errAgg,
 					)
 			}
@@ -32,15 +33,15 @@ func (dc *DataCenter) CurrentMonthAggregateTopNForHour(day, hour int8, sites ...
 	return result, nil
 }
 
-func (dc *DataCenter) CurrentMonthAggregateTopN(sites ...Site) ([]*analytics.AggregatedTopN, error) {
+func (dc *DataCenter) CurrentMonthAggregateTopN(sites ...site.SiteName) ([]*analytics.AggregatedTopN, error) {
 	if len(sites) == 0 {
 		return nil, analytics.ErrInvalidInput
 	}
 
 	result := make([]*analytics.AggregatedTopN, 0)
 
-	for _, site := range sites {
-		if registry, exists := dc.GetRegistry(site); exists {
+	for _, item := range sites {
+		if registry, exists := dc.GetRegistry(item); exists {
 			aggregate := registry.CurrentMonthAggregateTopN()
 
 			if aggregate != nil {

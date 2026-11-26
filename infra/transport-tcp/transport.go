@@ -7,7 +7,8 @@ import (
 	"net"
 	"sync"
 
-	"github.com/tudorhulban/analytics77/services/sanalytics"
+	"github.com/tudorhulban/analytics77/infra/datacenter"
+	"github.com/tudorhulban/analytics77/services/sgeo"
 	"github.com/tudorhulban/analytics77/services/slogging"
 	"github.com/tudorhulban/analytics77/shared"
 	"github.com/tudorhulban/arenalog"
@@ -18,17 +19,19 @@ import (
 type TransportTCP struct {
 	listener net.Listener
 
-	serviceLogging   *slogging.ServiceLogging
-	serviceAnalytics *sanalytics.ServiceAnalytics
+	serviceLogging *slogging.ServiceLogging
+	serviceGeo     *sgeo.ServiceGeo
 
 	logContext *arenalog.LogContext
+	Datacenter *datacenter.DataCenter
 
 	wgHandleConnection sync.WaitGroup
 }
 
 type PiersNewTransportTCP struct {
-	ServiceLogging   *slogging.ServiceLogging
-	ServiceAnalytics *sanalytics.ServiceAnalytics
+	ServiceLogging *slogging.ServiceLogging
+	ServiceGeo     *sgeo.ServiceGeo
+	Datacenter     *datacenter.DataCenter
 }
 
 func NewTransportTCP(l net.Listener, dependencies *PiersNewTransportTCP) (*TransportTCP, error) {
@@ -42,10 +45,13 @@ func NewTransportTCP(l net.Listener, dependencies *PiersNewTransportTCP) (*Trans
 		WithRoot("transport", "TCP")
 
 	return &TransportTCP{
-			listener:         l,
-			serviceAnalytics: dependencies.ServiceAnalytics,
-			serviceLogging:   dependencies.ServiceLogging,
-			logContext:       logContext,
+			listener: l,
+
+			serviceLogging: dependencies.ServiceLogging,
+			serviceGeo:     dependencies.ServiceGeo,
+
+			logContext: logContext,
+			Datacenter: dependencies.Datacenter,
 		},
 		nil
 }
@@ -86,7 +92,10 @@ func (s *TransportTCP) handleConnection(conn net.Conn) {
 	)
 
 	// Process the data.
-	errsValidationEvents, errsProcessEvents := s.serviceAnalytics.RecordEvents(batch)
+	errsValidationEvents, errsProcessEvents := s.Datacenter.RecordEvents(
+		batch,
+		s.serviceGeo,
+	)
 	if len(errsValidationEvents) > 0 {
 		s.logContext.Print(
 			fmt.Sprintf(
