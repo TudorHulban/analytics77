@@ -30,7 +30,7 @@ func TestCurrentDayHoursWithData(t *testing.T) {
 		Name: "xxxx - " + site.SiteName(t.Name()),
 	}
 
-	localTime := time.Now()
+	testTime := time.Now()
 
 	recordsPerSiteBefore := datacenter.GetPreviousHourRecordsPerSite()
 	require.Empty(t, recordsPerSiteBefore)
@@ -42,7 +42,7 @@ func TestCurrentDayHoursWithData(t *testing.T) {
 		Browser:         analytics.Brave,
 		OperatingSystem: analytics.Linux,
 
-		TimestampUTC: localTime.UTC().Unix(),
+		TimestampUTC: testTime.UTC().Unix(),
 		IsPrivateIP:  true,
 	}
 
@@ -52,15 +52,20 @@ func TestCurrentDayHoursWithData(t *testing.T) {
 	require.EqualValues(t,
 		1,
 		howManyAfter1,
-		"howManyAfter should be 1",
+
+		"with request 1 we should have requests in one hour only",
 	)
 	require.NotZero(t,
 		hoursWithDataAfter1,
 		"hoursWithDataAfter should be not zero in most cases",
 	)
 	require.EqualValues(t,
-		localTime.Hour(),
+		testTime.UTC().Hour(),
 		hoursWithDataAfter1[0],
+
+		"retrieved hour (%v) is UTC vs test hour (%v)",
+		hoursWithDataAfter1[0],
+		testTime.UTC().Hour(),
 	)
 
 	recordsPerSiteAfter1 := datacenter.GetPreviousHourRecordsPerSite()
@@ -73,7 +78,7 @@ func TestCurrentDayHoursWithData(t *testing.T) {
 		recordsPerSiteAfter1[site1Test.Name],
 	)
 
-	oneHourBefore := localTime.Add(-1 * time.Hour)
+	oneHourBefore := testTime.UTC().Add(-1 * time.Hour)
 
 	request2 := shared.ParamsAddEvent{
 		SiteKey: string(site1Test.Name),
@@ -82,7 +87,7 @@ func TestCurrentDayHoursWithData(t *testing.T) {
 		Browser:         analytics.Brave,
 		OperatingSystem: analytics.Linux,
 
-		TimestampUTC: localTime.UTC().Unix(),
+		TimestampUTC: oneHourBefore.Unix(),
 		IsPrivateIP:  true,
 	}
 
@@ -92,14 +97,19 @@ func TestCurrentDayHoursWithData(t *testing.T) {
 	require.EqualValues(t,
 		2,
 		howManyAfter2,
-		"howManyAfter should be 1",
+
+		"with request 2 we should have records in different hours",
 	)
 	require.NotZero(t,
 		hoursWithDataAfter2,
 		"hoursWithDataAfter should be not zero in most cases",
 	)
 	require.Empty(t,
-		hxhelpers.NotInSliceSource(hoursWithDataAfter2[:howManyAfter2], int8(oneHourBefore.Hour()), int8(localTime.Hour())),
+		hxhelpers.NotInSliceSource(
+			hoursWithDataAfter2[:howManyAfter2],
+
+			int8(oneHourBefore.Hour()),
+			int8(testTime.UTC().Hour())),
 		hoursWithDataAfter2,
 	)
 }
